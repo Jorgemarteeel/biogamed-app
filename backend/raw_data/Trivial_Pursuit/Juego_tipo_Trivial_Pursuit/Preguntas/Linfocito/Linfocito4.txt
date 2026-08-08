@@ -1,0 +1,59 @@
+¿Qué citocina es clave para la diferenciación de linfocitos B en plasmocitos de larga vida?
+a) IL-4
+b) IL-21 (correcta)
+c) TNF-α
+d) IFN-γ
+
+¿Qué ocurre durante la presentación de antígeno en MHC-II?
+a) Activación de CD8+
+b) Activación de CD4+ (correcta)
+c) Neutralización de anticuerpos
+d) Opsonización
+
+La diferencia entre memoria B y células plasmáticas es:
+a) Memoria no secreta anticuerpos inmediatamente (correcta)
+b) Plasmocitos no producen Ig
+c) Memoria fagocita bacterias
+d) Plasmocitos activan NK
+
+La activación T dependiente de antígeno requiere:
+a) Señal 1: TCR-antígeno, señal 2: coestimulación (correcta)
+b) Solo señal de citoquinas
+c) Reconocimiento inespecífico
+d) Neutralización de patógenos
+
+La respuesta secundaria se caracteriza por:
+a) Mayor cantidad y afinidad de anticuerpos (correcta)
+b) Inicio más lento
+c) Falta de memoria
+d) Activación de neutrófilos
+
+¿Qué tipo de anticuerpo indica exposición repetida a un antígeno?
+a) IgM
+b) IgG (correcta)
+c) IgA
+d) IgE
+
+La tolerancia periférica evita:
+a) Activación de linfocitos autoreactivos en tejidos (correcta)
+b) Expansión clonal de linfocitos
+c) Activación de complemento
+d) Fagocitosis de células propias
+
+¿Qué función tiene la coestimulación CD28-B7 en linfocitos T?
+a) Inhibir apoptosis
+b) Permitir activación y expansión clonal (correcta)
+c) Activar B directamente
+d) Producir histamina
+
+La selección de alta afinidad en centros germinales asegura:
+a) Anticuerpos más efectivos (correcta)
+b) Inmunidad inespecífica
+c) Activación de complemento
+d) Fagocitosis por neutrófilos
+
+La inmunidad adaptativa permite:
+a) Reconocer solo patrones comunes
+b) Reconocer antígenos específicos y generar memoria (correcta)
+c) Fagocitar bacterias
+d) Activar complemento terminal

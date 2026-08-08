@@ -1,0 +1,59 @@
+ChIP-seq combina:
+a) Inmunoprecipitación de proteínas unidas a ADN y secuenciación (correcta)
+b) Western blot y PCR
+c) ELISA y citometría de flujo
+d) Microscopía confocal y FISH
+
+¿Qué técnica permite identificar linfocitos específicos para un antígeno en células individuales?
+a) Tetrameros de MHC (correcta)
+b) ELISA
+c) Western blot
+d) PCR
+
+¿Qué herramienta se utiliza para generar knockouts específicos en células inmunes?
+a) CRISPR-Cas9 (correcta)
+b) ELISA
+c) FACS
+d) RNA-seq
+
+La citometría de flujo de alto contenido permite:
+a) Analizar morfología y marcadores simultáneamente (correcta)
+b) Amplificar ADN
+c) Medir proteínas en gel
+d) Detectar anticuerpos
+
+La microscopía de superresolución permite:
+a) Visualizar estructuras subcelulares <200 nm (correcta)
+b) Contar células
+c) Medir antígenos en gel
+d) Detectar anticuerpos
+
+La técnica de RNA in situ secuenciación (ISS) permite:
+a) Localizar transcripciones específicas en tejido (correcta)
+b) Medir proteínas
+c) Detectar anticuerpos
+d) Separar células
+
+¿Qué técnica permite mapear interacciones proteína-proteína en células completas?
+a) Proximity ligation assay (PLA) (correcta)
+b) ELISA
+c) Western blot
+d) PCR
+
+La inmunofenotipificación avanzada permite:
+a) Caracterizar subpoblaciones celulares con alta resolución (correcta)
+b) Detectar antígenos en gel
+c) Medir citocinas por ELISA
+d) Visualizar ARN
+
+¿Qué técnica combina anticuerpos y secuenciación de célula única?
+a) CITE-seq (correcta)
+b) Western blot
+c) ELISPOT
+d) FISH
+
+La tecnología de células CAR-T requiere:
+a) Ingeniería genética de linfocitos T (correcta)
+b) ELISA
+c) PCR convencional
+d) Western blot

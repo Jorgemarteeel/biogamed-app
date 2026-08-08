@@ -1,0 +1,59 @@
+La clase de anticuerpo que se encuentra en mucosas es:
+a) IgG
+b) IgA (correcta)
+c) IgM
+d) IgE
+
+¿Cuál es la función principal de los linfocitos T citotóxicos?
+a) Producir anticuerpos
+b) Destruir células infectadas por virus (correcta)
+c) Activar complemento
+d) Producir citoquinas antiinflamatorias
+
+La interacción CD40-CD40L ocurre entre:
+a) Linfocito B y macrófago
+b) Linfocito B y linfocito T ayudante (correcta)
+c) Linfocito T y NK
+d) Célula dendrítica y neutrófilo
+
+La maduración somática de linfocitos B ocurre en:
+a) Médula ósea
+b) Ganglios linfáticos (correcta)
+c) Pulmón
+d) Timo
+
+La activación de linfocitos T depende de:
+a) Reconocimiento de péptido-MHC (correcta)
+b) Fagocitosis de antígenos
+c) Opsonización
+d) Complemento
+
+La clase de anticuerpo que atraviesa la placenta es:
+a) IgM
+b) IgG (correcta)
+c) IgA
+d) IgE
+
+La eliminación de linfocitos autoreactivos en el timo se llama:
+a) Apoptosis inducida
+b) Selección negativa (correcta)
+c) Selección positiva
+d) Activación clonal
+
+La expansión clonal se refiere a:
+a) Muerte de linfocitos
+b) Multiplicación de linfocitos específicos tras activación (correcta)
+c) Producción de anticuerpos inespecíficos
+d) Migración a la médula ósea
+
+La diferencia entre linfocitos B de memoria y plasmocitos es:
+a) Memoria no produce anticuerpos inmediatamente (correcta)
+b) Plasmocitos no producen anticuerpos
+c) Memoria fagocita bacterias
+d) Plasmocitos actúan en ganglios
+
+La inmunidad adaptativa es más lenta en la respuesta primaria porque:
+a) No hay linfocitos presentes
+b) Requiere activación y proliferación clonal (correcta)
+c) Falta de complemento
+d) Inhibición de células T

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Editor de polígonos del tablero</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  margin: 20px;
+  display: flex;
+  justify-content: center;
+}
+#app {
+  max-width: 960px;
+  width: 100%;
+}
+#boardWrapper {
+  position: relative;
+  display: inline-block;
+}
+#board {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  cursor: crosshair;
+}
+.controls {
+  margin: 15px 0;
+  padding: 15px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+}
+button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 0;
+  margin-right: 10px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+button.secondary {
+  background: #6b7280;
+}
+#list {
+  margin-top: 10px;
+  white-space: pre-wrap;
+  font-size: 14px;
+  padding: 10px;
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+.polygon {
+  position: absolute;
+  background-color: rgba(0, 128, 0, 0.3);
+  pointer-events: none;
+}
+#currentCellDisplay {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <h2>Editor de polígonos del tablero</h2>
+  <p>Haz clic para definir los vértices del polígono. Presiona "Cerrar polígono" cuando termines.</p>
+
+  <input type="file" id="fileInput" accept="image/*"><br><br>
+
+  <div id="currentCellDisplay">Casilla actual: <span id="currentCell">1</span></div>
+
+  <div id="boardWrapper">
+    <img id="board" src="" alt="Tablero" style="display:none;">
+    <svg id="overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>
+  </div>
+
+  <div class="controls">
+    <button id="closePolygonBtn">Cerrar polígono</button>
+    <button id="undoBtn" class="secondary">Deshacer último</button>
+    <button id="exportBtn">Exportar posiciones</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+const board = document.getElementById("board");
+const overlay = document.getElementById("overlay");
+const wrapper = document.getElementById("boardWrapper");
+const fileInput = document.getElementById("fileInput");
+const undoBtn = document.getElementById("undoBtn");
+const exportBtn = document.getElementById("exportBtn");
+const closePolygonBtn = document.getElementById("closePolygonBtn");
+const list = document.getElementById("list");
+const currentCellDisplay = document.getElementById("currentCell");
+
+let polygons = [];
+let currentPolygon = [];
+let polygonElements = [];
+let currentCellNum = 1; // contador de casilla
+
+// Cargar imagen
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    board.src = event.target.result;
+    board.style.display = "block";
+    polygons = [];
+    currentPolygon = [];
+    polygonElements.forEach(el => el.remove());
+    polygonElements = [];
+    currentCellNum = 1;
+    updateCurrentCellDisplay();
+    updateList();
+  };
+  reader.readAsDataURL(file);
+});
+
+// Agregar vértice
+board.addEventListener("click", (e) => {
+  const rect = board.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  currentPolygon.push({x, y});
+  drawCurrentLines();
+});
+
+// Dibujar líneas temporales
+function drawCurrentLines() {
+  overlay.innerHTML = '';
+  if (currentPolygon.length < 2) return;
+  const points = currentPolygon.map(p => `${p.x},${p.y}`).join(' ');
+  const line = document.createElementNS("http://www.w3.org/2000/svg","polyline");
+  line.setAttribute("points", points);
+  line.setAttribute("stroke","red");
+  line.setAttribute("stroke-width","2");
+  line.setAttribute("fill","none");
+  overlay.appendChild(line);
+}
+
+// Cerrar polígono
+closePolygonBtn.addEventListener("click", () => {
+  if (currentPolygon.length < 3) {
+    alert("Se necesitan al menos 3 vértices para formar un polígono.");
+    return;
+  }
+
+  const name = prompt(`Introduce el nombre de la casilla ${currentCellNum}:`);
+  if (!name) return;
+
+  const rect = board.getBoundingClientRect();
+  const scaleX = board.naturalWidth / rect.width;
+  const scaleY = board.naturalHeight / rect.height;
+
+  const scaledPolygon = currentPolygon.map(p => ({
+    x: Math.round(p.x * scaleX),
+    y: Math.round(p.y * scaleY)
+  }));
+
+  // Dibujar polígono final
+  const polygonEl = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+  polygonEl.setAttribute("points", currentPolygon.map(p => `${p.x},${p.y}`).join(' '));
+  polygonEl.setAttribute("fill","rgba(0,128,0,0.3)");
+  polygonEl.setAttribute("stroke","green");
+  polygonEl.setAttribute("stroke-width","2");
+  overlay.appendChild(polygonEl);
+  polygonElements.push(polygonEl);
+
+  polygons.push({cell: currentCellNum, name, vertices: scaledPolygon});
+
+  currentPolygon = [];
+  overlay.innerHTML = '';
+  polygonElements.forEach(el => overlay.appendChild(el));
+
+  currentCellNum++;
+  updateCurrentCellDisplay();
+  updateList();
+});
+
+// Deshacer último polígono
+undoBtn.addEventListener("click", () => {
+  if (polygons.length === 0) return;
+  polygons.pop();
+  const last = polygonElements.pop();
+  if (last) last.remove();
+  currentCellNum = polygons.length + 1;
+  updateCurrentCellDisplay();
+  updateList();
+});
+
+// Exportar JSON
+exportBtn.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(polygons, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "poligonos.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Actualizar lista
+function updateList() {
+  list.textContent = JSON.stringify(polygons, null, 2);
+}
+
+function updateCurrentCellDisplay() {
+  currentCellDisplay.textContent = `Casilla actual: ${currentCellNum}`;
+}
+</script>
+
+</body>
+</html>

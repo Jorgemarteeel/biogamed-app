@@ -1,0 +1,59 @@
+La fagocitosis es facilitada por:
+a) Opsonización (correcta)
+b) Citoquinas antiinflamatorias
+c) Interferón tipo I
+d) Complemento terminal
+
+¿Qué célula produce interferón tipo I durante infecciones virales?
+a) Linfocito B
+b) Célula dendrítica plasmocitoide (correcta)
+c) Basófilo
+d) Eosinófilo
+
+¿Cuál es la función principal del complemento C3b?
+a) Neutralizar toxinas
+b) Opsónizar patógenos (correcta)
+c) Activar linfocitos T
+d) Inducir apoptosis
+
+¿Qué característica define a los neutrófilos?
+a) Memoria inmunológica
+b) Vida corta y migración rápida (correcta)
+c) Producción de anticuerpos
+d) Presentación de antígeno exclusiva a MHC-II
+
+La inflamación aguda se caracteriza por:
+a) Infiltración linfocitaria
+b) Migración de neutrófilos (correcta)
+c) Activación de linfocitos B
+d) Producción de IgG
+
+¿Qué célula produce histamina durante la respuesta innata?
+a) Mastocito (correcta)
+b) Linfocito T
+c) Macrófago
+d) Neutrófilo
+
+¿Qué molécula señala células infectadas para la destrucción por NK?
+a) MHC-I reducido (correcta)
+b) Anticuerpos circulantes
+c) Interferón tipo II
+d) Citoquinas antiinflamatorias
+
+El reconocimiento de patrones moleculares asociados a patógenos se denomina:
+a) Respuesta adaptativa
+b) PRR (Pattern Recognition Receptors) (correcta)
+c) Opsonización
+d) Complementación
+
+Las defensinas actúan principalmente:
+a) Como receptores celulares
+b) Rompiendo membranas bacterianas (correcta)
+c) Activando linfocitos T
+d) Estimulando la fiebre
+
+¿Cuál es un efecto del TNF-α en la inmunidad innata?
+a) Apoptosis y activación endotelial (correcta)
+b) Inhibición de neutrófilos
+c) Producción de IgE
+d) Neutralización viral directa

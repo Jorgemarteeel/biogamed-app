@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Immunology Board Game (HTML)</title>
+<style>
+  :root{
+    --panel-width: 420px;
+    --board-gap: 12px;
+    --token-size: 22px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  body{
+    margin:0;
+    background:#111;
+    color:#eee;
+    display:flex;
+    min-height:100vh;
+    align-items:flex-start;
+    justify-content:center;
+    padding:18px;
+    box-sizing:border-box;
+  }
+  .container{
+    display:flex;
+    gap:var(--board-gap);
+    width:100%;
+    max-width:1400px;
+  }
+
+  /* LEFT: board */
+  .board-wrap{
+    flex:1 1 auto;
+    position:relative;
+    background:#222;
+    border-radius:12px;
+    padding:10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  }
+  #board-img{
+    width:100%;
+    display:block;
+    height:auto;
+    border-radius:6px;
+    image-rendering:optimizeQuality;
+  }
+  /* token layer sits on top of the image */
+  .token-layer{
+    position:absolute;
+    left:10px;
+    top:10px;
+    right:var(--panel-width);
+    bottom:10px;
+    pointer-events:none;
+  }
+  .token{
+    position:absolute;
+    width:var(--token-size);
+    height:var(--token-size);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    color:#111;
+    box-shadow:0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  /* RIGHT: control panel */
+  .panel{
+    width:var(--panel-width);
+    min-width:var(--panel-width);
+    background:linear-gradient(180deg,#0d1113,#0b0e10);
+    padding:14px;
+    border-radius:10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .panel h2{margin:0 0 6px 0;font-size:16px}
+  .player-active{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px;
+    border-radius:8px;
+    background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .player-swatch{
+    width:36px;height:36px;border-radius:6px;border:2px solid rgba(0,0,0,0.6);
+  }
+  .small{
+    font-size:13px;color:#bfbfbf;
+  }
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  button{
+    background:#0ea5a4;
+    border:none;
+    color:#0b0e10;
+    font-weight:600;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  button:disabled{opacity:0.5;cursor:not-allowed}
+
+  .dice-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* 3D die cube */
+  .die3d{
+    width:80px;height:80px;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform 1s cubic-bezier(.2,.9,.2,1);
+    margin:0 auto;
+    perspective:600px;
+  }
+  .die3d .face{
+    position:absolute;
+    width:80px;height:80px;
+    left:0;top:0;
+    background:#fff;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    color:#000;
+    box-shadow:0 6px 12px rgba(0,0,0,0.3);
+  }
+  /* we'll render dot patterns on faces via CSS pseudo-elements inside */
+  .log{
+    height:200px;
+    overflow:auto;
+    padding:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.02);
+    font-size:13px;
+  }
+  .status-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:8px;
+  }
+  .card-preview{
+    width:100%;
+    height:120px;
+    border-radius:8px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#111;
+  }
+  img.card-image{max-width:100%;max-height:100%}
+
+  /* Question overlay */
+  .q-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1200;
+  }
+  .q-card{
+    width:min(720px,96%);
+    max-height:90%;
+    background:linear-gradient(180deg,#f7f7f8,#eaeaea);
+    border-radius:10px;
+    padding:12px;
+    color:#111;
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    display:flex;
+    gap:12px;
+  }
+  .q-card .card-img{
+    width:260px;
+    flex:0 0 260px;
+    border-radius:6px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ddd;
+  }
+  .q-card .card-body{
+    flex:1;
+    overflow:auto;
+    padding:6px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .q-card .question{
+    font-weight:700;
+    font-size:16px;
+  }
+  .answers{display:flex;flex-direction:column;gap:8px}
+  .answer{
+    padding:10px;border-radius:8px;background:#fff;border:1px solid #d0d0d0;cursor:pointer
+  }
+  .answer:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(0,0,0,0.1)}
+  .timer{
+    font-weight:800;font-size:20px;
+    color:#2b2b2b;
+    text-align:center;
+  }
+
+  /* modal for player setup */
+  .modal{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.7); z-index:2000;
+  }
+  .modal .box{
+    background:#0b0e10;padding:18px;border-radius:10px;width:560px;color:#eee;
+  }
+  .player-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  input[type=text]{flex:1;padding:8px;border-radius:6px;border:1px solid #333;background:#071018;color:#eee}
+  input[type=color]{width:48px;height:36px;padding:0;border-radius:6px;border:none}
+  .smallmuted{font-size:12px;color:#9aa3aa}
+  footer.note{font-size:12px;color:#9aa3aa;margin-top:8px}
+
+  @media (max-width:980px){
+    .container{flex-direction:column;align-items:stretch}
+    .token-layer{right:10px}
+    .panel{width:auto;min-width:unset}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="board-wrap" role="main" aria-label="Game board">
+    <img id="board-img" src="Tablero/Tablero.png" alt="Board image (Tablero.png)">
+    <div class="token-layer" id="token-layer"></div>
+  </div>
+
+  <aside class="panel" role="complementary" aria-label="Game panel">
+    <h2>Active Player</h2>
+    <div class="player-active" id="active-player">
+      <div class="player-swatch" id="active-color" style="background:#eee"></div>
+      <div style="flex:1">
+        <div id="active-name" style="font-weight:700">—</div>
+        <div class="small" id="active-pos">Pos: —</div>
+      </div>
+    </div>
+
+    <div class="status-grid">
+      <div>
+        <h2 class="small">Timer</h2>
+        <div class="card-preview">
+          <div style="text-align:center">
+            <div class="timer" id="question-timer">000</div>
+            <div class="small">Question time left</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="small">Card preview</h2>
+        <div class="card-preview">
+          <img id="card-preview-img" class="card-image" src="Tarjetas/Nivel1_1.png" alt="Card preview">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <div style="flex:1">
+        <h2 class="small">Dice</h2>
+        <div class="dice-wrap">
+          <div class="die3d" id="die3d" aria-hidden="true">
+            <!-- Faces are drawn using HTML for clarity; visual dots not semantically important -->
+            <div class="face" data-face="1" style="transform: translateZ(40px);">•</div>
+            <div class="face" data-face="2" style="transform: rotateY(180deg) translateZ(40px);">••</div>
+            <div class="face" data-face="3" style="transform: rotateY(90deg) translateZ(40px);">•••</div>
+            <div class="face" data-face="4" style="transform: rotateY(-90deg) translateZ(40px);">••••</div>
+            <div class="face" data-face="5" style="transform: rotateX(90deg) translateZ(40px);">•••••</div>
+            <div class="face" data-face="6" style="transform: rotateX(-90deg) translateZ(40px);">••••••</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button id="roll-btn">Roll dice</button>
+            <button id="next-turn-btn" disabled>Next turn</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:160px">
+        <h2 class="small">Game Log</h2>
+        <div class="log" id="game-log"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px">
+      <h2 class="small">Players</h2>
+      <div id="player-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+
+    <div style="margin-top:8px;display:flex;gap:8px;justify-content:space-between;align-items:center">
+      <div class="smallmuted">Use a local web server if assets don't load.</div>
+      <div style="display:flex;gap:8px">
+        <button id="restart-btn">Restart</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- Question overlay -->
+<div class="q-overlay" id="q-overlay" aria-hidden="true">
+  <div class="q-card" role="dialog" aria-modal="true" id="q-card">
+    <div class="card-img">
+      <img id="q-card-img" style="max-width:100%;max-height:100%" src="" alt="Card back">
+    </div>
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="question" id="q-text">Question text</div>
+        <div style="text-align:right">
+          <div class="small">Time left</div>
+          <div class="timer" id="q-timer">60</div>
+        </div>
+      </div>
+
+      <div class="answers" id="answers"></div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="q-skip" style="background:#f97316;color:#fff">Give up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Player setup modal -->
+<div class="modal" id="setup-modal" role="dialog" aria-modal="true">
+  <div class="box">
+    <h2>Player setup</h2>
+    <p class="smallmuted">Enter up to 4 players. Colors will be token colors. Click Start when ready.</p>
+    <div id="players-setup">
+      <!-- rows added by JS -->
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="start-game-btn">Start game</button>
+    </div>
+    <footer class="note">If resources (images, preguntas) do not load, run a local web server from the project root. See comments in HTML for details.</footer>
+  </div>
+</div>
+
+<script>
+/*
+  Full game implementation notes (important):
+  - The code fetches 'Posiciones/posiciones.json' to determine cell coordinates.
+  - Card images should be in Tarjetas/ with names: Nivel1_1.png, Nivel1_2.png, Nivel2_1.png, etc.
+  - Question files expected under Preguntas/<CellName>/<CellName><level>.txt or .json
+    * The loader supports:
+      - JSON file containing an array of objects: { "q":"...", "options":["..."], "answer":0 }
+      - Plain text file with blocks separated by a line containing only '---'. Each block:
+          Question line
+          1) Option...
+          2) Option...
+          3) Option...
+          4) Option...
+          Answer: 2   (index starting at 1)
+    - The code will try .json first then .txt. If none found, logs an error.
+  - For stable local testing, run: python -m http.server 8000  (from the project root),
+    then open http://localhost:8000/yourfile.html
+*/
+
+const MAX_PLAYERS = 4;
+const tokenLayer = document.getElementById('token-layer');
+const boardImg = document.getElementById('board-img');
+const logEl = document.getElementById('game-log');
+const playerListEl = document.getElementById('player-list');
+const activeNameEl = document.getElementById('active-name');
+const activeColorEl = document.getElementById('active-color');
+const activePosEl = document.getElementById('active-pos');
+const cardPreviewImg = document.getElementById('card-preview-img');
+
+const rollBtn = document.getElementById('roll-btn');
+const nextTurnBtn = document.getElementById('next-turn-btn');
+const dieEl = document.getElementById('die3d');
+
+const setupModal = document.getElementById('setup-modal');
+const playersSetupEl = document.getElementById('players-setup');
+const startGameBtn = document.getElementById('start-game-btn');
+const restartBtn = document.getElementById('restart-btn');
+
+const qOverlay = document.getElementById('q-overlay');
+const qCardImg = document.getElementById('q-card-img');
+const qText = document.getElementById('q-text');
+const answersEl = document.getElementById('answers');
+const qTimerEl = document.getElementById('q-timer');
+const questionTimerDisplay = document.getElementById('question-timer');
+const qSkipBtn = document.getElementById('q-skip');
+
+let positions = []; // loaded from Posiciones/posiciones.json
+let cellCentroids = {}; // {cellNumber: {x,y, name}}
+let players = []; // player objects
+let currentPlayerIndex = 0;
+let orderDetermined = false;
+let gameStarted = false;
+let usedQuestions = {}; // map filename -> set of used indices
+let questionCache = {}; // filename -> array of parsed questions
+let waitingForAnswer = false;
+let answerTimeout = null;
+let questionCountdown = 0;
+let mainTurnBlocked = false; // when a player failed and must skip further action
+
+// UTIL
+function log(msg){
+  const line = document.createElement('div');
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logEl.prepend(line);
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function sleep(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
+
+/* ------------- Load positions.json and compute centroids ------------- */
+async function loadPositions(){
+  try{
+    const resp = await fetch('Posiciones/posiciones.json');
+    if(!resp.ok) throw new Error('Failed to load Posiciones/posiciones.json: ' + resp.statusText);
+    positions = await resp.json();
+    // Compute centroid from vertices
+    positions.forEach(cell=>{
+      const verts = cell.vertices || [];
+      const sum = verts.reduce((acc,v)=>({x:acc.x+v.x,y:acc.y+v.y}), {x:0,y:0});
+      const n = verts.length || 1;
+      const cx = sum.x / n;
+      const cy = sum.y / n;
+      cellCentroids[cell.cell] = {x: cx, y: cy, name: cell.name};
+    });
+    log('Loaded positions.json with ' + positions.length + ' cells.');
+  }catch(e){
+    console.error(e);
+    log('Error loading positions.json. Ensure file exists and is served by a webserver. ' + e.message);
+    // Fallback: create some dummy positions for minimal interactivity (not ideal)
+    for(let i=1;i<=140;i++){
+      cellCentroids[i] = {x: 80+i*2, y: 80 + (i%10)*12, name:'Cell' + i};
+    }
+  }
+}
+
+/* ------------- Player management UI ------------- */
+function createPlayerSetupRows(){
+  playersSetupEl.innerHTML = '';
+  for(let i=0;i<MAX_PLAYERS;i++){
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    const nameInput = document.createElement('input');
+    nameInput.type='text';
+    nameInput.placeholder = `Player ${i+1} name (leave empty to skip)`;
+    nameInput.id = `playername-${i}`;
+
+    const colorInput = document.createElement('input');
+    colorInput.type='color';
+    colorInput.value = ['#1abc9c','#f97316','#60a5fa','#a78bfa'][i] || '#fff';
+    colorInput.id = `playercolor-${i}`;
+
+    row.appendChild(nameInput);
+    row.appendChild(colorInput);
+    playersSetupEl.appendChild(row);
+  }
+}
+
+/* ------------- Game boot/start ------------- */
+async function startGameFromSetup(){
+  players = [];
+  for(let i=0;i<MAX_PLAYERS;i++){
+    const name = document.getElementById(`playername-${i}`).value.trim();
+    const color = document.getElementById(`playercolor-${i}`).value;
+    if(name){
+      players.push({
+        id: i+1,
+        name,
+        color,
+        pos: 1, // starting cell 'Salida' assumed cell 1
+        tokenEl: null,
+        orderRoll: null,
+        skipNext: false
+      });
+    }
+  }
+  if(players.length < 1){
+    alert('Please enter at least one player name.');
+    return;
+  }
+  // create token elements
+  tokenLayer.innerHTML = '';
+  players.forEach((p, idx)=>{
+    const t = document.createElement('div');
+    t.className = 'token';
+    t.style.background = p.color;
+    t.style.width = 'var(--token-size)';
+    t.style.height = 'var(--token-size)';
+    t.style.lineHeight = 'var(--token-size)';
+    t.textContent = (idx+1);
+    tokenLayer.appendChild(t);
+    p.tokenEl = t;
+  });
+
+  setupModal.style.display = 'none';
+  gameStarted = true;
+  orderDetermined = false;
+
+  log(`Game started with ${players.length} players: ${players.map(p=>p.name).join(', ')}`);
+  renderPlayerList();
+  await placeAllTokens();
+  // Start initial rolling to determine order
+  log('Each player rolls the die once to determine turn order. Click "Roll dice" for each player in setup order.');
+  currentPlayerIndex = 0;
+  updateActivePlayerDisplay();
+  // enable roll to determine initial orders
+  rollBtn.disabled = false;
+  nextTurnBtn.disabled = true;
+}
+
+/* ------------- Render players list / active UI ------------- */
+function renderPlayerList(){
+  playerListEl.innerHTML = '';
+  players.forEach((p,idx) => {
+    const div = document.createElement('div');
+    div.style.display='flex';
+    div.style.alignItems='center';
+    div.style.gap='8px';
+    div.style.padding='6px';
+    div.style.borderRadius='6px';
+    div.style.background = 'linear-gradient(90deg, rgba(255,255,255,0.01), transparent)';
+    div.style.border='1px solid rgba(255,255,255,0.02)';
+    div.innerHTML = `<div class="player-swatch" style="background:${p.color}"></div>
+      <div style="flex:1">
+        <div style="font-weight:700">${p.name}</div>
+        <div class="small">Pos: ${p.pos}</div>
+      </div>
+      <div class="smallmuted">Roll: ${p.orderRoll ?? '-'}</div>`;
+    playerListEl.appendChild(div);
+  });
+}
+
+/* ------------- Token placement and movement ------------- */
+async function placeAllTokens(){
+  // place tokens at their current positions
+  players.forEach(p=>{
+    placeToken(p, p.pos);
+  });
+}
+
+function placeToken(player, cellNumber){
+  const centroid = cellCentroids[cellNumber];
+  if(!centroid){
+    console.warn('Missing centroid for cell', cellNumber);
+    return;
+  }
+  const boardRect = boardImg.getBoundingClientRect();
+  // positions in posiciones.json are relative to the board's image pixel coordinates.
+  // We need to map those to rendered image size. Determine scale:
+  const naturalW = boardImg.naturalWidth || boardImg.width;
+  const naturalH = boardImg.naturalHeight || boardImg.height;
+  const scaleX = boardRect.width / naturalW;
+  const scaleY = boardRect.height / naturalH;
+  const px = centroid.x * scaleX + boardRect.left - tokenLayer.getBoundingClientRect().left;
+  const py = centroid.y * scaleY + boardRect.top - tokenLayer.getBoundingClientRect().top;
+  // position token element
+  player.tokenEl.style.left = px + 'px';
+  player.tokenEl.style.top = py + 'px';
+}
+
+async function animateMove(player, steps){
+  // Move cell-by-cell with small pauses; update player's pos.
+  let target = player.pos + steps;
+  if(target > 140) target = 140; // don't go past finish for now
+  for(let cell = player.pos+1; cell<=target; cell++){
+    // move to cell
+    player.pos = cell;
+    placeToken(player, cell);
+    updatePlayerListPos(player);
+    await sleep(400); // pause on each cell
+  }
+  // After movement, return final cell number
+  return player.pos;
+}
+
+function updatePlayerListPos(player){
+  // update player list UI and active info
+  renderPlayerList();
+  if(players[currentPlayerIndex] && players[currentPlayerIndex].id === player.id){
+    activePosEl.textContent = 'Pos: ' + player.pos;
+  }
+}
+
+/* ------------- Dice (3D) handling ------------- */
+let dieRotationX = 0, dieRotationY = 0;
+function setDieFace(face){
+  // map face to rotation that shows that face (approximate)
+  // This mapping is not strictly realistic; it's a pleasing mapping.
+  const faceMap = {
+    1: {x:0,y:0},
+    2: {x: -90, y: 0},
+    3: {x: 0, y: -90},
+    4: {x: 0, y: 90},
+    5: {x: 90, y: 0},
+    6: {x: 180, y: 0}
+  };
+  const r = faceMap[face] || {x:0,y:0};
+  dieRotationX += 360 + r.x;
+  dieRotationY += 360 + r.y;
+  dieEl.style.transform = `rotateX(${dieRotationX}deg) rotateY(${dieRotationY}deg)`;
+}
+
+async function rollDiceAnimation(){
+  // quick spin then settle
+  dieEl.style.transition = 'transform 1.0s cubic-bezier(.2,.9,.2,1)';
+  // random face
+  const face = Math.floor(Math.random()*6) + 1;
+  // extra random rotations for flair
+  dieRotationX += Math.floor(Math.random()*4+2)*360;
+  dieRotationY += Math.floor(Math.random()*4+2)*360;
+  setDieFace(face);
+  return new Promise(resolve=>{
+    setTimeout(()=>resolve(face), 1100);
+  });
+}
+
+/* ------------- Question loading/parsing and management ------------- */
+function filenameForQuestion(cellName, level){
+  // level is integer 1..4
+  // cellName likely contains accents; encodeURI for fetch
+  const base = `${cellName}${level}`;
+  // try .json first then .txt
+  return [`Preguntas/${encodeURIComponent(cellName)}/${encodeURIComponent(base)}.json`,
+          `Preguntas/${encodeURIComponent(cellName)}/${encodeURIComponent(base)}.txt`,
+          `Preguntas/${encodeURIComponent(cellName)}/${encodeURIComponent(base)}.md`];
+}
+
+async function loadQuestionsFor(cellName, level){
+  // returns array of question objects: {q, options:[], answerIndex}
+  const cacheKey = `${cellName}_${level}`;
+  if(questionCache[cacheKey]) return questionCache[cacheKey];
+
+  const candidates = filenameForQuestion(cellName, level);
+  let data = null;
+  let loadedFrom = null;
+  for(const url of candidates){
+    try{
+      const resp = await fetch(url);
+      if(!resp.ok) continue;
+      const text = await resp.text();
+      // try to parse JSON
+      try{
+        const j = JSON.parse(text);
+        if(Array.isArray(j)){
+          data = j.map(entry=>{
+            // ensure fields exist
+            return {
+              q: entry.q || entry.question || entry.text || '',
+              options: entry.options || entry.choices || entry.answers || [],
+              answerIndex: (typeof entry.answer === 'number') ? entry.answer : (entry.answerIndex || 0)
+            };
+          });
+          loadedFrom = url;
+          break;
+        }
+      }catch(e){
+        // not JSON; parse as plain text with blocks
+        const blocks = text.split(/\r?\n-{3,}\r?\n/);
+        const parsed = [];
+        for(const block of blocks){
+          const lines = block.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+          if(lines.length < 2) continue;
+          const qline = lines[0];
+          const opts = [];
+          let answerIndex = null;
+          for(let i=1;i<lines.length;i++){
+            const ln = lines[i];
+            const mOpt = ln.match(/^\s*(?:\d+[\)\.]|[A-D][\)\.]?)\s*(.+)$/i);
+            if(mOpt){
+              opts.push(mOpt[1].trim());
+              continue;
+            }
+            // lines that start with '-' maybe options
+            const mDash = ln.match(/^\s*[-\u2022]\s*(.+)$/);
+            if(mDash){
+              opts.push(mDash[1].trim());
+              continue;
+            }
+            const mAns = ln.match(/^answer\s*[:=]\s*(\d+)/i);
+            if(mAns) answerIndex = parseInt(mAns[1]) - 1;
+          }
+          if(opts.length===0) continue;
+          if(answerIndex === null) answerIndex = 0;
+          parsed.push({q:qline, options:opts, answerIndex});
+        }
+        if(parsed.length>0){
+          data = parsed;
+          loadedFrom = url;
+          break;
+        }
+      }
+    }catch(e){
+      // fetch failed; try next candidate
+      console.warn('Could not fetch', url, e);
+      continue;
+    }
+  }
+  if(!data){
+    log(`No question file found for ${cellName} level ${level}. Expected under Preguntas/${cellName}/${cellName}${level}.[json|txt]`);
+    data = [];
+  } else {
+    log(`Loaded ${data.length} questions from ${loadedFrom}`);
+  }
+  questionCache[cacheKey] = data;
+  usedQuestions[cacheKey] = usedQuestions[cacheKey] || new Set();
+  return data;
+}
+
+function pickRandomUnusedQuestion(cellName, level){
+  const cacheKey = `${cellName}_${level}`;
+  const arr = questionCache[cacheKey] || [];
+  const used = usedQuestions[cacheKey] || new Set();
+  if(arr.length === 0) return null;
+  if(used.size >= arr.length){
+    // reset used set (all used once)
+    usedQuestions[cacheKey] = new Set();
+  }
+  // pick unused index
+  let idx;
+  do {
+    idx = Math.floor(Math.random()*arr.length);
+  } while(used.has(idx) && used.size < arr.length);
+  used.add(idx);
+  usedQuestions[cacheKey] = used;
+  return {idx, q: arr[idx]};
+}
+
+/* ------------- Game rules and cell effects ------------- */
+async function handleLanding(player, cellNumber){
+  // determine cell name if known
+  const cellInfo = positions.find(c=>c.cell === cellNumber) || {name: cellCentroids[cellNumber]?.name || ('Cell' + cellNumber)};
+  const name = cellInfo.name || 'Cell';
+  log(`${player.name} landed on ${name} (cell ${cellNumber}).`);
+  // special cells by name
+  const lower = (name || '').toLowerCase();
+  if(lower.includes('virus')){
+    // lose turn and move back 3
+    player.pos = Math.max(1, player.pos - 3);
+    placeToken(player, player.pos);
+    updatePlayerListPos(player);
+    player.skipNext = true;
+    log(`${player.name} hit Virus: moves back 3 and will lose next turn.`);
+    return {continueTurn: false}; // stop their turn
+  }
+  if(lower.includes('adn') || lower.includes('dna')){
+    // advance 3 and continue
+    const advanceTo = Math.min(140, player.pos + 3);
+    log(`${player.name} hits ADN: advance 3 to ${advanceTo}.`);
+    await animateMove(player, 3);
+    // After advance, check landing recursively (careful with infinite loops)
+    return await handleLanding(player, player.pos);
+  }
+  if(lower.includes('cerebro') || lower.includes('brain')){
+    // triple challenge: Macrófago, Linfocito, Bazo or Jeringuilla
+    return await handleCerebro(player);
+  }
+  // Otherwise, check if name matches question types:
+  const questionTypes = ['macrófago','macrofago','linfocito','bazo','erlenmeyer','jeringuilla'];
+  const found = questionTypes.find(t=> lower.includes(t));
+  if(found){
+    // decide level from cell number (1..4)
+    const level = levelFromCell(cellNumber);
+    return await presentQuestionFor(player, foundMapping(found), level);
+  } else {
+    // generic cell (no question)
+    return {continueTurn: true};
+  }
+}
+
+function foundMapping(found){
+  // normalize some variations
+  if(found === 'macrofago') return 'Macrófago';
+  if(found === 'macrófago') return 'Macrófago';
+  if(found === 'linfocito') return 'Linfocito';
+  if(found === 'bazo') return 'Bazo';
+  if(found === 'erlenmeyer') return 'Erlenmeyer';
+  if(found === 'jeringuilla') return 'Jeringuilla';
+  return found;
+}
+
+function levelFromCell(cellNumber){
+  if(cellNumber >=1 && cellNumber <=57) return 1;
+  if(cellNumber >=58 && cellNumber <=98) return 2;
+  if(cellNumber >=99 && cellNumber <=123) return 3;
+  if(cellNumber >=124 && cellNumber <=139) return 4;
+  if(cellNumber === 140) return 4;
+  return 1;
+}
+
+/* ------------- Presenting a question UI ------------- */
+async function presentQuestionFor(player, cellName, level){
+  // ensure questions loaded
+  await loadQuestionsFor(cellName, level);
+  const pick = pickRandomUnusedQuestion(cellName, level);
+  if(!pick){
+    log(`No questions available for ${cellName} level ${level}.`);
+    return {continueTurn: true};
+  }
+  waitingForAnswer = true;
+  // show the card preview/overlay
+  const cardFacePath = `Tarjetas/Nivel${level}_2.png`; // question face
+  qCardImg.src = cardFacePath;
+  cardPreviewImg.src = `Tarjetas/Nivel${level}_1.png`;
+
+  // populate question
+  qText.textContent = pick.q.q;
+  answersEl.innerHTML = '';
+  pick.q.options.forEach((opt, idx)=>{
+    const a = document.createElement('div');
+    a.className='answer';
+    a.textContent = opt;
+    a.onclick = ()=> {
+      selectAnswer(player, pick, idx);
+    };
+    answersEl.appendChild(a);
+  });
+
+  // show overlay
+  qOverlay.style.display='flex';
+  qOverlay.setAttribute('aria-hidden','false');
+
+  // start timer: 60s for normal single question
+  questionCountdown = 60;
+  qTimerEl.textContent = questionCountdown;
+  questionTimerDisplay.textContent = pad(questionCountdown);
+  if(answerTimeout) clearInterval(answerTimeout);
+  answerTimeout = setInterval(()=>{
+    questionCountdown--;
+    qTimerEl.textContent = questionCountdown;
+    questionTimerDisplay.textContent = pad(questionCountdown);
+    if(questionCountdown<=0){
+      clearInterval(answerTimeout);
+      handleAnswerTimeout(player, pick);
+    }
+  }, 1000);
+
+  // return a promise that resolves with outcome
+  return new Promise(resolve=>{
+    // we'll resolve inside selectAnswer or timeout
+    qOverlay.resolve = resolve;
+    qOverlay.currentQuestion = {pick, player, cellName, level};
+  });
+}
+
+function pad(n){ return String(n).padStart(3,'0'); }
+
+function closeQuestionOverlay(){
+  qOverlay.style.display='none';
+  qOverlay.setAttribute('aria-hidden','true');
+  if(answerTimeout) {clearInterval(answerTimeout); answerTimeout = null;}
+  waitingForAnswer = false;
+  questionTimerDisplay.textContent = '000';
+}
+
+async function selectAnswer(player, pickObj, chosenIdx){
+  const correct = pickObj.q.answerIndex;
+  // Do not show correct answer to the player; only indicate correct/incorrect
+  if(chosenIdx === correct){
+    log(`${player.name} answered correctly.`);
+    // allow to continue
+    closeQuestionOverlay();
+    if(qOverlay.resolve) qOverlay.resolve({correct:true});
+    return;
+  } else {
+    log(`${player.name} answered incorrectly.`);
+    // On incorrect: question is consumed and will not be used until file exhausted
+    closeQuestionOverlay();
+    if(qOverlay.resolve) qOverlay.resolve({correct:false});
+    return;
+  }
+}
+
+function handleAnswerTimeout(player, pickObj){
+  log(`${player.name} ran out of time.`);
+  closeQuestionOverlay();
+  if(qOverlay.resolve) qOverlay.resolve({correct:false, timeout:true});
+}
+
+/* ------------- Cerebro triple challenge ------------- */
+async function handleCerebro(player){
+  // triple questions: Macrófago, Linfocito, Bazo and Jeringuilla? The user wrote: "three questions ... of each thematic (Macrófago, Linfocito, Bazo and Jeringuilla)" — interpret as four questions (one of each) in 240s.
+  const themes = ['Macrófago','Linfocito','Bazo','Jeringuilla'];
+  log(`${player.name} triggered Cerebro: must answer 4 questions (one per theme) in 240s.`);
+  let overallCorrect = true;
+  // Start an overall 240s timer
+  let overallTime = 240;
+  questionTimerDisplay.textContent = pad(overallTime);
+  const overallInterval = setInterval(()=>{
+    overallTime--;
+    questionTimerDisplay.textContent = pad(overallTime);
+    if(overallTime<=0){
+      clearInterval(overallInterval);
+    }
+  },1000);
+
+  for(const theme of themes){
+    // pick question; if none available, count as fail
+    await loadQuestionsFor(theme, levelFromCell(player.pos));
+    const pick = pickRandomUnusedQuestion(theme, levelFromCell(player.pos));
+    if(!pick){
+      log(`No questions available for ${theme} at this level; treated as failure.`);
+      overallCorrect = false;
+      break;
+    }
+    // show question overlay but with 240s remaining limiting total (we'll show 240/remaining)
+    // For simplicity, present each question and give the remainder of overallTime as the timeLimit.
+    waitingForAnswer = true;
+    qCardImg.src = `Tarjetas/Nivel${levelFromCell(player.pos)}_2.png`;
+    qText.textContent = pick.q.q;
+    answersEl.innerHTML = '';
+    pick.q.options.forEach((opt, idx)=>{
+      const a = document.createElement('div');
+      a.className='answer';
+      a.textContent = opt;
+      a.onclick = ()=>{
+        // check correctness immediately
+        const correct = pick.q.answerIndex;
+        if(idx === correct){
+          log(`${player.name} answered ${theme} correctly.`);
+          closeQuestionOverlay();
+          // continue to next theme
+        } else {
+          log(`${player.name} answered ${theme} incorrectly.`);
+          overallCorrect = false;
+          closeQuestionOverlay();
+        }
+      };
+      answersEl.appendChild(a);
+    });
+    qOverlay.style.display='flex';
+    qOverlay.setAttribute('aria-hidden','false');
+
+    // Wait until either player answers (overlay closed) or overallTime expires
+    await new Promise(resolve=>{
+      const poll = setInterval(()=>{
+        if(qOverlay.style.display === 'none' || overallTime <= 0){
+          clearInterval(poll);
+          resolve();
+        }
+      },200);
+    });
+
+    if(overallTime <= 0){
+      overallCorrect = false;
+      break;
+    }
+    if(!overallCorrect) break;
+  }
+  clearInterval(overallInterval);
+  questionTimerDisplay.textContent = '000';
+  if(overallCorrect){
+    // advance to start of next level
+    const startNext = startCellOfNextLevel(player.pos);
+    log(`${player.name} passed Cerebro: moving to start of next level ${startNext}.`);
+    // animate steps to that start
+    if(startNext > player.pos){
+      await animateMove(player, startNext - player.pos);
+    } else {
+      log('Already at or beyond next level start.');
+    }
+    return {continueTurn: true};
+  } else {
+    // penalty: back to first cell of that level
+    const firstOfLevel = firstCellOfLevel(levelFromCell(player.pos));
+    player.pos = firstOfLevel;
+    placeToken(player, player.pos);
+    updatePlayerListPos(player);
+    log(`${player.name} failed Cerebro: moved back to cell ${firstOfLevel}.`);
+    return {continueTurn: false};
+  }
+}
+function startCellOfNextLevel(cell){
+  const lv = levelFromCell(cell);
+  if(lv===1) return 58;
+  if(lv===2) return 99;
+  if(lv===3) return 124;
+  if(lv===4) return 140;
+  return cell;
+}
+function firstCellOfLevel(lv){
+  if(lv===1) return 1;
+  if(lv===2) return 58;
+  if(lv===3) return 99;
+  if(lv===4) return 124;
+  return 1;
+}
+
+/* ------------- Turn flow ------------- */
+async function onRollClicked(){
+  if(!gameStarted) return;
+  if(waitingForAnswer) { log('Answer pending.'); return; }
+  const player = players[currentPlayerIndex];
+  if(!orderDetermined){
+    // initial ordering roll
+    rollBtn.disabled = true;
+    const face = await rollDiceAnimation();
+    player.orderRoll = face;
+    log(`${player.name} rolled ${face} for initial order.`);
+    // move to next player
+    currentPlayerIndex++;
+    if(currentPlayerIndex >= players.length){
+      // determine order
+      players.sort((a,b)=> b.orderRoll - a.orderRoll);
+      log('Initial order determined: ' + players.map(p=>p.name+'('+p.orderRoll+')').join(', '));
+      orderDetermined = true;
+      currentPlayerIndex = 0;
+      updateActivePlayerDisplay();
+      renderPlayerList();
+      rollBtn.disabled = false;
+    } else {
+      updateActivePlayerDisplay();
+      rollBtn.disabled = false;
+    }
+    return;
+  }
+
+  const active = players[currentPlayerIndex];
+  // check skip due to Virus effect
+  if(active.skipNext){
+    log(`${active.name} must skip this turn (penalty).`);
+    active.skipNext = false;
+    advanceTurn();
+    return;
+  }
+
+  // Roll for movement
+  rollBtn.disabled = true;
+  const face = await rollDiceAnimation();
+  log(`${active.name} rolled ${face}.`);
+  // animate movement
+  await animateMove(active, face);
+  // After movement, handle landing
+  const res = await handleLanding(active, active.pos);
+  // If player reached cell 140, game win
+  if(active.pos === 140){
+    log(`${active.name} reached goal (cell 140) and wins the game!`);
+    alert(`${active.name} wins!`);
+    rollBtn.disabled = true;
+    nextTurnBtn.disabled = true;
+    return;
+  }
+  if(res && res.continueTurn){
+    // allow player to roll again or continue
+    // For simplicity of UI, we let them press Next turn to end turn manually, or they can roll again:
+    rollBtn.disabled = false;
+    nextTurnBtn.disabled = false;
+    // If desired, you can force auto-continue as "player continues while they answer successfully"
+  } else {
+    // end turn automatically
+    advanceTurn();
+  }
+}
+
+function advanceTurn(){
+  // advance to next player
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  updateActivePlayerDisplay();
+  rollBtn.disabled = false;
+  nextTurnBtn.disabled = true;
+  log(`It's now ${players[currentPlayerIndex].name}'s turn.`);
+}
+
+function updateActivePlayerDisplay(){
+  const p = players[currentPlayerIndex];
+  if(!p){
+    activeNameEl.textContent = '—';
+    activeColorEl.style.background = '#fff';
+    activePosEl.textContent = 'Pos: —';
+    return;
+  }
+  activeNameEl.textContent = p.name;
+  activeColorEl.style.background = p.color;
+  activePosEl.textContent = 'Pos: ' + p.pos;
+}
+
+/* ------------- Question results promise resolution handling ------------- */
+qOverlay.addEventListener('click', (ev)=>{
+  if(ev.target === qOverlay){
+    // clicking outside will not close
+  }
+});
+
+qSkipBtn.addEventListener('click', ()=>{
+  if(qOverlay.resolve){
+    qOverlay.resolve({correct:false, skipped:true});
+  }
+  closeQuestionOverlay();
+});
+
+qOverlay.addEventListener('close', ()=>{});
+
+// When a question overlay resolves, continue the turn logic:
+async function handleQuestionResolution(result, questionContext){
+  // result: {correct: true/false, timeout: boolean?}
+  // questionContext present in qOverlay.currentQuestion
+  const player = questionContext.player;
+  if(result.correct){
+    log(`${player.name} answered correctly and may continue.`);
+    // allow continue: nothing to do
+    return {continueTurn:true};
+  } else {
+    log(`${player.name} failed the question.`);
+    // On failure: don't show correct answer, mark this question used (already), and end player's turn
+    return {continueTurn:false};
+  }
+}
+
+// We must hook qOverlay.resolve calls to call handleQuestionResolution
+// The resolution is managed where we called presentQuestionFor: we returned a promise that will be resolved by selectAnswer or timeout.
+// We intercept and process after resolution by awaiting the promise where it was called (already done in presentQuestionFor).
+// But we need global handling when qOverlay.resolve invoked directly (e.g., qSkipBtn). We already set qOverlay.resolve inside presentQuestionFor; the code path handles result immediately after await.
+
+
+// Wire up roll and next turn buttons
+rollBtn.addEventListener('click', onRollClicked);
+nextTurnBtn.addEventListener('click', advanceTurn);
+restartBtn.addEventListener('click', ()=>{
+  location.reload();
+});
+
+/* ------------- Hook into the question promise flow in presentQuestionFor ------------- */
+/* We have already set qOverlay.resolve inside presentQuestionFor and awaited resolution there in callers.
+   To centralize result handling, we will monkey-patch presentQuestionFor resolution handling by wrapping the creation call
+   so after presentQuestionFor's returned promise resolves we process result and continue the game flow.
+   Because presentQuestionFor is called from handleLanding and other places where code expects to receive the outcome,
+   those call sites already await result and will act accordingly.
+*/
+
+/* ------------- Initialization ------------- */
+
+async function boot(){
+  await loadPositions();
+  createPlayerSetupRows();
+  setupModal.style.display = 'flex';
+  // Add click handler to start game
+  startGameBtn.addEventListener('click', ()=> startGameFromSetup());
+  // Resize handling to reposition tokens on layout change
+  window.addEventListener('resize', ()=> {
+    if(players) players.forEach(p=> placeToken(p, p.pos));
+  });
+  // Intercept presentQuestionFor's returned promise results where used:
+  // Nothing to add here; presentQuestionFor returns a promise resolved by selectAnswer or timeout, and callers handle it.
+
+  // Also, set up a global listener for when the overlay's question resolves to resume game flow if needed.
+  // Because the presentQuestionFor function returns a promise, the caller (handleLanding) awaits it and uses its result.
+
+  // Final note to user: if fetch() fails because files aren't served, run a local server.
+}
+
+boot();
+
+/* ------------- Additional helper: when presentQuestionFor was awaited, handleLanding continues based on its return value.
+   Example: In handleLanding we do:
+     return await presentQuestionFor(player, foundMapping(found), level);
+   So outcome is used. For special flows (Cerebro) we implemented dedicated handler.
+*/
+
+/* ------------- END of script ------------- */
+
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+La citometría de flujo puede diferenciar células según:
+a) Tamaño y expresión de marcadores (correcta)
+b) Secuencia de ADN
+c) Presencia de antígenos en gel
+d) Fluorescencia de enzimas
+
+¿Qué técnica combina anticuerpos y enzimas para detección de proteínas en placas?
+a) ELISA (correcta)
+b) Western blot
+c) PCR
+d) Hibridación in situ
+
+La inmunohistoquímica se utiliza para:
+a) Analizar tejidos y detectar antígenos con anticuerpos (correcta)
+b) Separar células en suspensión
+c) Amplificar fragmentos de ADN
+d) Medir citocinas en suero
+
+¿Qué técnica permite detectar proteínas en células vivas usando fluoróforos?
+a) ELISA
+b) Fluorescencia en células vivas (correcta)
+c) PCR
+d) Western blot
+
+La PCR cuantitativa (qPCR) permite:
+a) Amplificar y cuantificar fragmentos de ADN (correcta)
+b) Detectar proteínas
+c) Contar células
+d) Medir anticuerpos en suero
+
+La inmunoprecipitación acoplada a Western blot permite:
+a) Analizar interacción proteína-proteína (correcta)
+b) Medir citocinas
+c) Detectar antígenos en tejido
+d) Clasificar células
+
+¿Qué técnica permite analizar la expresión génica a nivel de todo el transcriptoma?
+a) RNA-seq (correcta)
+b) Western blot
+c) ELISA
+d) Citometría de flujo
+
+La técnica de ELISPOT sirve para:
+a) Detectar secreción de moléculas por células individuales (correcta)
+b) Medir ADN
+c) Separar células por tamaño
+d) Detectar antígenos en gel
+
+¿Qué herramienta permite editar genes para estudiar su función en células inmunes?
+a) CRISPR-Cas9 (correcta)
+b) Western blot
+c) ELISA
+d) Citometría de flujo
+
+La hibridación in situ fluorescente (FISH) sirve para:
+a) Detectar secuencias de ADN o ARN en células (correcta)
+b) Medir anticuerpos
+c) Analizar proteínas por gel
+d) Contar linfocitos

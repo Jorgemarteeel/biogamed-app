@@ -1,0 +1,59 @@
+¿Qué técnica permite medir niveles de anticuerpos en suero?
+a) ELISA (correcta)
+b) PCR
+c) Microscopía electrónica
+d) Western blot
+
+La citometría de flujo se utiliza para:
+a) Separar células según sus propiedades y marcadores (correcta)
+b) Analizar secuencias de ADN
+c) Medir proteínas en gel
+d) Detectar bacterias por cultivo
+
+¿Qué técnica sirve para identificar proteínas mediante anticuerpos específicos tras separación en gel?
+a) Western blot (correcta)
+b) ELISA
+c) PCR
+d) Hibridación in situ
+
+La inmunofluorescencia se basa en:
+a) Uso de enzimas para medir antígenos
+b) Uso de anticuerpos conjugados con fluoróforos (correcta)
+c) Separación de proteínas por tamaño
+d) Secuenciación de genes
+
+La técnica de PCR permite:
+a) Amplificar fragmentos específicos de ADN (correcta)
+b) Medir la concentración de proteínas
+c) Detectar anticuerpos en suero
+d) Separar células por tamaño
+
+¿Qué técnica permite contar y clasificar células inmunes individuales?
+a) ELISA
+b) Citometría de flujo (correcta)
+c) Western blot
+d) Inmunoprecipitación
+
+La inmunoprecipitación se usa para:
+a) Detectar anticuerpos en sangre
+b) Aislar proteínas específicas mediante anticuerpos (correcta)
+c) Analizar secuencias de ADN
+d) Medir citocinas en suero
+
+¿Qué técnica permite visualizar estructuras celulares con gran detalle?
+a) Microscopía óptica
+b) Microscopía electrónica (correcta)
+c) ELISA
+d) PCR
+
+La prueba de Western blot es especialmente útil para:
+a) Detectar ARN
+b) Detectar proteínas específicas (correcta)
+c) Medir la proliferación celular
+d) Aislar linfocitos
+
+ELISA indirecto se usa para:
+a) Detectar antígenos
+b) Detectar anticuerpos específicos (correcta)
+c) Separar células por fluorescencia
+d) Analizar expresión génica

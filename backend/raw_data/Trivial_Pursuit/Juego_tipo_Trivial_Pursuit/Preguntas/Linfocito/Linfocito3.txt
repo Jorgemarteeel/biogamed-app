@@ -1,0 +1,59 @@
+La hipermutación somática afecta principalmente a:
+a) Linfocitos T
+b) Linfocitos B (correcta)
+c) Células NK
+d) Macrófagos
+
+El receptor TCR reconoce:
+a) Antígeno libre
+b) Antígeno presentado por MHC (correcta)
+c) Citoquinas
+d) IgG
+
+La selección positiva de linfocitos T asegura:
+a) Que reconozcan péptidos propios
+b) Que reconozcan MHC propio (correcta)
+c) Que reconozcan antígenos externos
+d) Que secreten anticuerpos
+
+La selección negativa de linfocitos T evita:
+a) Reconocer patógenos
+b) Reactividad frente a autoantígenos (correcta)
+c) Activación clonal
+d) Producción de citoquinas
+
+La célula T reguladora tiene como función:
+a) Activar B
+b) Suprimir respuestas autoreactivas (correcta)
+c) Fagocitar bacterias
+d) Producir anticuerpos
+
+La presentación cruzada permite a las células dendríticas:
+a) Activar linfocitos T CD8+ con antígeno extracelular (correcta)
+b) Producir anticuerpos
+c) Activar linfocitos B
+d) Fagocitar virus
+
+La inmunidad humoral adaptativa depende de:
+a) Linfocitos T CD8+
+b) Linfocitos B y ayuda de T CD4+ (correcta)
+c) NK
+d) Macrófagos
+
+Los centros germinales de ganglios linfáticos permiten:
+a) Selección y maduración de linfocitos B (correcta)
+b) Migración de neutrófilos
+c) Presentación de antígeno a NK
+d) Activación de complemento
+
+La memoria inmunológica específica se caracteriza por:
+a) Producción rápida de anticuerpos y células T efectores (correcta)
+b) Inflamación inespecífica
+c) Activación de neutrófilos
+d) Destrucción de complementos
+
+La activación de linfocitos T helper Th1 favorece:
+a) Respuesta antiviral e intracelular (correcta)
+b) Producción de IgE
+c) Inmunidad humoral exclusiva
+d) Tolerancia central

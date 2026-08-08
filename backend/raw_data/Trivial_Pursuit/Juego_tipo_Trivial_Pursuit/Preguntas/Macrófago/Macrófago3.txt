@@ -1,0 +1,59 @@
+¿Qué células presentan antígeno de manera eficiente a linfocitos T naive?
+a) Neutrófilos
+b) Células dendríticas (correcta)
+c) Eosinófilos
+d) Basófilos
+
+¿Qué componente del complemento forma el complejo de ataque a membrana?
+a) C1q
+b) C5b-C9 (correcta)
+c) C3a
+d) C4b
+
+La fagocitosis inducida por opsoninas incluye principalmente:
+a) IgM e IgG (correcta)
+b) Interleucina-10
+c) Interferón tipo I
+d) Histamina
+
+¿Qué célula es clave en la respuesta rápida a virus sin MHC-I?
+a) Linfocito B
+b) Célula NK (correcta)
+c) Macrófago
+d) Neutrófilo
+
+¿Qué citocina es típica de activación de inflamación sistémica?
+a) IL-1β (correcta)
+b) IL-10
+c) TGF-β
+d) IL-4
+
+¿Cuál es el papel principal de los eosinófilos en la inmunidad innata?
+a) Fagocitosis bacteriana
+b) Destrucción de parásitos multicelulares (correcta)
+c) Neutralización viral
+d) Producción de anticuerpos
+
+Los receptores NOD-like reconocen:
+a) PAMP intracelulares (correcta)
+b) Antígenos solubles
+c) Complemento activado
+d) MHC-II
+
+¿Qué ocurre durante la activación del inflamasoma?
+a) Producción de IL-1β y IL-18 (correcta)
+b) Neutralización viral directa
+c) Activación de linfocitos B
+d) Degradación de anticuerpos
+
+La opsonización favorece:
+a) Fagocitosis (correcta)
+b) Neutralización viral directa
+c) Liberación de histamina
+d) Activación de células T CD8
+
+¿Cuál de estas células participa en la inmunidad innata y en la regulación de la adaptativa?
+a) Macrófago (correcta)
+b) Linfocito B
+c) Linfocito T
+d) Plasmocito

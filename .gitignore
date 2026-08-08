@@ -17,3 +17,5 @@ venv/
 # SO
 .DS_Store
 Thumbs.db
+
+*.session.sql

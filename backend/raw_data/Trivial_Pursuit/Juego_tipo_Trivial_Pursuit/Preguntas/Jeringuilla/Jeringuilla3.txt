@@ -1,0 +1,59 @@
+¿Qué ventaja tiene la citometría de flujo multicolor?
+a) Analiza múltiples marcadores simultáneamente (correcta)
+b) Mide ADN solamente
+c) Detecta proteínas en gel
+d) Amplifica genes
+
+La técnica de Western blot con fluorescencia permite:
+a) Medir proteínas en tiempo real
+b) Multiplexar detección de proteínas (correcta)
+c) Analizar ADN
+d) Contar linfocitos
+
+¿Qué permite la inmunoprecipitación seguida de espectrometría de masas?
+a) Identificar proteínas y complejos (correcta)
+b) Medir citocinas
+c) Detectar anticuerpos
+d) Analizar tejidos
+
+ELISA de captura sandwich se utiliza para:
+a) Medir proteínas en solución con alta especificidad (correcta)
+b) Amplificar ADN
+c) Separar células
+d) Detectar antígenos en gel
+
+La microscopía confocal permite:
+a) Visualizar muestras en 3D con alta resolución óptica (correcta)
+b) Contar células
+c) Detectar anticuerpos
+d) Medir ARN
+
+¿Qué técnica permite estudiar interacciones proteína-ácido nucleico?
+a) ChIP (Chromatin Immunoprecipitation) (correcta)
+b) ELISA
+c) Western blot
+d) Citometría de flujo
+
+La PCR digital (dPCR) se usa para:
+a) Cuantificación absoluta de fragmentos de ADN (correcta)
+b) Detectar proteínas
+c) Contar células
+d) Analizar tejidos
+
+La citometría de masas (CyTOF) permite:
+a) Analizar >40 parámetros celulares simultáneamente (correcta)
+b) Medir proteínas en gel
+c) Amplificar ADN
+d) Detectar anticuerpos
+
+La inmunofluorescencia indirecta incrementa:
+a) Especificidad
+b) Señal al usar anticuerpo secundario marcado (correcta)
+c) Resolución óptica
+d) Contaje de células
+
+El RNA-seq permite:
+a) Estudiar transcripción de genes de manera global (correcta)
+b) Detectar proteínas
+c) Separar linfocitos
+d) Medir antígenos en gel

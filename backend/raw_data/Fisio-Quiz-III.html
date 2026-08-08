@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fisio-Quiz-III</title>
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:#0f1a33;
+  --text:#e9eefc;
+  --muted:#a8b3d6;
+  --blue:#add8e6;
+  --green:#9dffb0;
+  --red:#ff8b8b;
+  --highlight:#ffd36a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background: radial-gradient(1200px 600px at 50% 0%, #182b57 0%, var(--bg) 55%, #070b14 100%);
+  color:var(--text);
+  min-height:100vh;
+}
+header{
+  padding:16px 18px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+header h1{
+  margin:0;
+  font-size:30px;
+  letter-spacing:.3px;
+  font-weight:650;
+}
+.controls{
+  position:absolute;
+  right:18px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+button{
+  border:0;
+  background:#ffd36a;
+  color:black;
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:650;
+  box-shadow:0 10px 25px rgba(43,88,255,.25);
+}
+button:disabled{
+  background: rgba(255,255,255,.09);
+  box-shadow:none;
+  color:var(--text);
+  opacity:.5;
+  cursor:not-allowed;
+}
+.wrap{
+  padding:16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+@media (max-width:980px){
+  .wrap{grid-template-columns:1fr}
+}
+.board{
+  background: rgba(15,26,51,.65);
+  border:5px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  padding:14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  position:relative;
+  overflow:hidden;
+}
+.board.active{
+  outline: 5px solid var(--highlight);
+  box-shadow: 
+    0 0 0 4px rgba(255,211,106,.35),
+    0 18px 55px rgba(0,0,0,.45);
+}
+.topbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.playerName{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width: 52%;
+}
+.playerName label{
+  font-size:12px;
+  color:var(--muted);
+}
+.nameInput{
+  width:100%;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color:var(--text);
+  outline:none;
+  font-size:15px;
+  font-weight:750;
+}
+.meta{
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width: 40%;
+}
+.meta .time{
+  font-size:24px;
+  font-weight:850;
+  letter-spacing:.4px;
+}
+.meta .score{
+  font-size:12px;
+  color:var(--muted);
+}
+.map{
+  position:relative;
+  width:500px;
+  height:431px;
+  margin:6px auto 12px;
+
+  background-image: url("cerebro.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.node{
+  position:absolute;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background: var(--blue);
+  border:2px solid #000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  color:#000;
+  user-select:none;
+  transition: transform .1s;
+}
+.node.correct{ background: var(--green); border-color: var(--green); }
+.node.wrong{ background: var(--red); border-color: var(--red); }
+.node.passed{ opacity:.8; }
+.node.active{
+  outline:4px solid var(--highlight);
+  transform: scale(1.1);
+}
+.qa{
+  margin-top:10px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  padding:12px;
+}
+.qa .question{
+  font-size:16px;
+  margin-bottom:8px;
+}
+.qa .row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+input[type="text"].answer{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color:var(--text);
+  outline:none;
+  font-size:14px;
+}
+input[type="text"].answer::placeholder{color:rgba(233,238,252,.55);}
+.footerMsg {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:0 16px;
+  color: var(--highlight);
+  font-size: 24px;
+  font-weight:700;
+  min-height: 60px;
+  text-align:center;
+}
+.time.activeTimer { color: var(--highlight); font-weight:850; }
+
+.app-footer{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  color: rgba(233,238,252,0.6);
+  background: rgba(11,18,32,0.85);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  z-index: 1000;
+}
+
+
+</style>
+</head>
+
+<footer class="app-footer">
+  © Juan Vladimir de la Rosa Medina
+</footer>
+
+<body>
+
+<header>
+  <h1>Fisio-Quiz-III</h1>
+  <div class="controls">
+    <button id="btnStart">Iniciar juego</button>
+    <button id="btnReset" disabled>Reiniciar</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="board" id="board0">
+    <div class="topbar">
+      <div class="playerName">
+        <label>Nombre del Jugador 1</label>
+        <input class="nameInput" id="name0" type="text" value="Jugador 1" />
+      </div>
+      <div class="meta">
+        <div class="time" id="time0">10:00</div>
+        <div class="score" id="score0">Aciertos: 0 · Fallos: 0</div>
+      </div>
+    </div>
+    <div class="map" id="map0"></div>
+    <div class="qa" id="qa0">
+      <p class="question" id="q0">Pulsa “Iniciar” para comenzar.</p>
+      <div class="row">
+        <input id="a0" class="answer" type="text" placeholder="Escribe la respuesta o 'fisiopalabra'" disabled />
+        <button id="send0" disabled>Responder</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="board" id="board1">
+    <div class="topbar">
+      <div class="playerName">
+        <label>Nombre del Jugador 2</label>
+        <input class="nameInput" id="name1" type="text" value="Jugador 2" />
+      </div>
+      <div class="meta">
+        <div class="time" id="time1">10:00</div>
+        <div class="score" id="score1">Aciertos: 0 · Fallos: 0</div>
+      </div>
+    </div>
+    <div class="map" id="map1"></div>
+    <div class="qa" id="qa1">
+      <p class="question" id="q1">Pulsa “Iniciar” para comenzar.</p>
+      <div class="row">
+        <input id="a1" class="answer" type="text" placeholder="Escribe respuesta o 'fisiopalabra'" disabled />
+        <button id="send1" disabled>Responder</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="footerMsg" id="statusMsg"></div>
+
+<script>
+(() => {
+
+  const START_TIME = 10 * 60 * 1000;
+
+  const POSITIONS = [
+  [196,767], [144,544], [254,343], [452,205], [674,135], [901,133], [1130,150], [1369,244], [1551,382], [1672,596],
+  [1724,802], [1614,994], [1473,767], [1389,558], [1213,428], [987,369], [755,357], [533,427], [369,593], [428,854],
+  [592,681], [812,593], [1049,607], [1241,745], [1361,973], [1502,1209], [1272,1244], [1141,1043], [1015,839],
+  [781,845], [597,1001], [841,1059], [1032,1238], [1165,1469]
+  ].map(([x,y]) => ({ x:x*500/1883, y:y*500/1883 }));
+
+const QUESTIONS = [
+  { q:"Empieza por la letra N: Célula principal del sistema nervioso encargada de la transmisión de información.", a:"neurona" },
+  { q:"Empieza por la letra G: Células de soporte del sistema nervioso.", a:"glía" },
+  { q:"Empieza por la letra D: Prolongación neuronal especializada en recibir señales.", a:"dendrita" },
+  { q:"Empieza por la letra A: Prolongación neuronal que conduce el potencial de acción.", a:"axón" },
+  { q:"Empieza por la letra M: Sustancia lipídica que recubre los axones y aumenta la velocidad de conducción.", a:"mielina" },
+  { q:"Empieza por la letra N: Interrupción periódica de la vaina de mielina.", a:"nodo" },
+  { q:"Empieza por la letra S: Tipo de conducción que ocurre en axones mielinizados.", a:"saltatoria" },
+  { q:"Empieza por la letra A: Tipo de potencial de membrana de cambio rápido que se propaga sin decremento.", a:"acción" },
+  { q:"Empieza por la letra R: Diferencia de potencial eléctrico a ambos lados de la membrana en reposo.", a:"reposo" },
+  { q:"Empieza por la letra D: Proceso por el cual la membrana se vuelve menos negativa.", a:"despolarización" },
+  { q:"Empieza por la letra R: Proceso por el cual la membrana retorna al potencial basal.", a:"repolarización" },
+  { q:"Empieza por la letra H: Aumento de la negatividad del potencial de membrana.", a:"hiperpolarización" },
+  { q:"Empieza por la letra C: Proteínas de membrana que permiten el paso selectivo de iones.", a:"canales" },
+  { q:"Empieza por la letra S: Especialización funcional de contacto entre neuronas.", a:"sinapsis" },
+  { q:"Empieza por la letra N: Sustancia química liberada en la sinapsis.", a:"neurotransmisor" },
+  { q:"Empieza por la letra A: Neurotransmisor principal de la placa motora.", a:"acetilcolina" },
+  { q:"Empieza por la letra G: Neurotransmisor inhibidor principal del SNC.", a:"GABA" },
+  { q:"Empieza por la letra G: Neurotransmisor excitador principal del SNC.", a:"glutamato" },
+  { q:"Empieza por la letra D: Monoamina implicada en control motor y recompensa.", a:"dopamina" },
+  { q:"Empieza por la letra S: Monoamina implicada en estado de ánimo y sueño.", a:"serotonina" },
+  { q:"Empieza por la letra N: Monoamina implicada en atención y alerta.", a:"noradrenalina" },
+  { q:"Empieza por la letra P: Cambio de potencial graduado en dendritas y soma.", a:"postsináptico" },
+  { q:"Empieza por la letra E: Potencial postsináptico que acerca al umbral.", a:"excitatorio" },
+  { q:"Empieza por la letra I: Potencial postsináptico que aleja del umbral.", a:"inhibitorio" },
+  { q:"Empieza por la letra U: Valor de potencial a partir del cual se dispara el potencial de acción.", a:"umbral" },
+  { q:"Empieza por la letra T: Propiedad del potencial de acción que implica amplitud constante.", a:"todo/nada" },
+  { q:"Empieza por la letra R: Periodo en el que no puede generarse otro potencial de acción.", a:"refractario" },
+  { q:"Empieza por la letra A: Enzima que degrada la acetilcolina.", a:"acetilcolinesterasa" },
+  { q:"Empieza por la letra C: Ión cuya Entrada masiva desencadena la exocitosis vesicular.", a:"calcio" },
+  { q:"Empieza por la letra V: Estructura que almacena neurotransmisores.", a:"vesícula" },
+  { q:"Empieza por la letra E: Región postsináptica de la placa motora.", a:"endplate" },
+  { q:"Empieza por la letra P: Unión neuromuscular.", a:"placa-motora" },
+  { q:"Empieza por la letra M: Neurona que inerva músculo esquelético.", a:"motoneurona" },
+  { q:"Empieza por la letra S: División del SNP que controla músculo esquelético.", a:"somático" },
+  { q:"Empieza por la letra A: División del SNP que regula funciones viscerales.", a:"autónomo" },
+  { q:"Empieza por la letra S: Rama del SNA asociada a respuesta de alerta.", a:"simpático" },
+  { q:"Empieza por la letra P: Rama del SNA asociada a conservación de energía.", a:"parasimpático" },
+  { q:"Empieza por la letra P: Ganglio autónomo cercano al órgano diana.", a:"parasimpático" },
+  { q:"Empieza por la letra T: Sustancia que bloquea canales de sodio.", a:"tetrodotoxina" },
+  { q:"Empieza por la letra S: Ión responsable de la fase ascendente del potencial de acción.", a:"sodio" },
+  { q:"Empieza por la letra P: Ión responsable de la repolarización.", a:"potasio" },
+  { q:"Empieza por la letra A: Bomba que mantiene los gradientes iónicos.", a:"ATPasa" },
+  { q:"Empieza por la letra C: Encéfalo posterior implicado en coordinación motora.", a:"cerebelo" },
+  { q:"Empieza por la letra T: Región del diencéfalo que actúa como estación de relevo.", a:"tálamo" },
+  { q:"Empieza por la letra H: Región implicada en memoria y aprendizaje.", a:"hipocampo" },
+  { q:"Empieza por la letra A: Estructura implicada en respuestas emocionales.", a:"amígdala" },
+  { q:"Empieza por la letra C: Capa externa del cerebro formada por sustancia gris.", a:"corteza" },
+  { q:"Empieza por la letra F: División cortical asociada a funciones motoras.", a:"frontal" },
+  { q:"Empieza por la letra P: División cortical asociada a sensibilidad somática.", a:"parietal" },
+  { q:"Empieza por la letra T: División cortical asociada a audición.", a:"temporal" },
+  { q:"Empieza por la letra O: División cortical asociada a visión.", a:"occipital" },
+  { q:"Empieza por la letra E: Vía sensorial que transmite dolor y temperatura.", a:"espinotalámica" },
+  { q:"Empieza por la letra C: Vía sensorial para tacto fino y propiocepción.", a:"columnas dorsales" },
+  { q:"Empieza por la letra R: Unidad funcional de la médula espinal.", a:"reflejo" },
+  { q:"Empieza por la letra A: Respuesta motora automática e involuntaria.", a:"acto-reflejo" },
+  { q:"Empieza por la letra R: Reflejo miotático.", a:"rotuliano" },
+  { q:"Empieza por la letra M: Sustancia blanca central del SNC.", a:"médula" },
+  { q:"Empieza por la letra E: Potencial local que decrece con la distancia.", a:"electrotónico" },
+  { q:"Empieza por la letra R: Frecuencia de descarga neuronal.", a:"rate" },
+  { q:"Empieza por la letra P: Plasticidad que fortalece sinapsis activas.", a:"potenciación" },
+  { q:"Empieza por la letra L: Plasticidad sináptica a largo plazo.", a:"LTP" },
+  { q:"Empieza por la letra L: Plasticidad sináptica depresiva.", a:"LTD" },
+  { q:"Empieza por la letra N: Receptor ionotrópico de glutamato permeable a Ca2+.", a:"NMDA" },
+  { q:"Empieza por la letra A: Receptor ionotrópico de glutamato rápido.", a:"AMPA" },
+  { q:"Empieza por la letra M: Receptor metabotrópico acoplado a proteína G.", a:"muscarínico" },
+  { q:"Empieza por la letra N: Receptor ionotrópico colinérgico.", a:"nicotínico" },
+  { q:"Empieza por la letra O: Célula glial que mieliniza en el SNC.", a:"oligodendrocito" },
+  { q:"Empieza por la letra S: Célula glial que mieliniza en el SNP.", a:"schwann" },
+  { q:"Empieza por la letra A: Célula glial implicada en soporte metabólico.", a:"astrocito" },
+  { q:"Empieza por la letra M: Célula inmunitaria residente del SNC.", a:"microglía" },
+  { q:"Empieza por la letra C: Sustancia gris del SNC formada principalmente por somas neuronales.", a:"corteza" },
+  { q:"Empieza por la letra B: Sustancia del SNC formada mayoritariamente por axones mielinizados.", a:"blanca" },
+  { q:"Empieza por la letra P: Región del tronco encefálico implicada en control respiratorio.", a:"protuberancia" },
+  { q:"Empieza por la letra B: Parte del tronco encefálico que conecta con la médula espinal.", a:"bulbo" },
+  { q:"Empieza por la letra R: Formación implicada en el estado de alerta.", a:"reticular" },
+  { q:"Empieza por la letra S: Núcleo hipotalámico implicado en ritmos circadianos.", a:"supraquiasmático" },
+  { q:"Empieza por la letra H: Región cerebral que regula la homeostasis.", a:"hipotálamo" },
+  { q:"Empieza por la letra V: Nervio craneal implicado en la audición y el equilibrio.", a:"vestibulococlear" },
+  { q:"Empieza por la letra O: Nervio craneal responsable del olfato.", a:"olfatorio" },
+  { q:"Empieza por la letra T: Nervio craneal con función sensitiva y motora facial.", a:"trigémino" },
+  { q:"Empieza por la letra F: Nervio craneal que controla la musculatura facial.", a:"facial" },
+  { q:"Empieza por la letra V: Nervio craneal con funciones parasimpáticas viscerales.", a:"vago" },
+  { q:"Empieza por la letra E: Potencial sináptico generado por la apertura de canales de sodio.", a:"excitatorio" },
+  { q:"Empieza por la letra S: Convergencia de múltiples sinapsis sobre una neurona.", a:"sumación" },
+  { q:"Empieza por la letra T: Tipo de sumación que depende del tiempo.", a:"temporal" },
+  { q:"Empieza por la letra E: Tipo de sumación que depende del espacio.", a:"espacial" },
+  { q:"Empieza por la letra M: Área cerebral primaria responsable del movimiento voluntario.", a:"motora" },
+  { q:"Empieza por la letra S: Área cortical primaria responsable de la sensibilidad corporal.", a:"somatosensorial" },
+  { q:"Empieza por la letra V: Área cortical primaria responsable de la visión.", a:"visual" },
+  { q:"Empieza por la letra A: Área cortical primaria responsable de la audición.", a:"auditiva" },
+  { q:"Empieza por la letra P: Vía motora directa desde corteza a motoneuronas.", a:"piramidal" },
+  { q:"Empieza por la letra E: Conjunto de vías motoras indirectas.", a:"extrapiramidal" },
+  { q:"Empieza por la letra B: Núcleos implicados en el control del movimiento.", a:"basales" },
+  { q:"Empieza por la letra G: Neurotransmisor inhibidor en médula espinal.", a:"glicina" },
+  { q:"Empieza por la letra G: Receptor ionotrópico inhibidor acoplado a cloro.", a:"GABAa" },
+  { q:"Empieza por la letra G: Receptor metabotrópico inhibidor.", a:"GABAb" },
+  { q:"Empieza por la letra U: Concentración mínima de estímulo para activar un receptor.", a:"umbral" },
+  { q:"Empieza por la letra F: Adaptación rápida de receptores sensoriales.", a:"fásica" },
+  { q:"Empieza por la letra T: Adaptación lenta de receptores sensoriales.", a:"tónica" },
+  { q:"Empieza por la letra M: Receptor sensorial de adaptación lenta.", a:"Merkel" },
+  { q:"Empieza por la letra P: Receptor sensorial de adaptación rápida.", a:"Pacini" },
+  { q:"Empieza por la letra N: Receptor sensorial del dolor.", a:"nociceptor" },
+  { q:"Empieza por la letra T: Receptor sensorial de temperatura.", a:"termorreceptor" },
+  { q:"Empieza por la letra N: Percepción consciente del dolor.", a:"nocicepción" },
+  { q:"Empieza por la letra I: Sustancia liberada en sinapsis eléctricas.", a:"iones" },
+  { q:"Empieza por la letra E: Tipo de sinapsis basada en uniones gap.", a:"eléctrica" },
+  { q:"Empieza por la letra S: Región funcional de la neurona donde se inicia el PA.", a:"segmento inicial" }
+];
+
+  const norm = s => (s ?? "")
+    .toString().trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+
+  const players = [
+    { name:"Jugador 1", idx:0, qa:[], states:Array(34).fill("pending"), time:START_TIME, correct:0, wrong:0, done:false },
+    { name:"Jugador 2", idx:0, qa:[], states:Array(34).fill("pending"), time:START_TIME, correct:0, wrong:0, done:false }
+  ];
+
+  let active = 0;
+  let started = false;
+  let ticker = null;
+
+  const els = {
+    map:[map0,map1],
+    q:[q0,q1],
+    a:[a0,a1],
+    send:[send0,send1],
+    time:[time0,time1],
+    score:[score0,score1],
+    board:[board0,board1],
+    name:[name0,name1],
+    status: statusMsg,
+    btnReset: btnReset
+  };
+
+  const nodes = [[],[]];
+
+  els.status.textContent = "✏️ Introduce los nombres de los jugadores y pulsa 👉 en el botón 'Iniciar juego'";
+
+  /* ===== TABLERO (SIN CAMBIOS) ===== */
+
+  function buildMaps(){
+    for(let pi=0; pi<2; pi++){
+      els.map[pi].innerHTML="";
+      nodes[pi]=[];
+      POSITIONS.forEach((pos,i)=>{
+        const d=document.createElement("div");
+        d.className="node pending";
+        d.textContent=i+1;
+        d.style.left=(pos.x-25)+"px";
+        d.style.top =(pos.y-25)+"px";
+        els.map[pi].appendChild(d);
+        nodes[pi].push(d);
+      });
+    }
+  }
+
+  const formatTime = ms => {
+    const t=Math.max(0,Math.floor(ms/1000));
+    return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");
+  };
+
+  const isGameOver = () => players.every(p=>p.done);
+
+  function nextPending(pi, fromIdx, includeCurrent=false){
+    const p=players[pi];
+    const start=includeCurrent ? fromIdx : (fromIdx+1)%p.qa.length;
+    for(let s=0;s<p.qa.length;s++){
+      const i=(start+s)%p.qa.length;
+      if(p.states[i]==="pending"||p.states[i]==="passed") return i;
+    }
+    return null;
+  }
+
+  /* ===== ASIGNACIÓN ALEATORIA DE PREGUNTAS ===== */
+  function assignQuestions(){
+    // Mezclamos todas las preguntas
+    const shuffled = QUESTIONS.sort(() => Math.random() - 0.5);
+    const half = Math.floor(shuffled.length / 2);
+
+    // Cada jugador recibe la mitad del mazo sin repetir preguntas
+    players[0].qa = shuffled.slice(0, half);
+    players[1].qa = shuffled.slice(half, half*2);
+
+    // Si el número de preguntas es mayor que 34, se recortan a 34
+    players.forEach(p => { p.qa = p.qa.slice(0,34); });
+  }
+
+  /* ===== ACTUALIZACIÓN DE INTERFAZ ===== */
+  function updateUI(){
+    players.forEach((p,pi)=>{
+      els.board[pi].classList.toggle("active", pi===active && started && !p.done);
+      els.time[pi].textContent=formatTime(p.time);
+      els.score[pi].textContent=`Aciertos: ${p.correct} · Fallos: ${p.wrong}`;
+
+      nodes[pi].forEach((n,i)=>{
+        n.className="node "+p.states[i]+((pi===active&&i===p.idx&&started&&!p.done)?" active":"");
+      });
+
+      const canPlay=started&&pi===active&&!p.done&&!isGameOver();
+      els.a[pi].disabled=!canPlay;
+      els.send[pi].disabled=!canPlay;
+    });
+  }
+
+  function refreshQuestion(pi){
+    const p=players[pi];
+    els.q[pi].style.color="var(--highlight)";
+
+    if(!started){
+      els.q[pi].textContent="Pulsa Iniciar para comenzar";
+      return;
+    }
+
+    if(p.done){
+      els.q[pi].textContent="Inmuno-Quiz completado";
+      return;
+    }
+
+    if(pi!==active){
+      els.q[pi].textContent="Espera tu turno…";
+      return;
+    }
+
+    p.idx=nextPending(pi,p.idx,true);
+    els.q[pi].textContent=p.qa[p.idx].q;
+    els.a[pi].focus();
+  }
+
+  function startTicker(){
+    if(ticker) clearInterval(ticker);
+    ticker=setInterval(()=>{
+      if(!started||isGameOver()) return;
+      const p=players[active];
+      if(!p.done){
+        p.time-=100;
+        if(p.time<=0){
+          p.time=0;
+          p.done=true;
+          els.status.textContent=`⏰ ${p.name} ha agotado su tiempo`;
+          switchTurn();
+        }
+        updateUI();
+        endIfNeeded();
+      }
+    },100);
+  }
+
+  function switchTurn(){
+    const prev=active;
+    active=active===0?1:0;
+    if(players[active].done&&!players[prev].done) active=prev;
+    updateUI();
+    refreshQuestion(active);
+  }
+
+  function checkAnswer(pi, raw){
+    if(!started||pi!==active||players[pi].done) return;
+
+    const p=players[pi];
+    const idx=p.idx;
+    const got=norm(raw);
+    const expected=norm(p.qa[idx].a);
+
+    if(!got){
+      els.status.textContent="Escribe una respuesta o 'fisiopalabra'";
+      return;
+    }
+
+    if(got==="fisiopalabra"){
+      if(p.states[idx]==="pending") p.states[idx]="passed";
+      p.idx=nextPending(pi,idx);
+
+      const other = pi === 0 ? 1 : 0;
+      const siguienteJugador = players[other].name;
+
+      els.status.textContent =`💉 ${p.name} se protege de la pregunta de la casilla ${idx + 1} y pierde el turno. Turno para ${siguienteJugador}.`;
+      els.a[pi].value="";
+      switchTurn();
+      return;
+    }
+
+    if(got===expected){
+      p.states[idx]="correct";
+      p.correct++;
+      els.a[pi].value="";
+      els.status.textContent =`✅ ${p.name} acierta la pregunta de la casilla ${idx + 1}. Sigue jugando.`;
+      p.idx=nextPending(pi,idx);
+      refreshQuestion(pi);
+      updateUI();
+      endIfNeeded();
+      return;
+    }
+
+    else{
+      p.states[idx] = "wrong";
+      p.wrong++;
+
+      const other = pi === 0 ? 1 : 0;
+      const siguienteJugador = players[other].name;
+
+      els.status.textContent =
+        `❌ ${p.name} falla la pregunta de la casilla ${idx + 1}. La respuesta correcta era: "${p.qa[idx].a}". Turno para ${siguienteJugador}.`;
+
+      els.a[pi].value = "";
+      switchTurn();
+    }
+  }
+
+  function endIfNeeded(){
+    players.forEach((p,pi)=>{
+      if(!p.done && p.states.every(s => s === "correct" || s === "wrong")){
+        p.done = true;
+        els.q[pi].textContent = "Inmuno-Quiz completado";
+        els.q[pi].style.color = "var(--highlight)";
+        els.a[pi].disabled = true;
+        els.send[pi].disabled = true;
+      }
+    });
+
+    if(isGameOver()){
+      clearInterval(ticker);
+
+      let msg = `Inmuno-Quiz finalizado. ${players[0].name}: ${players[0].correct} · ${players[1].name}: ${players[1].correct}. `;
+      if(players[0].correct > players[1].correct) msg += `🏆 Gana ${players[0].name}`;
+      else if(players[1].correct > players[0].correct) msg += `Gana ${players[1].name}`;
+      else msg += `Empate`;
+
+      els.status.textContent = msg;
+    }
+  }
+
+  btnStart.onclick=()=>{
+    started=true;
+    players.forEach((p,pi)=>{
+      p.name=els.name[pi].value.trim()||`Jugador ${pi+1}`;
+      p.idx=0;
+      p.states.fill("pending");
+      p.correct=0;
+      p.wrong=0;
+      p.time=START_TIME;
+      p.done=false;
+      els.name[pi].disabled=true;
+    });
+
+    assignQuestions();
+    buildMaps();
+    active=Math.random()<0.5?0:1;
+    els.status.textContent=`🎲 Sorteo: comienza ${players[active].name}`;
+    btnReset.disabled=false;
+    updateUI();
+    refreshQuestion(active);
+    startTicker();
+    btnStart.disabled=true;
+  };
+
+  btnReset.onclick=()=>location.reload();
+
+  els.send[0].onclick=()=>checkAnswer(0,els.a[0].value);
+  els.send[1].onclick=()=>checkAnswer(1,els.a[1].value);
+  els.a[0].addEventListener("keydown",e=>{if(e.key==="Enter")checkAnswer(0,els.a[0].value);});
+  els.a[1].addEventListener("keydown",e=>{if(e.key==="Enter")checkAnswer(1,els.a[1].value);});
+
+  buildMaps();
+
+})();
+</script>
+
+
+</body>
+</html>

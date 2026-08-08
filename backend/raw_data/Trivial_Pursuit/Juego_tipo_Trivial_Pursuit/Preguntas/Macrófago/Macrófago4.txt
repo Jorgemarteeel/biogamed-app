@@ -1,0 +1,59 @@
+Los PAMPs incluyen todos, excepto:
+a) LPS bacteriano
+b) dsRNA viral
+c) Flagelina
+d) Anticuerpos específicos (correcta)
+
+¿Cuál es la función de los interferones tipo I?
+a) Inducir estado antiviral en células (correcta)
+b) Fagocitosis directa
+c) Opsonizar bacterias
+d) Neutralizar toxinas
+
+Los receptores RIG-I detectan principalmente:
+a) Bacterias extracelulares
+b) RNA viral citosólico (correcta)
+c) Antígenos proteicos
+d) Citoquinas inflamatorias
+
+¿Qué molécula del complemento actúa como anafilotoxina?
+a) C3a (correcta)
+b) C5b
+c) C4b
+d) C1q
+
+La activación de TLR4 en macrófagos induce:
+a) Respuesta antiviral inmediata
+b) Producción de TNF-α e IL-6 (correcta)
+c) Neutralización de anticuerpos
+d) Replicación viral
+
+¿Cuál es la principal función de las células dendríticas plasmocitoides?
+a) Producción masiva de interferón tipo I (correcta)
+b) Fagocitosis bacteriana
+c) Opsonización de patógenos
+d) Producción de anticuerpos IgG
+
+¿Qué efecto tienen los ROS generados por fagocitos?
+a) Neutralizan virus directamente
+b) Destruyen patógenos fagocitados (correcta)
+c) Inhiben linfocitos B
+d) Estimulan IgE
+
+La activación del inflamasoma NLRP3 requiere generalmente:
+a) Señales de peligro o estrés celular (correcta)
+b) Antígenos específicos
+c) Complemento C3b
+d) Interleucina-10
+
+¿Qué célula es capaz de producir tanto citocinas inflamatorias como interferón tipo I?
+a) Macrófago (correcta)
+b) Neutrófilo
+c) Eosinófilo
+d) Linfocito B
+
+¿Qué característica distingue a la inmunidad innata de la adaptativa?
+a) Memoria específica
+b) Reconocimiento inespecífico (correcta)
+c) Producción de anticuerpos IgG
+d) Expansión clonal de células T

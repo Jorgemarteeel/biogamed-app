@@ -1,0 +1,59 @@
+¿Cuál es la célula principal de la inmunidad adaptativa responsable de producir anticuerpos?
+a) Linfocito T
+b) Linfocito B (correcta)
+c) Macrófago
+d) Neutrófilo
+
+Los linfocitos T CD4+ son conocidos como:
+a) Citotóxicos
+b) Ayudantes (correcta)
+c) Reguladores
+d) Plasmocitos
+
+La inmunidad adaptativa se caracteriza por:
+a) Reconocimiento inespecífico
+b) Memoria inmunológica (correcta)
+c) Inflamación inmediata
+d) Fagocitosis directa
+
+¿Qué molécula presentan las células para activar linfocitos T?
+a) MHC-I
+b) MHC-II (correcta)
+c) IgM
+d) Complemento C3b
+
+¿Cuál es el principal tipo de anticuerpo en respuestas primarias?
+a) IgG
+b) IgM (correcta)
+c) IgA
+d) IgE
+
+Los linfocitos T CD8+ tienen como función principal:
+a) Ayudar a linfocitos B
+b) Destruir células infectadas (correcta)
+c) Fagocitar bacterias
+d) Producir histamina
+
+La activación de linfocitos T requiere:
+a) Señales del receptor y coestimulación (correcta)
+b) Solo señales de citoquinas
+c) Solo reconocimiento de patógeno
+d) Anticuerpos circulantes
+
+La tolerancia central ocurre principalmente en:
+a) Médula ósea y timo (correcta)
+b) Bazo
+c) Ganglios linfáticos
+d) Pulmón
+
+La memoria inmunológica permite:
+a) Respuesta más lenta a infecciones
+b) Respuesta más rápida y fuerte (correcta)
+c) Activación de neutrófilos
+d) Opsonización por complemento
+
+La inmunidad humoral depende principalmente de:
+a) Linfocitos T
+b) Linfocitos B (correcta)
+c) Macrófagos
+d) Células NK

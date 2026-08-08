@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inmuno-Quiz</title>
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:#0f1a33;
+  --text:#e9eefc;
+  --muted:#a8b3d6;
+  --blue:#add8e6;
+  --green:#9dffb0;
+  --red:#ff8b8b;
+  --highlight:#ffd36a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background: radial-gradient(1200px 600px at 50% 0%, #182b57 0%, var(--bg) 55%, #070b14 100%);
+  color:var(--text);
+  min-height:100vh;
+}
+header{
+  padding:16px 18px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+header h1{
+  margin:0;
+  font-size:30px;
+  letter-spacing:.3px;
+  font-weight:650;
+}
+.controls{
+  position:absolute;
+  right:18px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+button{
+  border:0;
+  background:#ffd36a;
+  color:black;
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:650;
+  box-shadow:0 10px 25px rgba(43,88,255,.25);
+}
+button:disabled{
+  background: rgba(255,255,255,.09);
+  box-shadow:none;
+  color:var(--text);
+  opacity:.5;
+  cursor:not-allowed;
+}
+.wrap{
+  padding:16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+@media (max-width:980px){
+  .wrap{grid-template-columns:1fr}
+}
+.board{
+  background: rgba(15,26,51,.65);
+  border:5px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  padding:14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  position:relative;
+  overflow:hidden;
+}
+.board.active{
+  outline: 5px solid var(--highlight);
+  box-shadow: 
+    0 0 0 4px rgba(255,211,106,.35),
+    0 18px 55px rgba(0,0,0,.45);
+}
+.topbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.playerName{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width: 52%;
+}
+.playerName label{
+  font-size:12px;
+  color:var(--muted);
+}
+.nameInput{
+  width:100%;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color:var(--text);
+  outline:none;
+  font-size:15px;
+  font-weight:750;
+}
+.meta{
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width: 40%;
+}
+.meta .time{
+  font-size:24px;
+  font-weight:850;
+  letter-spacing:.4px;
+}
+.meta .score{
+  font-size:12px;
+  color:var(--muted);
+}
+.map{
+  position:relative;
+  width:500px;
+  height:431px;
+  margin:6px auto 12px;
+}
+.node{
+  position:absolute;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background: var(--blue);
+  border:2px solid #000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  color:#000;
+  user-select:none;
+  transition: transform .1s;
+}
+.node.correct{ background: var(--green); border-color: var(--green); }
+.node.wrong{ background: var(--red); border-color: var(--red); }
+.node.passed{ opacity:.8; }
+.node.active{
+  outline:4px solid var(--highlight);
+  transform: scale(1.1);
+}
+.qa{
+  margin-top:10px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  padding:12px;
+}
+.qa .question{
+  font-size:16px;
+  margin-bottom:8px;
+}
+.qa .row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+input[type="text"].answer{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color:var(--text);
+  outline:none;
+  font-size:14px;
+}
+input[type="text"].answer::placeholder{color:rgba(233,238,252,.55);}
+.footerMsg {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:0 16px;
+  color: var(--highlight);
+  font-size: 24px;
+  font-weight:700;
+  min-height: 60px;
+  text-align:center;
+}
+.time.activeTimer { color: var(--highlight); font-weight:850; }
+
+.app-footer{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 12px;
+  color: rgba(233,238,252,0.6);
+  background: rgba(11,18,32,0.85);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  z-index: 1000;
+}
+
+</style>
+</head>
+
+<footer class="app-footer">
+  © Juan Vladimir de la Rosa Medina
+</footer>
+
+<body>
+
+<header>
+  <h1>Inmuno-Quiz</h1>
+  <div class="controls">
+    <button id="btnStart">Iniciar juego</button>
+    <button id="btnReset" disabled>Reiniciar</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="board" id="board0">
+    <div class="topbar">
+      <div class="playerName">
+        <label>Nombre del Jugador 1</label>
+        <input class="nameInput" id="name0" type="text" value="Jugador 1" />
+      </div>
+      <div class="meta">
+        <div class="time" id="time0">10:00</div>
+        <div class="score" id="score0">Aciertos: 0 · Fallos: 0</div>
+      </div>
+    </div>
+    <div class="map" id="map0"></div>
+    <div class="qa" id="qa0">
+      <p class="question" id="q0">Pulsa “Iniciar” para comenzar.</p>
+      <div class="row">
+        <input id="a0" class="answer" type="text" placeholder="Escribe la respuesta o 'inmunopalabra'" disabled />
+        <button id="send0" disabled>Responder</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="board" id="board1">
+    <div class="topbar">
+      <div class="playerName">
+        <label>Nombre del Jugador 2</label>
+        <input class="nameInput" id="name1" type="text" value="Jugador 2" />
+      </div>
+      <div class="meta">
+        <div class="time" id="time1">10:00</div>
+        <div class="score" id="score1">Aciertos: 0 · Fallos: 0</div>
+      </div>
+    </div>
+    <div class="map" id="map1"></div>
+    <div class="qa" id="qa1">
+      <p class="question" id="q1">Pulsa “Iniciar” para comenzar.</p>
+      <div class="row">
+        <input id="a1" class="answer" type="text" placeholder="Escribe respuesta o 'inmunopalabra'" disabled />
+        <button id="send1" disabled>Responder</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="footerMsg" id="statusMsg"></div>
+
+<script>
+(() => {
+
+  const START_TIME = 10 * 60 * 1000;
+
+  const POSITIONS = [
+    [475,562],[291,431],[97,308],[228,97],[420,227],[604,353],[738,526],
+    [737,742],[738,960],[737,1180],[737,1401],[996,1399],[993,1170],
+    [994,951],[998,737],[998,520],[1130,353],[1316,229],[1506,98],
+    [1630,312],[1441,436],[1259,558]
+  ].map(([x,y]) => ({ x:x*500/1733, y:y*500/1733 }));
+
+  const QUESTIONS = [
+  { q:"Empieza por la letra P: Célula del sistema inmunitario que deriva del linfocito B y cuya función es la de producir anticuerpos.", a:"plasmatica" },
+  { q:"Empieza por la letra A: Molécula que reconoce antígenos específicos y es producida por los linfocitos B.", a:"anticuerpo" },
+  { q:"Empieza por la letra P: Fase de la respuesta del sistema inmune que se produce frente a un antígeno nuevo.", a:"primaria" },
+  { q:"Empieza por la letra T: Propiedad por la que el sistema inmune adaptativo no responde a un antígeno propio.", a:"tolerancia" },
+  { q:"Empieza por la letra S: Fase de la respuesta del sistema inmune que reacciona rápidamente y es mediada por anticuerpos preexistentes.", a:"secundaria" },
+  { q:"Contiene la letra A: Inmunoglobulina mas abundante en las mucosas.", a:"IgA" },
+  { q:"Empieza por la letra C: Término por el que se denomina al tipo de linfocito T que destruye células infectadas por virus.", a:"citotóxico" },
+  { q:"Empieza por la letra E: Tipo de barrera física que protege todas las vías de entrada del organismo de las infecciones.", a:"epitelio" },
+  { q:"Empieza por la letra O: Conjunto de proteínas plasmáticas que facilitan la fagocitosis marcando a los patógenos.", a:"opsoninas" },
+  { q:"Empieza por la letra B: Órgano linfoide donde maduran los linfocitos B en las aves.", a:"bursa" },
+  { q:"Empieza por la letra B: Órgano linfoide secundario que se encarga de filtrar la sangre.", a:"bazo" },
+  { q:"Empieza por la letra C: Sistema de proteínas plasmáticas activadas por zimógenos, que ayuda a eliminar a los patógenos.", a:"complemento" },
+  { q:"Empieza por la letra D: Célula presentadora de antígenos profesional que activa a los linfocitos T.", a:"dendrítica" },
+  { q:"Empieza por la letra C: Tipo de respuesta inmunitaria que está mediada por las células T.", a:"celular" },
+  { q:"Empieza por la letra H: Tipo de respuesta inmunitaria que está mediada por los anticuerpos.", a:"humoral" },
+  { q:"Empieza por la letra C: Moléculas que inducen la activación o la quimiotaxis de las células inmunes.", a:"citoquinas" },
+  { q:"Empieza por la letra C: Mecanismo celular que capacita a ciertas células del sistema inmune para matar a otras célula infectadas.", a:"citotoxicidad" },
+  { q:"Empieza por la letra P: Acrónimo en inglés que hace referencia a los receptores que reconocen patrones comunes presentes en patógenos.", a:"prr" },
+  { q:"Empieza por la letra D: Molécula que participa en la señalización intracelular durante la activación del linfocito, que deriva de la membrana por la accion de la fosfolipasa A.", a:"diacilglicerol" },
+  { q:"Empieza por la letra D: Péptido que tiene capacidad antimicrobiana y producido por las células epiteliales.", a:"defensina" },
+  { q:"Empieza por la letra E: Porción específica de un antígeno que es reconocida por un anticuerpo.", a:"epitopo" },
+  { q:"Empieza por la letra D: Propiedad de la inmunidad adaptativa por la que sus receptores pueden reconocer un numero indeterminado de antígenos extraños.", a:"diversidad" },
+  { q:"Empieza por la letra E: Granulocito con una función importante en la defensa contra los parásitos.", a:"eosinofilo" },
+  { q:"Empieza por la letra E: Proceso por el cuál los linfocitos T proliferan tras su activación.", a:"expansión" },
+  { q:"Empieza por la letra E: Vesícula intracelular que internaliza proteínas extracelulares, para posteriormente procesarlas y presentarlas como antigenos.", a:"endosoma" },
+  { q:"Empieza por la letra E: Fase de la respuesta inmune adaptativa en la que actúan células activadas previamente y moléculas.", a:"efectora" },
+  { q:"Contiene la letra E: principal inmunoglobulina implicada en las alergias.", a:"IgE" },
+  { q:"Empieza por la letra F: Nombre del grupo de células fagocíticas que derivan del linaje mieloide.", a:"fagocitos" },
+  { q:"Empieza por la letra F: Proceso por el cual las células inmunitarias ingieren y destruyen partículas extrañas.", a:"fagocitosis" },
+  { q:"Empieza por la letra F: Vesícula que contiene partículas del exterior que han sido degradadas y cargadas en las moleculas del MHC-II.", a:"fagolisosoma" },
+  { q:"Empieza por la letra F: Proteínas plasmáticas que reconocen carbohidratos y activan el sistema del complemento.", a:"ficolinas" },
+  { q:"Empieza por la letra F: Factor de transcripción característico de linfocitos T reguladores.", a:"Foxp3" },
+  { q:"Empieza por la letra T: Citoquina proinflamatoria que es liberada por células dañadas y leucocitos activados, que puede actuar a nivel sistémico.", a:"TNF" },
+  { q:"Empieza por la letra I: Grupo de citoquinas producidas por las células NK, Linfocitos T y células dendríticas, responsable de inmunidad antiviral.", a:"interferones" },
+  { q:"Contiene la letra G: Inmunoglobulina más abundante en plasma sanguíneo.", a:"IgG" },
+  { q:"Empieza por la letra G: Órgano linfoide donde se inician las respuestas frente a los antígenos que son drenados por la linfa.", a:"ganglio" },
+  { q:"Empieza por la letra G: Serina proteasa presente en los gránulos de los linfocitos T citotóxicos y las células NK.", a:"granzima" },
+  { q:"Empieza por la letra G: Término por el que se conoce al grupo de células del linaje mieloide que contienen abundantes gránulos citoplasmáticos.", a:"granulocitos" },
+  { q:"Empieza por la letra H: Sustancia pequeña que puede ser reconocida por un anticuerpo pero que no es inmunogénica por sí sola.", a:"hapteno" },
+  { q:"Empieza por la letra H: Proceso fisiológico por el que se desarrollan las células sanguíneas.", a:"hematopoyesis" },
+  { q:"Empieza por la letra H: Porción de las moléculas del MHC donde se ancla el péptido antigénico.", a:"hendidura" },
+  { q:"Empieza por la letra H: Amina vasoactiva liberada por los mastocitos que participa en las reacciones alérgicas.", a:"histamina" },
+  { q:"Empieza por la letra I: Complejo formado por un antígeno y un anticuerpo.", a:"inmunocomplejo" },
+  { q:"Empieza por la letra I: Complejo multiproteico citosólico formado por receptores NOD que actua como un sensor del daño y las infecciones y activa la inflamación.", a:"inflamasoma" },
+  { q:"Empieza por la letra I: Respuesta fisilogica que tiene lugar en los tejidos infecctados o dañados.", a:"inflamación" },
+  { q:"Empieza por la letra I: Termino por el que un antígeno es capaz de inducir una respuesta inmune.", a:"inmunógeno" },
+  { q:"Empieza por la letra I: Molécula que participa en la adhesión leucocitaria.", a:"integrina" },
+  { q:"Empieza por la letra N: Siglas del linfocito innato que presenta actividad celular citotóxica.", a:"nk" },
+  { q:"Empieza por la letra K: Isotipo de cadena ligera de inmunoglobulinas.", a:"kappa" },
+  { q:"Empieza por la letra L: Isotipo de cadena ligera de inmunoglobulinas.", a:"lamda" },
+  { q:"Empieza por la letra C: Término al que se asocia al linfocito innato NK.", a:"citotóxico" },
+  { q:"Empieza por la letra L: Principal célula que tiene una función principal en el sistema inmunitario adaptativo.", a:"linfocito" },
+  { q:"Empieza por la letra L: Componente endotóxico de las bacterias gram negativas.", a:"Lipopolisacarido" },
+  { q:"Empieza por la letra L: Fluido que transporta antígenos y células inmunes desde los tejidos.", a:"linfa" },
+  { q:"Empieza por la letra L: Proteína que puede estar presente tanto en la membrana de los leucocitos como libre en el plasma sanguíneo y es capaz de reconocer residuos de manosa.", a:"lectina" },
+  { q:"Empieza por la letra M: Célula fagocítica derivada de monocitos.", a:"macrófago" },
+  { q:"Empieza por la letra M: Acrónimo en ingles que identifica a las moléculas encargadas de la presentación antigénica.", a:"MHC" },
+  { q:"Empieza por la letra M: Propiedad del sistema inmunitario adaptativo que le da la capacidad para recordar antígenos a los que ya ha estado expuesto.", a:"memoria" },
+  { q:"Empieza por la letra M: Célula efectora que participa en las reacciones de hipersensibilidad o reacciones alérgicas.", a:"mastocito" },
+  { q:"Empieza por la letra N: Granulocito más abundante en la sangre y reclutado durante la inflamación aguda.", a:"neutrófilo" },
+  { q:"Empieza por la letra N: Receptores citosólicos que reconocen patrones de patógenos y activan el inflamasoma.", a:"NOD" },
+  { q:"Contiene la letra Ñ: Proceso por el cual células inmunes transmiten información mediante receptores y moléculas efectoras.", a:"señalización" },
+  { q:"Contiene la letra Ñ: Estrategia de vacunación para inmunizar un grupo de población.", a:"campaña" },
+  { q:"Empieza por la letra O: Molécula que facilita la fagocitosis.", a:"opsonina" },
+  { q:"Empieza por la letra O: Macrófago residente en el hueso y que está especializado en la remodelacion del hueso.", a:"osteoclasto" },
+  { q:"Empieza por la letra M: Macrófago residente en el SNC y que está especializado en el mantenimiento de la homeostasis en ese tejido.", a:"microglia" },
+  { q:"Empieza por la letra O: Término por el que se denomina al desarrollo y formación desde el embrión del sistema inmunitario.", a:"ontogenia" },
+  { q:"Empieza por la letra P: Célula que deriva del linfocitos B y tiene capacidad para secretar anticuerpos.", a:"plasmatica" },
+  { q:"Empieza por la letra P: Acrónimo en ingles que hace referencia a patrones moleculares asociados al daño.", a:"DAMP" },
+  { q:"Empieza por la letra P: Proceso me diante el cuál se exhiben antígenos capturados por las celulas APC a traves de las moléculas de MHC.", a:"presentación" },
+  { q:"Empieza por la letra P: Proteína citolítica de presentes en los granulos de las células NK y linfocitos T CD8+ capaz de abrir poros.", a:"perforina" },
+  { q:"Empieza por la letra Q: Citoquina que dirige la migración de las celulas del sistema inmune a los tejidos.", a:"quimiocina" },
+  { q:"Empieza por la letra E: Tipo de inmunidad que es adquirida en el tiempo y se adapta al patógeno.", a:"específica" },
+  { q:"Empieza por la letra R: Término general por el que se conoce a la molécula que reconoca a un antigeno.", a:"receptor" },
+  { q:"Empieza por la letra R: Proceso mediante el cual la inmunidad adaptativa genera una gran diversidad en BCR y TCR.", a:"recombinación" },
+  { q:"Empieza por la letra R: Término que define el conjunto de reacciones inmunitarias que se orquestan para eliminar un antígeno extraño.", a:"respuesta" },
+  { q:"Empieza por la letra S: Molécula de adhesión leucocitaria.", a:"selectina" },
+  { q:"Empieza por la letra S: Contacto funcional que tiene lugar entre un linfocito y una APC, en la que participan numerosas moléculas.", a:"sinapsis" },
+  { q:"Empieza por la letra T: Receptor de linfocitos T.", a:"TCR" },
+  { q:"Empieza por la letra T: Término por el que se conoce al linfocito T inmaduro que ingresa en el timo.", a:"timocito" },
+  { q:"Empieza por la letra T: Propiedad de la inmunidad adaptativa por la que se produce una falta de respuesta frente a antígenos propios.", a:"tolerancia" },
+  { q:"Empieza por la letra T: Subpoblación de linfocitos T colaboradores que responden a patógenos intracelulares.", a:"Th1" },
+  { q:"Empieza por la letra T: Subpoblación de linfocitos T colaboradores que responden a alergenos y patógenos extracelulares como parásitos.", a:"Th2" },
+  { q:"Empieza por la letra T: Subpoblación de linfocitos T colaboradores que responden a patógenos extracelulares como hongos y bacterias.", a:"Th21" },
+  { q:"Empieza por la letra P: Complejo multiproteico citosólico implicado en la degradación de antígenos de origen intracelular.", a:"proteasoma" },
+  { q:"Empieza por la letra U: Pequeño polipéptido implicado en la degradación proteica.", a:"ubiquitina" },
+  { q:"Empieza por la letra V: Preparado constituido por patógenos inactivados que está destinado a inducir inmunidad.", a:"vacuna" },
+  { q:"Empieza por la letra D: Propiedad de la inmunidad adaptativa por la que se producen una gran cantidad de receptores inmunitarios.", a:"diversidad" },
+  { q:"Empieza por la letra C: Ruta de activación del complemento por la presencia de anticuerpos unidos a los microbios.", a:"clasica" },
+  { q:"Empieza por la letra A: Ruta de activación del complemento por la presencia directa de los microbios.", a:"alternativa" },
+  { q:"Empieza por la letra L: Ruta de activación del complemento por la presencia de ficolinas unidas a residuos de manosa en los microbios.", a:"lectinas" },
+  { q:"Empieza por la letra S: Técnica de biología molecular que permite la detección de proteínas.", a:"sds-page" },
+  { q:"Empieza por la letra R: Técnica de biología molecular que permite la detección y cuantificación de atigenos utilizando radioisótopos.", a:"radioinmunoensayo" },
+  { q:"Empieza por la letra E: Técnica de biología molecular que permite la detección y cuantificación de atigenos adsorbidos en un pocillo.", a:"elisa" },
+  { q:"Empieza por la letra I: Técnica de biología celular que permite la detección de atigenos en una preparación tisular utilizando anticuerpos conjugados con enzimas.", a:"inmunohistoquímica" },
+  { q:"Empieza por la letra C: Técnica de biología celular que permite la detección de atigenos en una suspensión celular que se pasa por un capilar y es interrogada por un laser.", a:"citometría" },
+  { q:"Empieza por la letra I: Técnica de biología celular que permite la detección de atigenos en una preparación en porta utilizando anticuerpos conjugados con fluoroforos.", a:"inmunofluorescencia" },
+  { q:"Empieza por la letra F: Zona funcional de los órganos linfoides secundarios donde se alojan los linfocitos B.", a:"foliculos" },
+  { q:"Empieza por la letra P: Zona funcional del ganglio donde se concentran los linfocitos T.", a:"paracorteza" },
+  { q:"Empieza por la letra B: Color de la pulpa de bazo donde se concentran los linfocitos T.", a:"blanca" },
+  { q:"Contiene la letra Y: Inmunoglobulina mayoritaria en las aves.", a:"IgY" },
+  { q:"Empieza por la letra Z: Cadena que forma parte del complejo CD3 que carece de porción extracelular.", a:"zeta" },
+];
+
+  const norm = s => (s ?? "")
+    .toString().trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+
+  const players = [
+    { name:"Jugador 1", idx:0, qa:[], states:Array(22).fill("pending"), time:START_TIME, correct:0, wrong:0, done:false },
+    { name:"Jugador 2", idx:0, qa:[], states:Array(22).fill("pending"), time:START_TIME, correct:0, wrong:0, done:false }
+  ];
+
+  let active = 0;
+  let started = false;
+  let ticker = null;
+
+  const els = {
+    map:[map0,map1],
+    q:[q0,q1],
+    a:[a0,a1],
+    send:[send0,send1],
+    time:[time0,time1],
+    score:[score0,score1],
+    board:[board0,board1],
+    name:[name0,name1],
+    status: statusMsg,
+    btnReset: btnReset
+  };
+
+  const nodes = [[],[]];
+
+  els.status.textContent = "✏️ Introduce los nombres de los jugadores y pulsa 👉 en el botón 'Iniciar juego'";
+
+  /* ===== TABLERO (SIN CAMBIOS) ===== */
+
+  function buildMaps(){
+    for(let pi=0; pi<2; pi++){
+      els.map[pi].innerHTML="";
+      nodes[pi]=[];
+      POSITIONS.forEach((pos,i)=>{
+        const d=document.createElement("div");
+        d.className="node pending";
+        d.textContent=i+1;
+        d.style.left=(pos.x-25)+"px";
+        d.style.top =(pos.y-25)+"px";
+        els.map[pi].appendChild(d);
+        nodes[pi].push(d);
+      });
+    }
+  }
+
+  const formatTime = ms => {
+    const t=Math.max(0,Math.floor(ms/1000));
+    return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");
+  };
+
+  const isGameOver = () => players.every(p=>p.done);
+
+  function nextPending(pi, fromIdx, includeCurrent=false){
+    const p=players[pi];
+    const start=includeCurrent ? fromIdx : (fromIdx+1)%p.qa.length;
+    for(let s=0;s<p.qa.length;s++){
+      const i=(start+s)%p.qa.length;
+      if(p.states[i]==="pending"||p.states[i]==="passed") return i;
+    }
+    return null;
+  }
+
+  /* ===== ASIGNACIÓN ALEATORIA DE PREGUNTAS ===== */
+  function assignQuestions(){
+    // Mezclamos todas las preguntas
+    const shuffled = QUESTIONS.sort(() => Math.random() - 0.5);
+    const half = Math.floor(shuffled.length / 2);
+
+    // Cada jugador recibe la mitad del mazo sin repetir preguntas
+    players[0].qa = shuffled.slice(0, half);
+    players[1].qa = shuffled.slice(half, half*2);
+
+    // Si el número de preguntas es mayor que 22, se recortan a 22
+    players.forEach(p => { p.qa = p.qa.slice(0,22); });
+  }
+
+  /* ===== ACTUALIZACIÓN DE INTERFAZ ===== */
+  function updateUI(){
+    players.forEach((p,pi)=>{
+      els.board[pi].classList.toggle("active", pi===active && started && !p.done);
+      els.time[pi].textContent=formatTime(p.time);
+      els.score[pi].textContent=`Aciertos: ${p.correct} · Fallos: ${p.wrong}`;
+
+      nodes[pi].forEach((n,i)=>{
+        n.className="node "+p.states[i]+((pi===active&&i===p.idx&&started&&!p.done)?" active":"");
+      });
+
+      const canPlay=started&&pi===active&&!p.done&&!isGameOver();
+      els.a[pi].disabled=!canPlay;
+      els.send[pi].disabled=!canPlay;
+    });
+  }
+
+  function refreshQuestion(pi){
+    const p=players[pi];
+    els.q[pi].style.color="var(--highlight)";
+
+    if(!started){
+      els.q[pi].textContent="Pulsa Iniciar para comenzar";
+      return;
+    }
+
+    if(p.done){
+      els.q[pi].textContent="Inmuno-Quiz completado";
+      return;
+    }
+
+    if(pi!==active){
+      els.q[pi].textContent="Espera tu turno…";
+      return;
+    }
+
+    p.idx=nextPending(pi,p.idx,true);
+    els.q[pi].textContent=p.qa[p.idx].q;
+    els.a[pi].focus();
+  }
+
+  function startTicker(){
+    if(ticker) clearInterval(ticker);
+    ticker=setInterval(()=>{
+      if(!started||isGameOver()) return;
+      const p=players[active];
+      if(!p.done){
+        p.time-=100;
+        if(p.time<=0){
+          p.time=0;
+          p.done=true;
+          els.status.textContent=`⏰ ${p.name} ha agotado su tiempo`;
+          switchTurn();
+        }
+        updateUI();
+        endIfNeeded();
+      }
+    },100);
+  }
+
+  function switchTurn(){
+    const prev=active;
+    active=active===0?1:0;
+    if(players[active].done&&!players[prev].done) active=prev;
+    updateUI();
+    refreshQuestion(active);
+  }
+
+  function checkAnswer(pi, raw){
+    if(!started||pi!==active||players[pi].done) return;
+
+    const p=players[pi];
+    const idx=p.idx;
+    const got=norm(raw);
+    const expected=norm(p.qa[idx].a);
+
+    if(!got){
+      els.status.textContent="Escribe una respuesta o 'inmunopalabra'";
+      return;
+    }
+
+    if(got==="inmunopalabra"){
+      if(p.states[idx]==="pending") p.states[idx]="passed";
+      p.idx=nextPending(pi,idx);
+
+      const other = pi === 0 ? 1 : 0;
+      const siguienteJugador = players[other].name;
+
+      els.status.textContent =`💉 ${p.name} se protege de la pregunta de la casilla ${idx + 1} y pierde el turno. Turno para ${siguienteJugador}.`;
+      els.a[pi].value="";
+      switchTurn();
+      return;
+    }
+
+    if(got===expected){
+      p.states[idx]="correct";
+      p.correct++;
+      els.a[pi].value="";
+      els.status.textContent =`✅ ${p.name} acierta la pregunta de la casilla ${idx + 1}. Sigue jugando.`;
+      p.idx=nextPending(pi,idx);
+      refreshQuestion(pi);
+      updateUI();
+      endIfNeeded();
+      return;
+    }
+
+    else{
+      p.states[idx] = "wrong";
+      p.wrong++;
+
+      const other = pi === 0 ? 1 : 0;
+      const siguienteJugador = players[other].name;
+
+      els.status.textContent =
+        `❌ ${p.name} falla la pregunta de la casilla ${idx + 1}. La respuesta correcta era: "${p.qa[idx].a}". Turno para ${siguienteJugador}.`;
+
+      els.a[pi].value = "";
+      switchTurn();
+    }
+  }
+
+  function endIfNeeded(){
+    players.forEach((p,pi)=>{
+      if(!p.done && p.states.every(s => s === "correct" || s === "wrong")){
+        p.done = true;
+        els.q[pi].textContent = "Inmuno-Quiz completado";
+        els.q[pi].style.color = "var(--highlight)";
+        els.a[pi].disabled = true;
+        els.send[pi].disabled = true;
+      }
+    });
+
+    if(isGameOver()){
+      clearInterval(ticker);
+
+      let msg = `Inmuno-Quiz finalizado. ${players[0].name}: ${players[0].correct} · ${players[1].name}: ${players[1].correct}. `;
+      if(players[0].correct > players[1].correct) msg += `🏆 Gana ${players[0].name}`;
+      else if(players[1].correct > players[0].correct) msg += `Gana ${players[1].name}`;
+      else msg += `Empate`;
+
+      els.status.textContent = msg;
+    }
+  }
+
+  btnStart.onclick=()=>{
+    started=true;
+    players.forEach((p,pi)=>{
+      p.name=els.name[pi].value.trim()||`Jugador ${pi+1}`;
+      p.idx=0;
+      p.states.fill("pending");
+      p.correct=0;
+      p.wrong=0;
+      p.time=START_TIME;
+      p.done=false;
+      els.name[pi].disabled=true;
+    });
+
+    assignQuestions();
+    buildMaps();
+    active=Math.random()<0.5?0:1;
+    els.status.textContent=`🎲 Sorteo: comienza ${players[active].name}`;
+    btnReset.disabled=false;
+    updateUI();
+    refreshQuestion(active);
+    startTicker();
+    btnStart.disabled=true;
+  };
+
+  btnReset.onclick=()=>location.reload();
+
+  els.send[0].onclick=()=>checkAnswer(0,els.a[0].value);
+  els.send[1].onclick=()=>checkAnswer(1,els.a[1].value);
+  els.a[0].addEventListener("keydown",e=>{if(e.key==="Enter")checkAnswer(0,els.a[0].value);});
+  els.a[1].addEventListener("keydown",e=>{if(e.key==="Enter")checkAnswer(1,els.a[1].value);});
+
+  buildMaps();
+
+})();
+</script>
+
+
+</body>
+</html>
