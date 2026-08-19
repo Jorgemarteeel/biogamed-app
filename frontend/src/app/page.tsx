@@ -90,7 +90,7 @@ export default function Home() {
 
               <h1 className="text-balance text-5xl font-black leading-[1.03] tracking-[-0.04em] text-blue-950 sm:text-6xl lg:text-7xl">
                 Aprende ciencias de la salud
-                <span className="mt-2 block text-sky-800">jugando en serio.</span>
+                <span className="mt-2 block text-sky-800">jugando.</span>
               </h1>
 
               <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-600 lg:mx-0 lg:max-w-xl">

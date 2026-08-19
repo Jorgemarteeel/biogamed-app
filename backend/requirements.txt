@@ -3,3 +3,7 @@ uvicorn
 sqlalchemy
 alembic
 psycopg2-binary
+passlib[bcrypt]
+bcrypt==3.2.2
+PyJWT
+email-validator
