@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -67,6 +67,8 @@ class Question(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     correct_answer: Mapped[str] = mapped_column(String(255), nullable=False)
+    options: Mapped[Optional[list[str]]] = mapped_column(JSON, nullable=True)
+    correct_option_index: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     game_letter: Mapped[Optional[str]] = mapped_column(String(1), nullable=True)
 
     topic_id: Mapped[int] = mapped_column(
