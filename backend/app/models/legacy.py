@@ -1,4 +1,4 @@
-import enum
+﻿import enum
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -46,7 +46,7 @@ class User(Base):
         default=UserRole.STUDENT,
     )
 
-    game_sessions: Mapped[list["GameSession"]] = relationship(
+    game_sessions: Mapped[list["LegacyGameSession"]] = relationship(
         back_populates="user"
     )
 
@@ -81,7 +81,7 @@ class Question(Base):
     )
 
 
-class GameSession(Base):
+class LegacyGameSession(Base):
     __tablename__ = "game_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -122,7 +122,8 @@ class AnswerLog(Base):
     )
     response_time_ms: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    game_session: Mapped["GameSession"] = relationship(
+    game_session: Mapped["LegacyGameSession"] = relationship(
         back_populates="answer_logs"
     )
     question: Mapped["Question"] = relationship(back_populates="answer_logs")
+

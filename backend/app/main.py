@@ -1,10 +1,8 @@
 from fastapi import FastAPI
-from app.database import engine, Base
 # Importamos nuestro nuevo router
-from app.routers import auth, questions, topics
+from app.routers import auth, game, questions, topics
 
-# Creamos las tablas si no existen
-Base.metadata.create_all(bind=engine)
+# Las tablas se gestionan mediante `alembic upgrade head`.
 
 app = FastAPI(title="BioGaMed API")
 
@@ -12,6 +10,7 @@ app = FastAPI(title="BioGaMed API")
 app.include_router(auth.router)
 app.include_router(topics.router)
 app.include_router(questions.router)
+app.include_router(game.router)
 
 @app.get("/")
 def read_root():
