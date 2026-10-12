@@ -16,7 +16,9 @@ def create_question(db: Session, question: QuestionCreate) -> Question:
 
     db_question = Question(
         **question.model_dump(),
-        correct_answer=question.options[question.correct_option_index],
+        correct_answer=(question.options[question.correct_option_index]
+                        if question.question_type == "TRIVIAL"
+                        else question.exact_word.strip()),
     )
     db.add(db_question)
     try:
@@ -36,8 +38,12 @@ def get_questions_by_topic(
         .where(
             Question.topic_id == topic_id,
             # Legacy free-text questions have no multiple-choice options.
-            Question.options.is_not(None),
-            Question.correct_option_index.is_not(None),
+            ((Question.question_type == "TRIVIAL")
+             & Question.options.is_not(None)
+             & Question.correct_option_index.is_not(None))
+            | ((Question.question_type == "PASAPALABRA")
+               & Question.letter.is_not(None)
+               & Question.exact_word.is_not(None)),
         )
         .order_by(Question.id)
         .offset(skip)

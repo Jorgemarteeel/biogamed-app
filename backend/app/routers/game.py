@@ -15,10 +15,11 @@ router = APIRouter(prefix="/game", tags=["Game"])
              status_code=status.HTTP_201_CREATED)
 def start_game(
     topic_id: int = Path(ge=1),
+    mode: str = "TRIVIAL",
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> GameSessionStartResponse:
-    return game_service.start_game_session(db, current_user, topic_id)
+    return game_service.start_game_session(db, current_user, topic_id, game_mode=mode)
 
 
 @router.post("/submit/{session_id}", response_model=GameResultResponse)

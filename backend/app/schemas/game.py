@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.question import QuestionType
 
 
 class QuestionForGame(BaseModel):
@@ -6,7 +7,9 @@ class QuestionForGame(BaseModel):
 
     id: int
     text: str
-    options: list[str]
+    options: list[str] | None = None
+    question_type: QuestionType = "TRIVIAL"
+    letter: str | None = None
 
 
 class GameSessionStartResponse(BaseModel):
@@ -17,7 +20,8 @@ class GameSessionStartResponse(BaseModel):
 
 class UserAnswer(BaseModel):
     question_id: int = Field(gt=0, strict=True)
-    selected_index: int = Field(ge=0, strict=True)
+    selected_index: int | None = Field(default=None, ge=0, strict=True)
+    text_answer: str | None = None
 
 
 class GameSubmit(BaseModel):
@@ -26,8 +30,10 @@ class GameSubmit(BaseModel):
 
 class AnswerCorrection(BaseModel):
     question_id: int
-    selected_index: int
-    correct_option_index: int
+    selected_index: int | None = None
+    correct_option_index: int | None = None
+    text_answer: str | None = None
+    exact_word: str | None = None
     is_correct: bool
 
 

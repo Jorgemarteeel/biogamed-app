@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.legacy import Base
@@ -19,3 +19,6 @@ class GameSession(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     question_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+    game_mode: Mapped[str] = mapped_column(
+        String(20), default="TRIVIAL", server_default="TRIVIAL", nullable=False
+    )
