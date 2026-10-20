@@ -30,7 +30,9 @@ services:
   frontend:
     build: ./frontend
     container_name: biogamed_frontend
-    command: npm run dev
+    command: sh -c "npm ci && npm run dev -- --webpack"
+    environment:
+      WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
     volumes:
