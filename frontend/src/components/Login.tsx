@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { loginUser } from "@/services/api";
 
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +26,9 @@ export default function Login() {
       localStorage.setItem("token", access_token);
       setPassword("");
       setSuccess("Sesión iniciada correctamente.");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         setError(
