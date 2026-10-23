@@ -31,7 +31,13 @@ class QuestionCreate(QuestionBase):
                 raise ValueError("PASAPALABRA requiere una letra alfabética.")
             if self.exact_word is None or not self.exact_word.strip():
                 raise ValueError("PASAPALABRA requiere exact_word.")
-            if not self.exact_word.strip().lower().startswith(self.letter.lower()):
+            word = self.exact_word.strip().casefold()
+            letter = self.letter.casefold()
+            contains = self.text.strip().casefold().startswith("contiene la letra ")
+            if contains:
+                if letter not in word:
+                    raise ValueError("exact_word debe contener letter.")
+            elif not word.startswith(letter):
                 raise ValueError("exact_word debe empezar por letter.")
         return self
 

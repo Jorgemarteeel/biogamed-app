@@ -101,7 +101,7 @@ def find_trivial_questions_dir() -> Path:
     return candidates[0]
 
 
-def parse_trivial_file(path: Path) -> list[dict[str, str]]:
+def parse_trivial_file(path: Path) -> list[dict]:
     """Parse question blocks and their option marked with '(correcta)'."""
     content = path.read_text(encoding="utf-8-sig").strip()
     blocks = re.split(r"\r?\n\s*\r?\n", content)
@@ -125,7 +125,23 @@ def parse_trivial_file(path: Path) -> list[dict[str, str]]:
 
         # Preserve the alternatives in the question, but do not reveal which is correct.
         clean_text = re.sub(r"\s*\(correcta\)\s*$", "", block, flags=re.I | re.M).strip()
-        parsed.append({"question": clean_text, "answer": answer_match.group(1).strip()})
+        option_matches = [re.fullmatch(r"([a-z])\)\s*(.+)", line, re.I)
+                          for line in clean_text.splitlines()]
+        options = [match.group(2).strip() for match in option_matches if match]
+        labels = [match.group(1).lower() for match in option_matches if match]
+        if labels != ["a", "b", "c", "d"]:
+            raise ValueError(f"Se esperaban cuatro opciones a-d en {path}: {block!r}")
+        correct_label = correct_lines[0][0].lower()
+        question_text = "\n".join(
+            line for line, match in zip(clean_text.splitlines(), option_matches) if not match
+        ).strip()
+        if not question_text:
+            raise ValueError(f"Pregunta sin enunciado en {path}")
+        parsed.append({
+            "question": question_text, "legacy_text": clean_text,
+            "answer": answer_match.group(1).strip(), "options": options,
+            "correct_option_index": labels.index(correct_label),
+        })
 
     return parsed
 
@@ -140,28 +156,33 @@ def get_or_create_topic(session, name: str) -> Topic:
 
 
 def add_question_if_missing(
-    session, topic: Topic, text: str, answer: str, game_letter: str | None
+    session, topic: Topic, text: str, answer: str, game_letter: str | None,
+    *, legacy_text: str | None = None, options: list[str] | None = None,
+    correct_option_index: int | None = None,
 ) -> bool:
-    existing = session.scalar(
+    matches = list(session.scalars(
         select(Question).where(
             Question.topic_id == topic.id,
-            Question.text == text,
+            Question.text.in_({text, legacy_text or text}),
             Question.game_letter == game_letter,
         )
-    )
-    if existing is not None:
-        existing.correct_answer = answer
-        return False
-
-    session.add(
-        Question(
-            topic_id=topic.id,
-            game_letter=game_letter,
-            text=text,
-            correct_answer=answer,
-        )
-    )
-    return True
+    ))
+    inserted = not matches
+    if inserted:
+        matches = [Question(topic_id=topic.id, game_letter=game_letter)]
+        session.add(matches[0])
+    # Repair matching legacy rows in place, preserving IDs and historical links.
+    for question in matches:
+        question.text = text
+        question.correct_answer = answer
+        question.question_type = "PASAPALABRA" if game_letter else "TRIVIAL"
+        question.letter = game_letter
+        question.exact_word = answer if game_letter else None
+        question.options = options
+        question.correct_option_index = correct_option_index
+    # SessionLocal disables autoflush: make this row visible to subsequent lookups.
+    session.flush()
+    return inserted
 
 
 def seed_pasapalabra(session) -> int:
@@ -175,7 +196,8 @@ def seed_pasapalabra(session) -> int:
         for item in extract_html_questions(path):
             letter, clean_text = parse_pasapalabra_question(item["question"])
             inserted += add_question_if_missing(
-                session, topic, clean_text, item["answer"], letter
+                session, topic, item["question"], item["answer"], letter,
+                legacy_text=clean_text,
             )
     return inserted
 
@@ -188,7 +210,9 @@ def seed_trivial(session) -> int:
         for text_file in sorted(topic_dir.glob("*.txt")):
             for item in parse_trivial_file(text_file):
                 inserted += add_question_if_missing(
-                    session, topic, item["question"], item["answer"], None
+                    session, topic, item["question"], item["answer"], None,
+                    legacy_text=item["legacy_text"], options=item["options"],
+                    correct_option_index=item["correct_option_index"],
                 )
     return inserted
 
@@ -198,7 +222,7 @@ def seed_database() -> None:
     try:
         inserted = seed_pasapalabra(session) + seed_trivial(session)
         session.commit()
-        print(f"Base de datos poblada con éxito: {inserted} preguntas nuevas.")
+        print(f"Banco sincronizado: {inserted} preguntas nuevas; existentes actualizadas.")
     except Exception as error:
         session.rollback()
         print(f"Error al poblar la base de datos: {error}")
