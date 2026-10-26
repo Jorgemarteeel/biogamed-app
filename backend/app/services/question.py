@@ -6,6 +6,22 @@ from app.models import Question, Topic
 from app.schemas.question import QuestionCreate
 
 
+def update_accepted_answers(db: Session, question_id: int, answers: list[str]) -> Question:
+    question = db.get(Question, question_id)
+    if question is None:
+        raise HTTPException(404, "La pregunta no existe.")
+    if question.question_type != "PASAPALABRA":
+        raise HTTPException(422, "Las respuestas alternativas solo se utilizan en PASAPALABRA.")
+    question.accepted_answers = answers
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(question)
+    return question
+
+
 def create_question(db: Session, question: QuestionCreate) -> Question:
     topic = db.execute(select(Topic).where(Topic.id == question.topic_id)).scalar_one_or_none()
     if topic is None:

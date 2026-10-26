@@ -3,6 +3,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.models import AnswerLog, GameSession, Question, Topic, User
+from app.utils.answers import is_accepted_answer
 from app.schemas.game import (
     AnswerCorrection, GameResultResponse, GameSessionStartResponse,
     QuestionForGame, UserAnswer,
@@ -98,8 +99,9 @@ def submit_game_session(
                 correction = AnswerCorrection(
                     question_id=question.id, text_answer=answer.text_answer,
                     exact_word=question.exact_word,
-                    is_correct=(answer.text_answer.strip().lower()
-                                == question.exact_word.strip().lower()),
+                    is_correct=is_accepted_answer(
+                        answer.text_answer, question.exact_word, question.accepted_answers,
+                    ),
                 )
             corrections.append(correction)
             logs.append(AnswerLog(
@@ -110,6 +112,7 @@ def submit_game_session(
                 selected_index=correction.selected_index, text_answer=correction.text_answer,
                 correct_option_index=correction.correct_option_index,
                 exact_word=correction.exact_word, is_correct=correction.is_correct,
+                accepted_answers=list(question.accepted_answers or []) if session.game_mode == "PASAPALABRA" else None,
                 response_time_ms=answer.response_time_ms,
             ))
         score = sum(c.is_correct for c in corrections)

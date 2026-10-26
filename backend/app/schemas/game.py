@@ -58,6 +58,7 @@ class AnswerHistory(BaseModel):
     text_answer: str | None
     correct_option_index: int | None
     exact_word: str | None
+    accepted_answers: list[str] | None
     is_correct: bool
     response_time_ms: int | None
     answered_at: datetime

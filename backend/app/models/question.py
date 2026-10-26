@@ -18,6 +18,7 @@ class Question(Base):
     )
     letter: Mapped[str | None] = mapped_column(String(1), nullable=True)
     exact_word: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    accepted_answers: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id"), nullable=False)
 
     topic: Mapped["Topic"] = relationship(back_populates="questions")

@@ -24,6 +24,7 @@ class AnswerLog(Base):
     text_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     correct_option_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
     exact_word: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    accepted_answers: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False)
     response_time_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     answered_at: Mapped[datetime] = mapped_column(

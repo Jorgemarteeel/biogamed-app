@@ -1,5 +1,33 @@
 # Base de datos y banco de preguntas
 
+## Corrección de Pasapalabra
+
+La comparación ignora mayúsculas, tildes de vocales, diéresis y espacios
+sobrantes (también espacios repetidos dentro de una expresión). Conserva la
+diferencia entre `n` y `ñ`, la puntuación y las palabras completas: no utiliza
+coincidencias aproximadas ni deduce equivalencias médicas automáticamente.
+
+Cada pregunta puede tener `accepted_answers`, una lista de hasta 30 respuestas
+alternativas aprobadas por el docente, además de `exact_word`. Se pueden
+especificar al crearla o sustituir mediante la API autenticada:
+
+```text
+PATCH /questions/{question_id}/accepted-answers
+{"accepted_answers": ["glóbulo blanco"]}
+```
+
+Solo profesores y administradores pueden realizar esta operación. Una lista
+vacía elimina las alternativas; la respuesta principal continúa siendo válida.
+La alternativa puede empezar por otra letra, pues se acepta explícitamente
+como equivalente para esa pregunta. El docente debe decidir si eso encaja con
+la pista. No se generan sinónimos automáticamente para el banco existente.
+El importador conserva las alternativas configuradas al repetir la carga.
+
+Las alternativas no se envían al comenzar una partida. Se guarda una copia en
+el historial junto con la respuesta original del jugador, sin modificar esta.
+Las partidas ya corregidas no se recalculan. Para instalaciones existentes,
+aplicar `alembic upgrade head` antes de arrancar el backend actualizado.
+
 Desde la raíz del repositorio, con Docker disponible:
 
 ```sh

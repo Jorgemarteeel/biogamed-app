@@ -4,11 +4,23 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import Question, User, UserRole
-from app.schemas.question import QuestionCreate, QuestionResponse
+from app.schemas.question import QuestionCreate, QuestionResponse, QuestionSynonymsUpdate
 from app.services import question as question_service
 
 
 router = APIRouter(prefix="/questions", tags=["Questions"])
+
+
+@router.patch("/{question_id}/accepted-answers", response_model=QuestionResponse)
+def update_accepted_answers(
+    payload: QuestionSynonymsUpdate,
+    question_id: int = Path(ge=1),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Question:
+    if current_user.role not in {UserRole.ADMIN, UserRole.TEACHER}:
+        raise HTTPException(403, "No tienes permisos para modificar preguntas.")
+    return question_service.update_accepted_answers(db, question_id, payload.accepted_answers)
 
 
 @router.post("/", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
