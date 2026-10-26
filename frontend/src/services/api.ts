@@ -5,6 +5,24 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "teacher" | "student";
+}
+
+export async function registerUser(data: RegisterData): Promise<UserResponse> {
+  const response = await api.post<UserResponse>("/auth/register", data);
+  return response.data;
+}
+
 export interface Topic {
   id: number;
   name: string;
