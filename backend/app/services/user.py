@@ -13,7 +13,7 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 
 
 def create_user(db: Session, user: UserCreate) -> User:
-    """Cifra la contraseña y guarda el nuevo usuario en PostgreSQL"""
+    """Calcula el hash de la contraseña y guarda el nuevo usuario en PostgreSQL."""
     hashed_password = get_password_hash(user.password)
     
     # Creamos el objeto de base de datos

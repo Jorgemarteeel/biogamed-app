@@ -13,12 +13,12 @@ SECRET_KEY = os.getenv(
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Configuramos el motor de cifrado usando el algoritmo bcrypt
+# Configuramos bcrypt para calcular y verificar hashes de contraseñas.
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
     """
-    Recibe una contraseña en texto plano y devuelve su versión cifrada (hash).
+    Calcula el hash de una contraseña con bcrypt y una sal aleatoria.
     """
     return pwd_context.hash(password)
 

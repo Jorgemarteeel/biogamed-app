@@ -31,7 +31,14 @@ def get_questions_by_topic(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> list[Question]:
+    # This management response includes solutions, so it requires a staff role.
+    if current_user.role not in {UserRole.ADMIN, UserRole.TEACHER}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para consultar el banco de preguntas.",
+        )
     return question_service.get_questions_by_topic(
         db=db, topic_id=topic_id, skip=skip, limit=limit
     )

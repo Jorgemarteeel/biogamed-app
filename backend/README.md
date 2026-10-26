@@ -34,6 +34,12 @@ docker compose run --rm --no-deps backend python -m pytest -q
 
 ## Historial de partidas
 
+El banco completo (`GET /questions/topic/{topic_id}`) incluye soluciones y
+requiere un usuario con rol de profesor o administrador: sin credenciales
+válidas responde `401` y para estudiantes responde `403`. Los jugadores
+obtienen las preguntas sin soluciones al iniciar una partida y la corrección
+al enviarla. El rol se comprueba contra el usuario actual de la base de datos.
+
 `game_engine_sessions` es el único modelo de partidas. `User.game_sessions`
 apunta a esas partidas y `GameSession.answer_logs` / `Question.answer_logs`
 permiten consultar sus respuestas en la nueva tabla `answer_logs`.
