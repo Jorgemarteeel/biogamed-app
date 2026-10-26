@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from app.models import GameSession, Question, Topic, User
+from app.models import AnswerLog, GameSession, Question, Topic, User
 from app.schemas.game import (
     AnswerCorrection, GameResultResponse, GameSessionStartResponse,
     QuestionForGame, UserAnswer,
@@ -72,6 +72,7 @@ def submit_game_session(
             select(Question).where(Question.id.in_(session.question_ids))
         )}
         corrections = []
+        logs = []
         for answer in answers:
             question = questions.get(answer.question_id)
             if (question is None or question.topic_id != session.topic_id
@@ -101,6 +102,16 @@ def submit_game_session(
                                 == question.exact_word.strip().lower()),
                 )
             corrections.append(correction)
+            logs.append(AnswerLog(
+                game_session_id=session.id, question_id=question.id,
+                question_text=question.text, question_type=session.game_mode,
+                options=list(question.options) if session.game_mode == "TRIVIAL" else None,
+                letter=question.letter if session.game_mode == "PASAPALABRA" else None,
+                selected_index=correction.selected_index, text_answer=correction.text_answer,
+                correct_option_index=correction.correct_option_index,
+                exact_word=correction.exact_word, is_correct=correction.is_correct,
+                response_time_ms=answer.response_time_ms,
+            ))
         score = sum(c.is_correct for c in corrections)
         # The conditional update also prevents double submissions without row locks.
         updated = db.execute(update(GameSession).where(
@@ -108,6 +119,7 @@ def submit_game_session(
         ).values(score=score, is_completed=True))
         if updated.rowcount != 1:
             raise HTTPException(409, "La sesión ya está completada.")
+        db.add_all(logs)
         result = GameResultResponse(
             score=score, total_questions=len(session.question_ids), corrections=corrections
         )
@@ -116,3 +128,18 @@ def submit_game_session(
         db.rollback()
         raise
     return result
+
+
+def get_game_history(db: Session, current_user: User, skip: int, limit: int):
+    return list(db.scalars(select(GameSession).where(
+        GameSession.user_id == current_user.id,
+    ).order_by(GameSession.created_at.desc(), GameSession.id.desc()).offset(skip).limit(limit)))
+
+
+def get_game_history_detail(db: Session, current_user: User, session_id: int):
+    session = db.scalar(select(GameSession).where(
+        GameSession.id == session_id, GameSession.user_id == current_user.id,
+    ))
+    if session is None:
+        raise HTTPException(404, "La sesión no existe.")
+    return session

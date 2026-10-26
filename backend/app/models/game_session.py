@@ -2,13 +2,16 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
 
 class GameSession(Base):
     __tablename__ = "game_engine_sessions"
+
+    user: Mapped["User"] = relationship(back_populates="game_sessions")
+    answer_logs: Mapped[list["AnswerLog"]] = relationship(back_populates="game_session", order_by="AnswerLog.id")
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)

@@ -5,9 +5,9 @@ from app.models.user import User, UserRole
 from app.models.topic import Topic
 from app.models.question import Question
 from app.models.game_session import GameSession
-from app.models.legacy import AnswerLog, AnswerStatus, GameMode, LegacyGameSession
+from app.models.answer_log import AnswerLog
 
 __all__ = [
     "Base", "User", "UserRole", "Topic", "Question", "GameSession",
-    "AnswerLog", "AnswerStatus", "GameMode", "LegacyGameSession",
+    "AnswerLog",
 ]

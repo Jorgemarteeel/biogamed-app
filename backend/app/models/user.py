@@ -31,6 +31,6 @@ class User(Base):
         default=UserRole.STUDENT,
     )
 
-    game_sessions: Mapped[list["LegacyGameSession"]] = relationship(
+    game_sessions: Mapped[list["GameSession"]] = relationship(
         back_populates="user"
     )

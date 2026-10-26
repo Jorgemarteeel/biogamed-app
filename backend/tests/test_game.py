@@ -1,6 +1,6 @@
 import pytest
 
-from app.models import GameSession, Question
+from app.models import AnswerLog, GameSession, Question, User
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ def test_game_engine_trivial(client, db, topic, auth_headers, selected_index, ex
     response = client.post(
         f"/game/submit/{game['session_id']}",
         headers=auth_headers,
-        json={"answers": [{"question_id": question.id, "selected_index": selected_index}]},
+        json={"answers": [{"question_id": question.id, "selected_index": selected_index, "response_time_ms": 1500}]},
     )
     assert response.status_code == 200, response.text
     result = response.json()
@@ -45,6 +45,30 @@ def test_game_engine_trivial(client, db, topic, auth_headers, selected_index, ex
     session = db.get(GameSession, game["session_id"])
     assert session.is_completed is True
     assert session.score == expected_score
+    assert len(session.answer_logs) == 1
+    log = session.answer_logs[0]
+    assert log.selected_index == selected_index
+    assert log.is_correct is bool(expected_score)
+    assert log.response_time_ms == 1500
+    assert log.question is question
+    assert session in session.user.game_sessions
+    assert log in question.answer_logs
+
+    # Editing the bank must not rewrite what was answered or its correction.
+    question.text = "Changed question"
+    question.options = ["New A", "New B", "New C", "New D"]
+    question.correct_option_index = 0
+    db.commit()
+    history = client.get(f"/game/history/{session.id}", headers=auth_headers)
+    assert history.status_code == 200
+    saved = history.json()["answer_logs"][0]
+    assert saved["question_text"] == "Which organ pumps blood?"
+    assert saved["options"] == ["Lung", "Liver", "Heart", "Kidney"]
+    assert saved["correct_option_index"] == 2
+    repeat = client.post(f"/game/submit/{session.id}", headers=auth_headers,
+                         json={"answers": [{"question_id": question.id, "selected_index": 0}]})
+    assert repeat.status_code == 409
+    assert db.query(AnswerLog).count() == 1
 
 
 @pytest.mark.parametrize("text_answer", ["Aorta", "  aORTA  ", "\tAORTA\n"])
@@ -90,3 +114,57 @@ def test_game_engine_pasapalabra(client, db, topic, auth_headers, text_answer):
     session = db.get(GameSession, game["session_id"])
     assert session.is_completed is True
     assert session.score == 1
+    assert len(session.answer_logs) == 1
+    log = session.answer_logs[0]
+    assert log.text_answer == text_answer
+    assert log.exact_word == "Aorta"
+    assert log.letter == "A"
+    assert log.response_time_ms is None
+    assert log.is_correct is True
+
+
+def test_history_is_private(client, db, topic, auth_headers, test_user):
+    other = User(name="Other", email="other@example.com", hashed_password="unused")
+    db.add(other)
+    db.flush()
+    own = GameSession(user_id=test_user.id, topic_id=topic.id, question_ids=[])
+    foreign = GameSession(user_id=other.id, topic_id=topic.id, question_ids=[])
+    db.add_all([own, foreign])
+    db.commit()
+    response = client.get("/game/history", headers=auth_headers)
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [own.id]
+    assert client.get(f"/game/history/{foreign.id}", headers=auth_headers).status_code == 404
+    assert client.get("/game/history").status_code == 401
+    assert client.get(f"/game/history/{own.id}").status_code == 401
+    assert client.get("/game/history?limit=0", headers=auth_headers).status_code == 422
+    assert client.get("/game/history?skip=1", headers=auth_headers).json() == []
+    # Pre-existing completed games have no fabricated answer history.
+    own.is_completed = True
+    db.commit()
+    assert client.get(f"/game/history/{own.id}", headers=auth_headers).json()["answer_logs"] == []
+
+
+def test_history_and_score_roll_back_together(db, topic, test_user):
+    from sqlalchemy import event
+    from app.schemas.game import UserAnswer
+    from app.services.game import start_game_session, submit_game_session
+
+    question = Question(text="Question", topic_id=topic.id, options=["A", "B", "C", "D"],
+                        correct_answer="A", correct_option_index=0)
+    db.add(question)
+    db.commit()
+    game = start_game_session(db, test_user, topic.id)
+    def fail_insert(*args):
+        raise RuntimeError("history write failed")
+    event.listen(AnswerLog, "before_insert", fail_insert)
+    try:
+        with pytest.raises(RuntimeError, match="history write failed"):
+            submit_game_session(db, test_user, game.session_id,
+                                [UserAnswer(question_id=question.id, selected_index=0)])
+    finally:
+        event.remove(AnswerLog, "before_insert", fail_insert)
+    session = db.get(GameSession, game.session_id)
+    assert session.is_completed is False
+    assert session.score == 0
+    assert db.query(AnswerLog).count() == 0

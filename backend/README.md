@@ -31,3 +31,38 @@ Pruebas (usan una base SQLite aislada, sin modificar PostgreSQL):
 ```sh
 docker compose run --rm --no-deps backend python -m pytest -q
 ```
+
+## Historial de partidas
+
+`game_engine_sessions` es el único modelo de partidas. `User.game_sessions`
+apunta a esas partidas y `GameSession.answer_logs` / `Question.answer_logs`
+permiten consultar sus respuestas en la nueva tabla `answer_logs`.
+
+Al corregir una partida se guardan las respuestas y la puntuación en la misma
+transacción. Cada respuesta conserva el enunciado, opciones, letra, respuesta
+enviada y corrección de ese momento. Los cambios posteriores del banco no
+alteran ese historial. La pareja partida/pregunta es única.
+
+La API autenticada permite consultar el historial del propio usuario:
+
+- `GET /game/history?skip=0&limit=20`: partidas, de más reciente a más antigua.
+- `GET /game/history/{session_id}`: detalle con `answer_logs`.
+- `POST /game/submit/{session_id}` admite `response_time_ms` opcional en cada
+  respuesta. Es un tiempo declarado por el cliente, no una medición del servidor.
+  Si el cliente no lo envía, se guarda como `null`, sin inventar una duración.
+
+No se ha añadido una pantalla de historial al frontend. Las partidas anteriores
+a esta funcionalidad conservan sus puntuaciones y tienen el historial de
+respuestas vacío; no es posible reconstruir respuestas que no se registraron.
+
+La migración `d64caef31027` sustituye las tablas antiguas únicamente si están
+vacías. Si otra instalación contiene registros antiguos, se detiene antes de
+eliminarlos: será necesario trasladarlos o archivarlos explícitamente. También
+impide revertir la migración si el nuevo historial ya contiene respuestas.
+
+Para probar además la migración sobre PostgreSQL (crea y elimina un esquema
+temporal aislado, sin modificar las tablas de la aplicación):
+
+```sh
+docker compose run --rm --no-deps -e TEST_POSTGRES_MIGRATIONS=1 backend python -m pytest -q
+```
