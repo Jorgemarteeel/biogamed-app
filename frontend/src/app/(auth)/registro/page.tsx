@@ -96,11 +96,6 @@ export default function RegistroPage() {
           <p className="mt-2 text-xs text-slate-500">Usa al menos 8 caracteres para proteger tu cuenta.</p>
         </div>
 
-        <label className="flex cursor-pointer items-start gap-3 pt-1 text-xs leading-5 text-slate-600">
-          <input type="checkbox" name="terms" required className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-sky-800" />
-          <span>Acepto las condiciones de uso y el tratamiento académico de mis datos de progreso.</span>
-        </label>
-
         <button type="submit" className="group flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3.5 font-extrabold text-white shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-orange-500/20">
           {isLoading ? "Creando cuenta…" : "Crear mi cuenta"}
           <svg className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m13 7 5 5m0 0-5 5m5-5H6" /></svg>
