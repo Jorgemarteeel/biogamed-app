@@ -85,6 +85,27 @@ export async function loginUser(
 
 export type GameMode = "TRIVIAL" | "PASAPALABRA";
 
+export interface GameQuestion {
+  id: number;
+  text: string;
+  options: string[] | null;
+  question_type: GameMode;
+  letter: string | null;
+}
+
+export interface GameSessionStart {
+  session_id: number;
+  topic_id: number;
+  questions: GameQuestion[];
+}
+
+export async function startTrivialGame(topicId: number): Promise<GameSessionStart> {
+  const response = await api.post<GameSessionStart>(`/game/start/${topicId}`, null, {
+    params: { mode: "TRIVIAL" },
+  });
+  return response.data;
+}
+
 export async function getTopics(mode?: GameMode): Promise<Topic[]> {
   const response = await api.get<Topic[]>("/topics/", { params: mode ? { mode } : undefined });
   return response.data;

@@ -101,3 +101,36 @@ test("successful requests keep token and response", async () => {
   assert.equal(values.get("token"), "old-token");
   assert.deepEqual(redirects, []);
 });
+
+test("starting Trivial sends an authenticated POST and returns the server session", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const session = { session_id: 17, topic_id: 3, questions: [
+    { id: 8, text: "Pregunta", options: ["A", "B"], question_type: "TRIVIAL", letter: null },
+  ] };
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "post");
+    assert.equal(config.url, "/game/start/3");
+    assert.deepEqual(config.params, { mode: "TRIVIAL" });
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    return { status: 201, data: session, headers: {}, config };
+  };
+  try {
+    assert.deepEqual(await loaded.exports.startTrivialGame(3), session);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
+test("a topic with no playable questions keeps the session and exposes the 409", async () => {
+  const { values, redirects } = browser();
+  const originalAdapter = api.defaults.adapter;
+  api.defaults.adapter = rejectWith(409);
+  try {
+    await assert.rejects(loaded.exports.startTrivialGame(3), (error) => error.response.status === 409);
+    assert.equal(values.get("token"), "old-token");
+    assert.deepEqual(redirects, []);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
