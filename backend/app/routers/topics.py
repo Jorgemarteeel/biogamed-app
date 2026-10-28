@@ -5,6 +5,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import Topic, User, UserRole
 from app.schemas.topic import TopicCreate, TopicResponse
+from app.schemas.question import QuestionType
 from app.services import topic as topic_service
 
 
@@ -15,9 +16,10 @@ router = APIRouter(prefix="/topics", tags=["Topics"])
 def list_topics(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=100),
+    mode: QuestionType | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[Topic]:
-    return topic_service.get_topics(db=db, skip=skip, limit=limit)
+    return topic_service.get_topics(db=db, skip=skip, limit=limit, mode=mode)
 
 
 @router.post(

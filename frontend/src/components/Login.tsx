@@ -5,19 +5,21 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { loginUser } from "@/services/api";
 
-export default function Login() {
+export default function Login({ sessionExpired = false }: { sessionExpired?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showSessionNotice, setShowSessionNotice] = useState(sessionExpired);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isLoading) return;
 
     setIsLoading(true);
+    setShowSessionNotice(false);
     setError("");
     setSuccess("");
 
@@ -46,13 +48,15 @@ export default function Login() {
     }
   }
 
-  const inputClassName =
-    "block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-700";
-
   return (
     <form onSubmit={handleSubmit} aria-busy={isLoading} className="space-y-5">
+      {showSessionNotice && (
+        <p role="status" className="notice-warning">
+          Tu sesión ha caducado o ya no es válida. Vuelve a iniciar sesión.
+        </p>
+      )}
       <div>
-        <label htmlFor="login-email" className="mb-2 block font-semibold">
+        <label htmlFor="login-email" className="form-label">
           Correo electrónico
         </label>
         <input
@@ -64,11 +68,11 @@ export default function Login() {
           onChange={(event) => setEmail(event.target.value)}
           disabled={isLoading}
           required
-          className={inputClassName}
+          className="form-input"
         />
       </div>
       <div>
-        <label htmlFor="login-password" className="mb-2 block font-semibold">
+        <label htmlFor="login-password" className="form-label">
           Contraseña
         </label>
         <input
@@ -80,15 +84,15 @@ export default function Login() {
           onChange={(event) => setPassword(event.target.value)}
           disabled={isLoading}
           required
-          className={inputClassName}
+          className="form-input"
         />
       </div>
-      {error && <p role="alert" className="text-red-700">{error}</p>}
-      {success && <p role="status" className="text-green-700">{success}</p>}
+      {error && <p role="alert" className="notice-error">{error}</p>}
+      {success && <p role="status" className="notice-success">{success}</p>}
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-xl bg-orange-500 px-5 py-3 font-bold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="button-primary w-full"
       >
         {isLoading ? "Iniciando sesión…" : "Entrar en BioGaMed"}
       </button>

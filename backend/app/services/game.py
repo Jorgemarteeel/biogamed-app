@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models import AnswerLog, GameSession, Question, Topic, User
 from app.utils.answers import is_accepted_answer
+from app.services.game_questions import playable_question_filter
 from app.schemas.game import (
     AnswerCorrection, GameResultResponse, GameSessionStartResponse,
     QuestionForGame, UserAnswer,
@@ -18,17 +19,8 @@ def start_game_session(
     if db.get(Topic, topic_id) is None:
         raise HTTPException(404, "La temática no existe.")
     statement = select(Question).where(
-        Question.topic_id == topic_id, Question.question_type == game_mode,
+        Question.topic_id == topic_id, playable_question_filter(game_mode),
     )
-    if game_mode == "TRIVIAL":
-        statement = statement.where(
-            Question.options.is_not(None),
-            Question.correct_option_index.is_not(None),
-        )
-    else:
-        statement = statement.where(
-            Question.letter.is_not(None), Question.exact_word.is_not(None),
-        )
     questions = list(db.scalars(statement.order_by(func.random()).limit(10)))
     if not questions:
         raise HTTPException(409, "La temática no tiene preguntas disponibles para este modo.")

@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend de BioGaMed
 
-## Getting Started
+Aplicación Next.js con React, TypeScript y Tailwind CSS.
 
-First, run the development server:
+## Ejecución local
 
-```bash
+Desde `frontend/`, con Node.js y las dependencias instaladas:
+
+```sh
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre `http://localhost:3000`. El backend debe estar disponible en
+`http://localhost:8000`. Para utilizar Docker, consulta `docker-compose.yml`
+en la raíz del repositorio.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Comprobaciones
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+npm run lint
+npx next typegen
+npx tsc --noEmit
+```
 
-## Learn More
+## Panel del estudiante
 
-To learn more about Next.js, take a look at the following resources:
+`/dashboard` comprueba el token con `/auth/me`, carga temáticas desde `/topics/`
+y muestra hasta cinco partidas recientes desde `/game/history`. Sin token
+redirige al login; una sesión rechazada utiliza el interceptor compartido.
+El cierre de sesión elimina la clave `token` sin borrar otros datos del navegador.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+El panel muestra primero Trivial y Pasapalabra. Al elegir un juego, consulta
+`/topics/?mode=TRIVIAL` o `mode=PASAPALABRA` y muestra solo temáticas con
+preguntas disponibles. Se puede volver a cambiar de juego; las respuestas
+tardías de una selección anterior no sustituyen los temas del modo actual.
+Las tarjetas de temática enlazan a `/game?topicId=…&mode=TRIVIAL` o `mode=PASAPALABRA`.
+La página `/game` se implementará en el siguiente paso. No se muestran números
+de preguntas por temática porque la respuesta actual de temas no los incluye.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Sesiones rechazadas por el backend
 
-## Deploy on Vercel
+El cliente compartido de Axios añade el token almacenado a las peticiones,
+excepto al login y al registro. Si una petición con el token actual recibe
+`401`, elimina ese token y redirige a `/login?session=expired`, donde se pide
+iniciar sesión de nuevo. El mensaje indica que la sesión ha caducado o ya no
+es válida: el backend usa `401` para ambos casos.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Un login incorrecto conserva su mensaje de credenciales incorrectas. Los
+errores `403`, de servidor o de red no cierran la sesión. Una respuesta tardía
+de un token anterior no elimina uno nuevo. Esta gestión ocurre al recibir un
+`401`; no hay temporizador ni renovación automática del token.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Pruebas del interceptor (tras instalar las dependencias con `npm ci`):
+
+```sh
+node --test tests/session-expiry.test.mjs
+```

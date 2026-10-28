@@ -3,10 +3,14 @@ from sqlalchemy.orm import Session
 
 from app.models import Topic
 from app.schemas.topic import TopicCreate
+from app.services.game_questions import playable_question_filter
 
 
-def get_topics(db: Session, skip: int = 0, limit: int = 100) -> list[Topic]:
-    statement = select(Topic).offset(skip).limit(limit)
+def get_topics(db: Session, skip: int = 0, limit: int = 100, mode: str | None = None) -> list[Topic]:
+    statement = select(Topic)
+    if mode is not None:
+        statement = statement.where(Topic.questions.any(playable_question_filter(mode)))
+    statement = statement.order_by(Topic.id).offset(skip).limit(limit)
     return list(db.scalars(statement).all())
 
 
