@@ -134,3 +134,78 @@ test("a topic with no playable questions keeps the session and exposes the 409",
     api.defaults.adapter = originalAdapter;
   }
 });
+
+test("submission sends each selection including index zero and uses the server score", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const answers = [{ question_id: 21, selected_index: 0 }, { question_id: 5, selected_index: 2 }];
+  const result = { score: 1, total_questions: 2, corrections: [
+    { question_id: 21, selected_index: 0, correct_option_index: 0, is_correct: true },
+    { question_id: 5, selected_index: 2, correct_option_index: 1, is_correct: false },
+  ] };
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "post");
+    assert.equal(config.url, "/game/submit/17");
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    assert.deepEqual(JSON.parse(config.data), { answers });
+    return { status: 200, data: result, headers: {}, config };
+  };
+  try {
+    assert.deepEqual(await loaded.exports.submitTrivialGame(17, answers), result);
+    assert.deepEqual(answers, [{ question_id: 21, selected_index: 0 }, { question_id: 5, selected_index: 2 }]);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
+test("retry after a lost submission response recovers the saved result", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const answers = [{ question_id: 21, selected_index: 0 }];
+  const corrections = [{ question_id: 21, selected_index: 0, correct_option_index: 0, is_correct: true }];
+  let posts = 0;
+  const calls = [];
+  api.defaults.adapter = async (config) => {
+    calls.push(`${config.method} ${config.url}`);
+    if (config.method === "post") {
+      posts += 1;
+      return rejectWith(posts === 1 ? undefined : 409)(config);
+    }
+    return { status: 200, data: { is_completed: true, score: 1, question_ids: [21], answer_logs: corrections }, headers: {}, config };
+  };
+  try {
+    await assert.rejects(loaded.exports.submitTrivialGame(17, answers));
+    assert.deepEqual(await loaded.exports.submitTrivialGame(17, answers), { score: 1, total_questions: 1, corrections });
+    assert.deepEqual(calls, ["post /game/submit/17", "post /game/submit/17", "get /game/history/17"]);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
+test("a conflict on an unfinished game stays an error instead of showing a false result", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  api.defaults.adapter = async (config) => config.method === "post"
+    ? rejectWith(409)(config)
+    : { status: 200, data: { is_completed: false, score: 0, question_ids: [21], answer_logs: [] }, headers: {}, config };
+  try {
+    await assert.rejects(loaded.exports.submitTrivialGame(17, [{ question_id: 21, selected_index: 0 }]), (error) => error.response.status === 409);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
+test("expired sessions during submission redirect to login without fetching history", async () => {
+  const { values, redirects } = browser();
+  const originalAdapter = api.defaults.adapter;
+  let calls = 0;
+  api.defaults.adapter = rejectWith(401, () => { calls += 1; });
+  try {
+    await assert.rejects(loaded.exports.submitTrivialGame(17, [{ question_id: 21, selected_index: 0 }]));
+    assert.equal(calls, 1);
+    assert.equal(values.has("token"), false);
+    assert.deepEqual(redirects, ["/login?session=expired"]);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});

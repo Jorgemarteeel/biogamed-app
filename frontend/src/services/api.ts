@@ -106,6 +106,41 @@ export async function startTrivialGame(topicId: number): Promise<GameSessionStar
   return response.data;
 }
 
+export interface TrivialAnswer {
+  question_id: number;
+  selected_index: number;
+}
+
+export interface GameCorrection {
+  question_id: number;
+  selected_index: number | null;
+  correct_option_index: number | null;
+  is_correct: boolean;
+}
+
+export interface GameResult {
+  score: number;
+  total_questions: number;
+  corrections: GameCorrection[];
+}
+
+export async function submitTrivialGame(sessionId: number, answers: TrivialAnswer[]): Promise<GameResult> {
+  try {
+    const response = await api.post<GameResult>(`/game/submit/${sessionId}`, { answers });
+    return response.data;
+  } catch (error: unknown) {
+    if (!axios.isAxiosError(error) || error.response?.status !== 409) throw error;
+    // A previous submission may have succeeded even if its response was lost.
+    const { data } = await api.get<GameHistorySummary & { answer_logs: GameCorrection[] }>(`/game/history/${sessionId}`);
+    if (!data.is_completed) throw error;
+    return {
+      score: data.score,
+      total_questions: data.question_ids.length,
+      corrections: data.answer_logs,
+    };
+  }
+}
+
 export async function getTopics(mode?: GameMode): Promise<Topic[]> {
   const response = await api.get<Topic[]>("/topics/", { params: mode ? { mode } : undefined });
   return response.data;

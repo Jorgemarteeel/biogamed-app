@@ -38,7 +38,7 @@ Las tarjetas de temática enlazan a `/game?topicId=…&mode=TRIVIAL` o `mode=PAS
 No se muestran números de preguntas por temática porque la respuesta actual
 de temas no los incluye.
 
-## Primera pantalla de Trivial
+## Partidas de Trivial
 
 `/game` valida los parámetros y comprueba la sesión. Al pulsar «Comenzar partida»,
 envía `POST /game/start/{topicId}?mode=TRIVIAL` y muestra la primera pregunta
@@ -46,10 +46,17 @@ con sus opciones. La creación ocurre solo al pulsar, con bloqueo de doble clic;
 abrir la página no crea partidas. Se gestionan errores de conexión, sesión
 caducada, temática inexistente y falta de preguntas.
 
-Este paso permite seleccionar una opción localmente. Todavía no envía respuestas,
-avanza entre preguntas ni calcula resultados; la partida queda «Sin finalizar».
-Recargar o abandonar la página pierde la selección. Pasapalabra muestra un aviso
-de preparación sin crear ninguna partida.
+Se puede avanzar y retroceder conservando las selecciones, y cambiarlas antes
+de finalizar. Es necesario responder todas las preguntas. Al terminar se envía
+una respuesta por pregunta a `POST /game/submit/{sessionId}`; la puntuación y
+la corrección proceden del backend. El resultado muestra los aciertos, la
+respuesta elegida y la correcta para cada pregunta.
+
+El envío bloquea los controles para evitar duplicados. Si falla, conserva las
+respuestas para reintentar. Si el backend ya había guardado la partida pero se
+perdió la respuesta, un reintento recupera el resultado desde el historial.
+Recargar o abandonar la página pierde las selecciones no enviadas. Pasapalabra
+muestra un aviso de preparación sin crear ninguna partida.
 
 ## Sesiones rechazadas por el backend
 

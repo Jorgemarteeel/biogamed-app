@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import Brand from "@/components/Brand";
+import TrivialGame from "@/components/TrivialGame";
 import {
   getCurrentUser, startTrivialGame,
   type GameMode, type GameSessionStart,
@@ -21,10 +22,8 @@ export default function GameStart({ topicId, mode }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [session, setSession] = useState<GameSessionStart | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const starting = useRef(false);
   const mounted = useRef(false);
-  const questionHeading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -46,10 +45,6 @@ export default function GameStart({ topicId, mode }: {
     return () => { active = false; };
   }, [router, authAttempt]);
 
-  useEffect(() => {
-    if (session) questionHeading.current?.focus();
-  }, [session]);
-
   async function start() {
     if (!authenticated || topicId === null || mode !== "TRIVIAL" || starting.current || session) return;
     starting.current = true;
@@ -58,9 +53,8 @@ export default function GameStart({ topicId, mode }: {
     try {
       const result = await startTrivialGame(topicId);
       if (!mounted.current) return;
-      const first = result.questions[0];
-      if (!first || first.question_type !== "TRIVIAL" || !first.options || first.options.length < 2) {
-        setError("No se ha recibido una pregunta válida. Vuelve al panel y elige otra temática.");
+      if (!result.questions.length || result.questions.some((question) => question.question_type !== "TRIVIAL" || !question.options || question.options.length < 2)) {
+        setError("No se han recibido preguntas válidas. Vuelve al panel y elige otra temática.");
         return;
       }
       setSession(result);
@@ -87,8 +81,6 @@ export default function GameStart({ topicId, mode }: {
     router.replace("/login");
   }
 
-  const firstQuestion = session?.questions[0];
-
   return (
     <div className="min-h-screen bg-background text-slate-900">
       <header className="site-header">
@@ -111,23 +103,10 @@ export default function GameStart({ topicId, mode }: {
             : mode === "PASAPALABRA" ? <>
               <h2 className="text-xl font-bold text-blue-950">Pasapalabra está en preparación</h2>
               <p className="mt-3 leading-7 text-slate-600">Todavía no puedes iniciar esta modalidad. Puedes volver al panel para explorar Trivial.</p>
-            </> : firstQuestion ? <>
-              <p className="text-sm font-semibold text-sky-800">Pregunta 1 de {session.questions.length}</p>
-              <h2 ref={questionHeading} tabIndex={-1} className="mt-4 break-words text-xl font-bold leading-8 text-blue-950 outline-none" id="question-heading">{firstQuestion.text}</h2>
-              <fieldset className="mt-6 space-y-3" aria-labelledby="question-heading">
-                <legend className="sr-only">Selecciona una respuesta</legend>
-                {firstQuestion.options?.map((option, index) => (
-                  <label key={index} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors focus-within:ring-2 focus-within:ring-sky-700 ${selectedIndex === index ? "border-sky-700 bg-sky-50" : "border-slate-300 hover:bg-slate-50"}`}>
-                    <input type="radio" name="answer" value={index} checked={selectedIndex === index} onChange={() => setSelectedIndex(index)} className="mt-1 h-4 w-4 shrink-0 accent-sky-800" />
-                    <span className="break-words leading-6">{option}</span>
-                  </label>
-                ))}
-              </fieldset>
-              <p className="mt-6 text-sm leading-6 text-slate-600">Esta versión permite explorar la primera pregunta. Tu selección aún no se envía ni se puntúa.</p>
-            </> : <>
+            </> : session ? <TrivialGame session={session} /> : <>
               <h2 className="text-xl font-bold text-blue-950">Practica eligiendo una respuesta</h2>
-              <p className="mt-3 leading-7 text-slate-600">Cargaremos las preguntas de la temática que has elegido. Por ahora podrás explorar la primera pregunta y sus opciones.</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Al comenzar se registra una partida. Si vuelves al panel, aparecerá como «Sin finalizar».</p>
+              <p className="mt-3 leading-7 text-slate-600">Responde las preguntas de la temática que has elegido. Podrás revisar tus elecciones y, al finalizar, consultar la puntuación y las respuestas correctas.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Si abandonas o recargas antes de terminar, perderás tus selecciones y la partida quedará «Sin finalizar».</p>
               {error && <p role="alert" className="notice-error mt-5">{error}</p>}
               <button onClick={start} disabled={loading} className="button-primary mt-6 w-full sm:w-auto">{loading ? "Cargando partida…" : "Comenzar partida"}</button>
               {loading && <p role="status" className="mt-3 text-sm text-slate-600">Buscando tus preguntas…</p>}
