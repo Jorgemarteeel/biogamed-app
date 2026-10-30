@@ -35,6 +35,7 @@ class ContentContext(BaseModel):
 
 class AvailableCombination(BaseModel):
     category_id: int | None
+    category_name: str | None
     difficulty: int | None
     count: int
 

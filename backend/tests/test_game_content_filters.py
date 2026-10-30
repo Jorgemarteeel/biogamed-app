@@ -28,13 +28,19 @@ def test_availability_and_filtered_start_preserve_snapshot(db, client, topic,
     assert client.get(url).status_code == 401
     availability = client.get(url, headers=auth_headers).json()
     assert availability["total_questions"] == 16
+    assert {tuple(item[key] for key in ("category_id", "category_name", "difficulty", "count"))
+            for item in availability["combinations"]} == {
+        (a.id, "Linfocito", 2, 12), (a.id, "Linfocito", 3, 1),
+        (a.id, "Linfocito", None, 1), (b.id, "Macrófago", 2, 1),
+        (None, None, None, 1),
+    }
     assert not any("text" in item or "answer" in item
                    for item in availability["combinations"])
     params = {"category_id": a.id, "difficulty": 2}
     filtered = client.get(url, params=params, headers=auth_headers).json()
     assert filtered["total_questions"] == 12
     assert filtered["combinations"] == [
-        {"category_id": a.id, "difficulty": 2, "count": 12}]
+        {"category_id": a.id, "category_name": "Linfocito", "difficulty": 2, "count": 12}]
     response = client.post(start, params=params, headers=auth_headers)
     assert response.status_code == 201, response.text
     data = response.json()

@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from app.models import AnswerLog, GameSession, Question, Topic, User
+from app.models import AnswerLog, Category, GameSession, Question, Topic, User
 from app.utils.answers import is_accepted_answer
 from app.services.game_questions import selectable_questions
 from app.schemas.game import (
@@ -65,14 +65,17 @@ def get_game_availability(db: Session, topic_id: int, game_mode: str = "TRIVIAL"
         raise HTTPException(404, "La temática no existe.")
     counts = db.execute(
         statement.with_only_columns(
-            Question.category_id, Question.difficulty, func.count(Question.id),
-        ).group_by(Question.category_id, Question.difficulty)
+            Question.category_id, Category.name, Question.difficulty,
+            func.count(Question.id), maintain_column_froms=True,
+        ).outerjoin(Category, Question.category_id == Category.id)
+        .group_by(Question.category_id, Category.name, Question.difficulty)
         .order_by(Question.category_id, Question.difficulty)
     ).all()
     return GameAvailabilityResponse(
         topic_id=topic_id, game_mode=game_mode,
-        total_questions=sum(row[2] for row in counts),
-        combinations=[{"category_id": row[0], "difficulty": row[1], "count": row[2]}
+        total_questions=sum(row[3] for row in counts),
+        combinations=[{"category_id": row[0], "category_name": row[1],
+                       "difficulty": row[2], "count": row[3]}
                       for row in counts],
     )
 

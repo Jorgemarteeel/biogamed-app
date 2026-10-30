@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { submitTrivialGame, type GameResult, type GameSessionStart } from "@/services/api";
 
-export default function TrivialGame({ session }: { session: GameSessionStart }) {
+export default function TrivialGame({ session, topicName }: { session: GameSessionStart; topicName: string }) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -18,6 +18,22 @@ export default function TrivialGame({ session }: { session: GameSessionStart }) 
   const selectedIndex = answers[question.id];
   const allAnswered = session.questions.every((item) => answers[item.id] !== undefined);
   const isLast = questionIndex === session.questions.length - 1;
+  const context = session.content_context;
+  const categoryNames = [...new Set(context?.questions.map((item) =>
+    item.category_id === null ? "Sin categoría" : item.category_name || `Categoría ${item.category_id}`) ?? [])];
+  const categoryLabel = context?.selection.category_id !== null && context?.selection.category_id !== undefined
+    ? context.selection.category_name || `Categoría ${context.selection.category_id}`
+    : categoryNames.length === 1 ? categoryNames[0] : categoryNames.length > 1
+      ? `Varias categorías${categoryNames.includes("Sin categoría") ? ", incluidas preguntas sin categoría" : ""}`
+      : "Categoría no disponible";
+  const difficulties = [...new Set(context?.questions.map((item) => item.difficulty) ?? [])];
+  const difficultyLabel = context?.selection.difficulty !== null && context?.selection.difficulty !== undefined
+    ? `Nivel ${context.selection.difficulty}`
+    : context?.selection.difficulty_unknown ? "Dificultad sin clasificar"
+      : difficulties.length === 1 ? difficulties[0] === null ? "Dificultad sin clasificar" : `Nivel ${difficulties[0]}`
+        : difficulties.length > 1 ? `Dificultad mixta${difficulties.includes(null) ? ", incluidas preguntas sin clasificar" : ""}`
+          : "Dificultad no disponible";
+  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">Temática: {topicName} · Categoría: {categoryLabel} · Dificultad: {difficultyLabel}</p>;
 
   useEffect(() => {
     mounted.current = true;
@@ -99,6 +115,7 @@ export default function TrivialGame({ session }: { session: GameSessionStart }) 
       <div>
         <p className="text-xs font-bold uppercase tracking-widest text-sky-800">Partida completada</p>
         <h2 ref={heading} tabIndex={-1} className="mt-3 text-3xl font-black text-blue-950 outline-none">Tu resultado</h2>
+        {gameContext}
         <p className="mt-5 text-4xl font-black text-blue-950">{result.score} <span className="text-xl font-semibold text-slate-600">de {result.total_questions} aciertos</span></p>
         <p className="mt-3 leading-7 text-slate-600">Tu resultado se ha guardado. Revisa tus respuestas para seguir aprendiendo.</p>
         {journey}
@@ -126,6 +143,7 @@ export default function TrivialGame({ session }: { session: GameSessionStart }) 
 
   return (
     <div aria-busy={submitting}>
+      {gameContext}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-sky-800">
         <p>Pregunta {questionIndex + 1} de {session.questions.length}</p>
         <p>{Object.keys(answers).length} respondidas</p>

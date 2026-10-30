@@ -116,8 +116,10 @@ docker compose run --rm --no-deps backend python -m pytest -q
 ### Filtros de contenido para juegos nuevos
 
 `GET /game/availability/{topic_id}` (autenticado) devuelve `total_questions`
-y las combinaciones `category_id`, `difficulty` y `count` para una temática y
-modalidad. No devuelve preguntas ni soluciones. `POST /game/start/{topic_id}`
+y las combinaciones `category_id`, `category_name`, `difficulty` y `count`
+para una temática y modalidad. El nombre procede de `categories`; para
+preguntas sin categoría, ID y nombre son `null`. No devuelve preguntas ni
+soluciones. `POST /game/start/{topic_id}`
 acepta los mismos parámetros y selecciona hasta diez preguntas distintas:
 
 ```text

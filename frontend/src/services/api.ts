@@ -97,11 +97,47 @@ export interface GameSessionStart {
   session_id: number;
   topic_id: number;
   questions: GameQuestion[];
+  content_context: GameContentContext | null;
 }
 
-export async function startTrivialGame(topicId: number): Promise<GameSessionStart> {
-  const response = await api.post<GameSessionStart>(`/game/start/${topicId}`, null, {
+export interface GameContentContext {
+  selection: {
+    category_id: number | null;
+    category_name: string | null;
+    difficulty: number | null;
+    difficulty_unknown: boolean;
+  };
+  questions: {
+    question_id: number;
+    category_id: number | null;
+    category_name: string | null;
+    difficulty: number | null;
+  }[];
+}
+
+export interface GameAvailability {
+  topic_id: number;
+  game_mode: GameMode;
+  total_questions: number;
+  combinations: { category_id: number | null; category_name: string | null; difficulty: number | null; count: number }[];
+}
+
+export interface TrivialFilters {
+  category_id?: number;
+  difficulty?: number;
+  difficulty_unknown?: boolean;
+}
+
+export async function getTrivialAvailability(topicId: number): Promise<GameAvailability> {
+  const response = await api.get<GameAvailability>(`/game/availability/${topicId}`, {
     params: { mode: "TRIVIAL" },
+  });
+  return response.data;
+}
+
+export async function startTrivialGame(topicId: number, filters: TrivialFilters = {}): Promise<GameSessionStart> {
+  const response = await api.post<GameSessionStart>(`/game/start/${topicId}`, null, {
+    params: { mode: "TRIVIAL", ...filters },
   });
   return response.data;
 }

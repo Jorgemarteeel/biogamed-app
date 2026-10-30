@@ -122,6 +122,50 @@ test("starting Trivial sends an authenticated POST and returns the server sessio
   }
 });
 
+test("availability uses authenticated GET and returns counts without questions", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const availability = { topic_id: 6, game_mode: "TRIVIAL", total_questions: 10,
+    combinations: [{ category_id: 3, category_name: "Linfocito", difficulty: 2, count: 10 }] };
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "get");
+    assert.equal(config.url, "/game/availability/6");
+    assert.deepEqual(config.params, { mode: "TRIVIAL" });
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    return { status: 200, data: availability, headers: {}, config };
+  };
+  try {
+    assert.deepEqual(await loaded.exports.getTrivialAvailability(6), availability);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
+test("starting Trivial sends selected category, level or unknown difficulty", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const requests = [];
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "post");
+    assert.equal(config.url, "/game/start/6");
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    requests.push(config.params);
+    return { status: 201, data: { session_id: 1, topic_id: 6, questions: [] }, headers: {}, config };
+  };
+  try {
+    await loaded.exports.startTrivialGame(6, { category_id: 3, difficulty: 2 });
+    await loaded.exports.startTrivialGame(6, { difficulty_unknown: true });
+    await loaded.exports.startTrivialGame(6, { category_id: 3 });
+    assert.deepEqual(requests, [
+      { mode: "TRIVIAL", category_id: 3, difficulty: 2 },
+      { mode: "TRIVIAL", difficulty_unknown: true },
+      { mode: "TRIVIAL", category_id: 3 },
+    ]);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
 test("a topic with no playable questions keeps the session and exposes the 409", async () => {
   const { values, redirects } = browser();
   const originalAdapter = api.defaults.adapter;
