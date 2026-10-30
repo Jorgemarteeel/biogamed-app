@@ -1,5 +1,41 @@
 # Base de datos y banco de preguntas
 
+## Dificultad opcional de las preguntas
+
+`difficulty` es opcional en la creación y consulta del banco de preguntas,
+tanto para Trivial como para Pasapalabra. Admite `null` o enteros del 1 al 4;
+la API rechaza booleanos, decimales (incluido `2.0`) y cadenas como `"2"`.
+Omitir el campo conserva la compatibilidad y guarda `NULL`: dificultad desconocida.
+
+La escala representa los niveles de origen del prototipo. Su significado
+académico está pendiente de validación; no equivale todavía a etiquetas como
+«básico» o «avanzado». No se deduce dificultad de la modalidad ni del contenido.
+
+La migración `f86ec0153249`, posterior a `e75dbf042138`, añade una columna
+entera nullable, sin valor por defecto, y la restricción `ck_question_difficulty`
+(`NULL` o rango 1–4). No rellena preguntas existentes ni modifica sus IDs,
+contenidos, partidas o historial. El downgrade elimina solo esta restricción
+y columna, perdiendo cualquier dificultad que se haya asignado después.
+
+FastAPI valida `QuestionCreate` con Pydantic; el servicio existente pasa sus
+campos a `Question`, SQLAlchemy persiste el valor y PostgreSQL comprueba el
+rango. `QuestionResponse` lo devuelve en el banco autorizado. El entero estricto
+se exige en la API; la restricción SQL protege el rango, no la sintaxis del JSON.
+No cambia el contrato de preguntas del juego, la selección ni la puntuación.
+`seed.py` no asigna dificultad: las nuevas preguntas importadas quedan en `NULL`
+y repetir la carga no sustituye dificultades existentes.
+
+La prueba `tests/test_difficulty_migration.py` requiere una URL explícita en
+`TEST_DIFFICULTY_POSTGRES_URL`, de PostgreSQL con nombre de base que empiece por
+`test_biogamed_`. Debe apuntar a una base **desechable**, nunca a la de desarrollo.
+Sin esa variable, se omite. Crea y elimina únicamente su esquema temporal y
+comprueba la conservación de datos, ausencia de valores por defecto y rango SQL.
+Para ejecutarla dentro de ese entorno de pruebas:
+
+```sh
+python -m pytest -q tests/test_difficulty_migration.py
+```
+
 ## Corrección de Pasapalabra
 
 La comparación ignora mayúsculas, tildes de vocales, diéresis y espacios

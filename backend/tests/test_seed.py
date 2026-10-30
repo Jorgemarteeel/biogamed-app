@@ -37,9 +37,17 @@ def test_import_repairs_legacy_rows_and_is_repeatable(db, test_user):
     assert old_word.letter == letter
     assert old_word.exact_word == word["answer"]
     assert old_word.text == word["question"]
+    assert all(q.difficulty is None for q in db.scalars(select(Question)))
+    old_trivial.difficulty = 3
+    old_word.difficulty = 2
+    db.commit()
     assert seed.seed_pasapalabra(db) + seed.seed_trivial(db) == 0
     db.commit()
     assert db.scalar(select(func.count()).select_from(Question)) == count
+    assert (old_trivial.difficulty, old_word.difficulty) == (3, 2)
+    assert all(q.difficulty is None for q in db.scalars(
+        select(Question).where(Question.id.not_in(old_ids))
+    ))
 
     for question in db.scalars(select(Question)):
         if question.question_type == "TRIVIAL":

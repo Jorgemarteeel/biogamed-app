@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -6,9 +6,17 @@ from app.models.base import Base
 
 class Question(Base):
     __tablename__ = "questions"
+    __table_args__ = (
+        CheckConstraint(
+            "difficulty IS NULL OR difficulty BETWEEN 1 AND 4",
+            name="ck_question_difficulty",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(Text, nullable=False)
+    # Source levels from the prototype; their academic meaning is not validated yet.
+    difficulty: Mapped[int | None] = mapped_column(Integer, nullable=True)
     correct_answer: Mapped[str] = mapped_column(String(255), nullable=False)
     options: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     correct_option_index: Mapped[int | None] = mapped_column(Integer, nullable=True)

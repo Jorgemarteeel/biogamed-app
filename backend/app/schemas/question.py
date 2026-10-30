@@ -7,6 +7,10 @@ from app.utils.answers import normalize_answer
 # The legacy correct_answer column accepts at most 255 characters.
 AnswerOption = Annotated[str, Field(min_length=1, max_length=255)]
 QuestionType = Literal["TRIVIAL", "PASAPALABRA"]
+Difficulty = Annotated[int, Field(
+    strict=True, ge=1, le=4,
+    description="Nivel de origen del prototipo (1–4); significado académico pendiente de validación.",
+)]
 
 
 class AcceptedAnswers(BaseModel):
@@ -35,6 +39,7 @@ class QuestionBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     text: str = Field(min_length=1)
+    difficulty: Difficulty | None = None
     options: list[AnswerOption] | None = Field(default=None, min_length=4, max_length=4)
     correct_option_index: int | None = Field(default=None, ge=0, le=3)
     topic_id: int = Field(gt=0)
@@ -77,6 +82,7 @@ class QuestionUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     text: str | None = Field(default=None, min_length=1)
+    difficulty: Difficulty | None = None
     options: list[AnswerOption] | None = Field(default=None, min_length=4, max_length=4)
     correct_option_index: int | None = Field(default=None, ge=0, le=3)
     topic_id: int | None = Field(default=None, gt=0)
