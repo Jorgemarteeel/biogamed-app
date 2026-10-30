@@ -151,3 +151,33 @@ temporal aislado, sin modificar las tablas de la aplicación):
 ```sh
 docker compose run --rm --no-deps -e TEST_POSTGRES_MIGRATIONS=1 backend python -m pytest -q
 ```
+
+## Metadatos de origen de Trivial
+
+Desde `backend/`, ejecutar la simulación (solo lectura):
+
+```sh
+python -B tools/assign_trivial_metadata.py
+```
+
+El diagnóstico detallado escribe un informe en la ruta indicada; se recomienda
+una ubicación fuera del repositorio:
+
+```sh
+python -B tools/diagnose_trivial_sources.py --output /ruta/externa/informe.md
+```
+
+Tras verificar un respaldo de la base, aplicar las asignaciones:
+
+```sh
+python -B tools/assign_trivial_metadata.py --apply
+```
+
+La herramienta vuelve a comparar los TXT y las preguntas antes de escribir.
+Exige 160 correspondencias únicas, cero incidencias y diez preguntas por cada
+combinación de cuatro categorías de origen y niveles 1–4. Rechaza categorías
+ambiguas y metadatos incompatibles. En una sola transacción crea o reutiliza
+las cuatro categorías sin bloque y modifica únicamente `category_id` y
+`difficulty` de las preguntas identificadas. Puede repetirse sin duplicados.
+No ejecuta el importador de escritura ni clasifica Pasapalabra. Los niveles son
+los del prototipo; su significado académico sigue pendiente de validación.
