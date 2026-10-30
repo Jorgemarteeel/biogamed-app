@@ -1,5 +1,20 @@
 # Base de datos y banco de preguntas
 
+## Organización académica de contenidos
+
+`Subject` (asignatura) contiene bloques `ContentBlock`; cada bloque puede
+contener categorías `Category`. Una categoría puede quedar temporalmente sin
+bloque hasta validar su ubicación académica. Cada pregunta puede señalar una
+categoría mediante `category_id`; las existentes mantienen `NULL` y conservan
+su `topic_id`, su dificultad y sus identificadores.
+
+`Topic` sigue siendo la agrupación heredada que utilizan la API, el importador
+y los juegos. No representa todavía un nivel académico fijo: sus nombres
+actuales pueden describir materias o categorías del prototipo. Esta estructura
+no clasifica preguntas ni crea asignaturas, bloques o categorías automáticamente.
+Las claves foráneas impiden borrar un elemento académico referenciado; no hay
+borrado en cascada de preguntas o actividad.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

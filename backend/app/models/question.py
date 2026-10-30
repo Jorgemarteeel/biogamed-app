@@ -28,6 +28,10 @@ class Question(Base):
     exact_word: Mapped[str | None] = mapped_column(String(255), nullable=True)
     accepted_answers: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id"), nullable=False)
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("categories.id", ondelete="RESTRICT"), nullable=True, index=True,
+    )
 
     topic: Mapped["Topic"] = relationship(back_populates="questions")
+    category: Mapped["Category | None"] = relationship(back_populates="questions")
     answer_logs: Mapped[list["AnswerLog"]] = relationship(back_populates="question")
