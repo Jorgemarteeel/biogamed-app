@@ -14,10 +14,43 @@ class QuestionForGame(BaseModel):
     letter: str | None = None
 
 
+class QuestionClassification(BaseModel):
+    question_id: int
+    category_id: int | None
+    category_name: str | None
+    difficulty: int | None
+
+
+class SelectionContext(BaseModel):
+    category_id: int | None
+    category_name: str | None
+    difficulty: int | None
+    difficulty_unknown: bool
+
+
+class ContentContext(BaseModel):
+    selection: SelectionContext
+    questions: list[QuestionClassification]
+
+
+class AvailableCombination(BaseModel):
+    category_id: int | None
+    difficulty: int | None
+    count: int
+
+
+class GameAvailabilityResponse(BaseModel):
+    topic_id: int
+    game_mode: QuestionType
+    total_questions: int
+    combinations: list[AvailableCombination]
+
+
 class GameSessionStartResponse(BaseModel):
     session_id: int
     topic_id: int
     questions: list[QuestionForGame]
+    content_context: ContentContext | None = None
 
 
 class UserAnswer(BaseModel):
@@ -74,6 +107,7 @@ class GameHistorySummary(BaseModel):
     is_completed: bool
     created_at: datetime
     question_ids: list[int]
+    content_context: ContentContext | None = None
 
 
 class GameHistoryDetail(GameHistorySummary):

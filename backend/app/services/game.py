@@ -4,42 +4,77 @@ from sqlalchemy.orm import Session
 
 from app.models import AnswerLog, GameSession, Question, Topic, User
 from app.utils.answers import is_accepted_answer
-from app.services.game_questions import playable_question_filter
+from app.services.game_questions import selectable_questions
 from app.schemas.game import (
-    AnswerCorrection, GameResultResponse, GameSessionStartResponse,
+    AnswerCorrection, GameAvailabilityResponse, GameResultResponse, GameSessionStartResponse,
     QuestionForGame, UserAnswer,
 )
 
 
 def start_game_session(
-    db: Session, current_user: User, topic_id: int, game_mode: str = "TRIVIAL"
+    db: Session, current_user: User, topic_id: int, game_mode: str = "TRIVIAL",
+    category_id: int | None = None, difficulty: int | None = None,
+    difficulty_unknown: bool = False,
 ) -> GameSessionStartResponse:
-    if game_mode not in {"TRIVIAL", "PASAPALABRA"}:
-        raise HTTPException(422, "El modo debe ser TRIVIAL o PASAPALABRA.")
+    statement = selectable_questions(topic_id, game_mode, category_id, difficulty,
+                                     difficulty_unknown)
     if db.get(Topic, topic_id) is None:
         raise HTTPException(404, "La temática no existe.")
-    statement = select(Question).where(
-        Question.topic_id == topic_id, playable_question_filter(game_mode),
-    )
     questions = list(db.scalars(statement.order_by(func.random()).limit(10)))
     if not questions:
-        raise HTTPException(409, "La temática no tiene preguntas disponibles para este modo.")
+        raise HTTPException(409, "No hay preguntas disponibles para esta combinación de filtros.")
     public_questions = [QuestionForGame.model_validate(q) for q in questions]
+    content_context = {
+        "selection": {
+            "category_id": category_id,
+            "category_name": questions[0].category.name if category_id is not None else None,
+            "difficulty": difficulty, "difficulty_unknown": difficulty_unknown,
+        },
+        "questions": [
+            {"question_id": q.id, "category_id": q.category_id,
+             "category_name": q.category.name if q.category_id is not None else None,
+             "difficulty": q.difficulty}
+            for q in questions
+        ],
+    }
     session = GameSession(
         user_id=current_user.id, topic_id=topic_id, game_mode=game_mode,
-        question_ids=[q.id for q in questions], is_completed=False, score=0,
+        question_ids=[q.id for q in questions], content_context=content_context,
+        is_completed=False, score=0,
     )
     try:
         db.add(session)
         db.flush()
         result = GameSessionStartResponse(
-            session_id=session.id, topic_id=topic_id, questions=public_questions
+            session_id=session.id, topic_id=topic_id, questions=public_questions,
+            content_context=content_context,
         )
         db.commit()
     except Exception:
         db.rollback()
         raise
     return result
+
+
+def get_game_availability(db: Session, topic_id: int, game_mode: str = "TRIVIAL",
+                          category_id: int | None = None, difficulty: int | None = None,
+                          difficulty_unknown: bool = False) -> GameAvailabilityResponse:
+    statement = selectable_questions(topic_id, game_mode, category_id, difficulty,
+                                     difficulty_unknown)
+    if db.get(Topic, topic_id) is None:
+        raise HTTPException(404, "La temática no existe.")
+    counts = db.execute(
+        statement.with_only_columns(
+            Question.category_id, Question.difficulty, func.count(Question.id),
+        ).group_by(Question.category_id, Question.difficulty)
+        .order_by(Question.category_id, Question.difficulty)
+    ).all()
+    return GameAvailabilityResponse(
+        topic_id=topic_id, game_mode=game_mode,
+        total_questions=sum(row[2] for row in counts),
+        combinations=[{"category_id": row[0], "difficulty": row[1], "count": row[2]}
+                      for row in counts],
+    )
 
 
 def submit_game_session(

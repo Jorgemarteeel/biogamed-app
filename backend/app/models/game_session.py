@@ -22,6 +22,7 @@ class GameSession(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     question_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+    content_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     game_mode: Mapped[str] = mapped_column(
         String(20), default="TRIVIAL", server_default="TRIVIAL", nullable=False
     )

@@ -113,6 +113,33 @@ docker compose run --rm --no-deps backend python -m pytest -q
 
 ## Historial de partidas
 
+### Filtros de contenido para juegos nuevos
+
+`GET /game/availability/{topic_id}` (autenticado) devuelve `total_questions`
+y las combinaciones `category_id`, `difficulty` y `count` para una temática y
+modalidad. No devuelve preguntas ni soluciones. `POST /game/start/{topic_id}`
+acepta los mismos parámetros y selecciona hasta diez preguntas distintas:
+
+```text
+GET  /game/availability/6?mode=TRIVIAL&category_id=3&difficulty=2
+POST /game/start/6?mode=TRIVIAL&category_id=3&difficulty=2
+```
+
+`mode` admite `TRIVIAL` (por defecto) y `PASAPALABRA`; `category_id` es un ID
+positivo opcional. Para dificultad se puede omitir el filtro, indicar
+`difficulty=1` a `4` o elegir solo las preguntas sin nivel con
+`difficulty_unknown=true`. Indicar simultáneamente un nivel y dificultad
+desconocida devuelve `422`. Una combinación sin preguntas devuelve `409` al
+iniciar; disponibilidad devuelve un total de cero. Omitir los filtros mantiene
+el comportamiento anterior, incluidas preguntas sin clasificación.
+
+Cada partida nueva guarda `content_context`: los filtros elegidos y una copia
+del `category_id`, nombre de categoría y dificultad de cada pregunta al inicio.
+La respuesta de inicio y las consultas de historial exponen ese contexto sin
+soluciones. Reclasificar posteriormente el banco no cambia la interpretación
+de la partida. La migración `c8e54b739a21` añade la columna JSON nullable;
+las partidas anteriores conservan `NULL`.
+
 El banco completo (`GET /questions/topic/{topic_id}`) incluye soluciones y
 requiere un usuario con rol de profesor o administrador: sin credenciales
 válidas responde `401` y para estudiantes responde `403`. Los jugadores
