@@ -149,7 +149,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
         <p>{Object.keys(answers).length} respondidas</p>
       </div>
       {journey}
-      <h2 ref={heading} tabIndex={-1} className="mt-5 break-words text-xl font-bold leading-8 text-blue-950 outline-none" id="question-heading">{question.text}</h2>
+      <h2 ref={heading} tabIndex={-1} className="mt-5 break-words text-xl font-bold leading-8 text-blue-950 focus:outline-2 focus:outline-offset-4 focus:outline-sky-700" id="question-heading">{question.text}</h2>
       <fieldset disabled={submitting} className="mt-6 space-y-3 disabled:opacity-70" aria-labelledby="question-heading">
         <legend className="sr-only">Selecciona una respuesta</legend>
         {question.options?.map((option, index) => (

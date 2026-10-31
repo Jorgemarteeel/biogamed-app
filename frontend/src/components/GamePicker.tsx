@@ -6,7 +6,7 @@ import { getTopics, type GameMode, type Topic } from "@/services/api";
 
 const modes = [
   { id: "TRIVIAL" as const, name: "Trivial", label: "Elige la respuesta", description: "Pon a prueba tus conocimientos escogiendo la opción correcta entre varias respuestas.", icon: "✓" },
-  { id: "PASAPALABRA" as const, name: "Pasapalabra", label: "Encuentra la palabra", description: "Practica vocabulario científico respondiendo a definiciones con la ayuda de una letra.", icon: "Aa" },
+  { id: "PASAPALABRA" as const, name: "Pasapalabra", label: "Encuentra la palabra", description: "Próximamente podrás practicar vocabulario científico respondiendo a definiciones con la ayuda de una letra.", icon: "Aa" },
 ];
 
 function TopicPicker({ mode, onBack }: { mode: GameMode; onBack: () => void }) {
@@ -67,8 +67,11 @@ export default function GamePicker() {
             <span aria-hidden="true" className={`mb-6 flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-black ${item.id === "TRIVIAL" ? "bg-sky-100 text-sky-800" : "bg-teal-100 text-teal-800"}`}>{item.icon}</span>
             <p className={`text-xs font-bold uppercase tracking-wider ${item.id === "TRIVIAL" ? "text-sky-800" : "text-teal-800"}`}>{item.label}</p>
             <h3 className="mt-2 text-2xl font-black text-blue-950">{item.name}</h3>
+            {item.id === "PASAPALABRA" && <span className="mt-3 w-fit rounded-full border border-teal-300 bg-teal-100 px-3 py-1 text-xs font-bold text-teal-900">En preparación</span>}
             <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{item.description}</p>
-            <button ref={(node) => { if (node && lastMode.current === item.id) { node.focus(); lastMode.current = null; } }} onClick={() => { lastMode.current = item.id; setMode(item.id); }} className="button-primary mt-7">Elegir {item.name}</button>
+            {item.id === "TRIVIAL"
+              ? <button ref={(node) => { if (node && lastMode.current === item.id) { node.focus(); lastMode.current = null; } }} onClick={() => { lastMode.current = item.id; setMode(item.id); }} className="button-primary mt-7">Elegir {item.name}</button>
+              : <p className="mt-7 rounded-xl border border-teal-200 bg-white px-4 py-3 text-sm font-semibold text-teal-900">Todavía no se pueden iniciar partidas de Pasapalabra.</p>}
           </article>
         ))}
       </div>

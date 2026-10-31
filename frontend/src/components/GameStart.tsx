@@ -168,7 +168,7 @@ export default function GameStart({ topicId, mode }: {
             </> : session ? <TrivialGame session={session} topicName={topicName || `Temática ${topicId}`} /> : <>
               <h2 className="text-xl font-bold text-blue-950">Practica eligiendo una respuesta</h2>
               <p className="mt-3 leading-7 text-slate-600">Temática: {topicName || `Temática ${topicId}`}. Elige el contenido que quieres practicar antes de comenzar.</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Si abandonas o recargas antes de terminar, perderás tus selecciones y la partida quedará «Sin finalizar».</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">La partida se crea al pulsar «Comenzar partida». Después, si abandonas o recargas antes de terminar, perderás tus selecciones y quedará «Sin finalizar».</p>
               {availabilityLoading && <p role="status" className="mt-5 text-sm text-slate-600">Consultando preguntas disponibles…</p>}
               {availabilityError && <div className="mt-5"><p role="alert" className="notice-error">{availabilityError}</p><button type="button" className="button-secondary mt-3" onClick={() => { setAvailability(null); setAvailabilityLoading(true); setAvailabilityError(""); setAvailabilityAttempt((value) => value + 1); }}>Reintentar consulta</button></div>}
               {availability && <div className="mt-6 grid gap-5 sm:grid-cols-2">
