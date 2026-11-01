@@ -106,6 +106,12 @@ respuesta elegida y la correcta para cada pregunta.
 El envío bloquea los controles para evitar duplicados. Si falla, conserva las
 respuestas para reintentar. Si el backend ya había guardado la partida pero se
 perdió la respuesta, un reintento recupera el resultado desde el historial.
+Cada respuesta de Trivial envía `response_time_ms`: suma los intervalos en que
+su pregunta está mostrada con la pestaña visible, incluidas las revisitas.
+El reloj monotónico del cliente se detiene durante el envío y se reanuda tras
+un fallo; la espera de red no cuenta. Es **tiempo de exposición medido por el
+cliente**, no una medida garantizada de atención. Los registros antiguos con
+`NULL` indican tiempo desconocido, no cero.
 Recargar o abandonar la página pierde las selecciones no enviadas. Pasapalabra
 muestra un aviso de preparación sin crear ninguna partida.
 

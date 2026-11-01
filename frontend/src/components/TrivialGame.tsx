@@ -6,6 +6,10 @@ import { isAxiosError } from "axios";
 import { submitTrivialGame, type GameResult, type GameSessionStart } from "@/services/api";
 import GameReview from "@/components/GameReview";
 import { describeContentContext, liveReviewItems } from "@/lib/game-review";
+import { QuestionExposure } from "@/lib/question-exposure";
+import type { TrivialAnswer } from "@/services/api";
+
+const monotonicNow = () => performance.now();
 
 export default function TrivialGame({ session, topicName }: { session: GameSessionStart; topicName: string }) {
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -16,6 +20,9 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   const sending = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const mounted = useRef(false);
+  const exposure = useRef<QuestionExposure | null>(null);
+  const pendingAnswers = useRef<TrivialAnswer[] | null>(null);
+  if (exposure.current === null) exposure.current = new QuestionExposure(monotonicNow);
   const question = session.questions[questionIndex];
   const selectedIndex = answers[question.id];
   const allAnswered = session.questions.every((item) => answers[item.id] !== undefined);
@@ -29,21 +36,39 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   }, []);
 
   useEffect(() => {
+    const timer = exposure.current!;
+    timer.show(session.questions[questionIndex].id, document.visibilityState === "visible");
+    const onVisibilityChange = () => timer.setVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => { timer.setVisible(false); document.removeEventListener("visibilitychange", onVisibilityChange); };
+  }, [session.questions, questionIndex]);
+
+  function navigate(index: number) {
+    exposure.current!.show(session.questions[index].id, document.visibilityState === "visible");
+    setQuestionIndex(index);
+  }
+
+  useEffect(() => {
     heading.current?.focus();
   }, [questionIndex, result]);
 
   async function finish() {
     if (!allAnswered || sending.current || result) return;
     sending.current = true;
+    exposure.current!.stop();
+    const payload = session.questions.map((item) => ({
+      question_id: item.id,
+      selected_index: answers[item.id],
+      response_time_ms: exposure.current!.milliseconds(item.id),
+    }));
+    pendingAnswers.current = payload;
     setSubmitting(true);
     setError("");
     try {
-      const response = await submitTrivialGame(session.session_id, session.questions.map((item) => ({
-        question_id: item.id,
-        selected_index: answers[item.id],
-      })));
+      const response = await submitTrivialGame(session.session_id, pendingAnswers.current);
       if (mounted.current) setResult(response);
     } catch (err: unknown) {
+      exposure.current!.resume(document.visibilityState === "visible");
       if (!mounted.current) return;
       const status = isAxiosError(err) ? err.response?.status : undefined;
       if (status === 401) return;
@@ -53,6 +78,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
           ? "Una pregunta de esta partida ya no está disponible. Vuelve al panel para comenzar otra."
           : "No se pudo obtener el resultado. Tus respuestas siguen aquí; puedes volver a enviarlas.");
     } finally {
+      pendingAnswers.current = null;
       sending.current = false;
       if (mounted.current) setSubmitting(false);
     }
@@ -75,7 +101,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
           </>;
           return (
             <li key={item.id}>
-              <button type="button" onClick={() => setQuestionIndex(index)} disabled={submitting} aria-current={current ? "step" : undefined} aria-label={`${label}. Ir a la pregunta`} className={className}>{content}</button>
+              <button type="button" onClick={() => navigate(index)} disabled={submitting} aria-current={current ? "step" : undefined} aria-label={`${label}. Ir a la pregunta`} className={className}>{content}</button>
             </li>
           );
         })}
@@ -122,10 +148,10 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
       <p className="mt-5 text-sm leading-6 text-slate-600">Puedes revisar y cambiar tus respuestas antes de finalizar.</p>
       {error && <p role="alert" className="notice-error mt-5">{error}</p>}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-        <button onClick={() => setQuestionIndex((index) => Math.max(0, index - 1))} disabled={questionIndex === 0 || submitting} className="button-secondary">Anterior</button>
+        <button onClick={() => navigate(Math.max(0, questionIndex - 1))} disabled={questionIndex === 0 || submitting} className="button-secondary">Anterior</button>
         {isLast
           ? <button onClick={finish} disabled={!allAnswered || submitting} className="button-primary">{submitting ? "Enviando respuestas…" : "Finalizar y ver resultado"}</button>
-          : <button onClick={() => setQuestionIndex((index) => answers[session.questions[index].id] === undefined ? index : Math.min(index + 1, session.questions.length - 1))} disabled={selectedIndex === undefined || submitting} className="button-primary">Siguiente pregunta</button>}
+          : <button onClick={() => navigate(Math.min(questionIndex + 1, session.questions.length - 1))} disabled={selectedIndex === undefined || submitting} className="button-primary">Siguiente pregunta</button>}
       </div>
       {submitting && <p role="status" className="mt-4 text-sm text-slate-600">Estamos corrigiendo tus respuestas…</p>}
     </div>

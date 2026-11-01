@@ -65,6 +65,7 @@ def test_game_engine_trivial(client, db, topic, auth_headers, selected_index, ex
     assert saved["question_text"] == "Which organ pumps blood?"
     assert saved["options"] == ["Lung", "Liver", "Heart", "Kidney"]
     assert saved["correct_option_index"] == 2
+    assert saved["response_time_ms"] == 1500
     repeat = client.post(f"/game/submit/{session.id}", headers=auth_headers,
                          json={"answers": [{"question_id": question.id, "selected_index": 0}]})
     assert repeat.status_code == 409

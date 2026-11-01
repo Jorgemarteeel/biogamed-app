@@ -145,6 +145,7 @@ export async function startTrivialGame(topicId: number, filters: TrivialFilters 
 export interface TrivialAnswer {
   question_id: number;
   selected_index: number;
+  response_time_ms?: number;
 }
 
 export interface GameCorrection {

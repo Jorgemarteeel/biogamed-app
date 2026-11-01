@@ -215,7 +215,7 @@ test("a topic with no playable questions keeps the session and exposes the 409",
 test("submission sends each selection including index zero and uses the server score", async () => {
   browser();
   const originalAdapter = api.defaults.adapter;
-  const answers = [{ question_id: 21, selected_index: 0 }, { question_id: 5, selected_index: 2 }];
+  const answers = [{ question_id: 21, selected_index: 0, response_time_ms: 1200 }, { question_id: 5, selected_index: 2, response_time_ms: 345 }];
   const result = { score: 1, total_questions: 2, corrections: [
     { question_id: 21, selected_index: 0, correct_option_index: 0, is_correct: true },
     { question_id: 5, selected_index: 2, correct_option_index: 1, is_correct: false },
@@ -229,7 +229,7 @@ test("submission sends each selection including index zero and uses the server s
   };
   try {
     assert.deepEqual(await loaded.exports.submitTrivialGame(17, answers), result);
-    assert.deepEqual(answers, [{ question_id: 21, selected_index: 0 }, { question_id: 5, selected_index: 2 }]);
+    assert.deepEqual(answers, [{ question_id: 21, selected_index: 0, response_time_ms: 1200 }, { question_id: 5, selected_index: 2, response_time_ms: 345 }]);
   } finally {
     api.defaults.adapter = originalAdapter;
   }
