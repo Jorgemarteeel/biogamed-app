@@ -219,7 +219,33 @@ mismos recuentos para `TRIVIAL` y `PASAPALABRA`. Cuenta todas las partidas del
 usuario mediante agregación en la base; una partida completada con cero aciertos
 cuenta como completada. Un usuario sin actividad recibe ceros conocidos.
 
-Para las futuras mejores marcas, no se agruparán todas las partidas mixtas
-como equivalentes. La primera versión se limitará a partidas con categoría y
+Las mejores marcas no agrupan todas las partidas mixtas como equivalentes.
+La primera versión se limita a partidas con categoría y
 dificultad históricas únicas y conocidas, e igual modalidad, temática y número
 de preguntas.
+
+La respuesta añade `best_marks` (lista vacía cuando no hay resultados válidos).
+Cada elemento incluye `game_mode`, `topic_id`, `topic_name`, `category_id`,
+`category_name`, `category_name_source`, `difficulty`, `total_questions`,
+`best_score`, `session_id`, `started_at`, `valid_results` y
+`tied_best_results`. `topic_name` procede de la tabla actual de temáticas porque
+no se guarda una copia histórica de ese nombre; puede ser `null` si ya no está
+disponible. `category_name` procede de `content_context` cuando existe
+(`category_name_source: "historical"`); si falta, se consulta el nombre actual
+(`"current"`) o se devuelve `null` si no está disponible.
+
+Las marcas se calculan para todo el historial del usuario autenticado mediante
+consultas por conjuntos, sin cargar enunciados ni soluciones. Solo entran
+partidas completadas con preguntas distintas, puntuación entre cero y el total,
+contexto que cubre exactamente esas preguntas, categoría única con ID conocido,
+dificultad única entre 1 y 4, y un registro de respuesta coherente por pregunta.
+Se agrupan por modalidad, temática, categoría histórica, nivel y número de
+preguntas. Gana la mayor puntuación; el empate se resuelve por primera fecha de
+inicio y después por ID, y `tied_best_results` indica cuántas comparten la
+mejor puntuación. No se usa el tiempo. Partidas excluidas de marcas siguen
+contando en `started`, `completed` y `unfinished`.
+Las partidas antiguas sin `content_context`, las mixtas, las que carecen de
+categoría o nivel y las que tienen respuestas incompletas o incoherentes no
+aportan marcas. El nombre de temática no tiene versión histórica guardada.
+Las pruebas relacionadas se ejecutaron en bases aisladas (20 aprobadas); no se
+crearon partidas en la base habitual para verificar estos casos.

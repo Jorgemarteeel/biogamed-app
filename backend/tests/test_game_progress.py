@@ -9,7 +9,7 @@ def test_progress_empty(client, auth_headers):
     response = client.get("/game/progress", headers=auth_headers)
     assert response.status_code == 200
     zero = {"started": 0, "completed": 0, "unfinished": 0}
-    assert response.json() == {**zero, "by_mode": {"TRIVIAL": zero, "PASAPALABRA": zero}}
+    assert response.json() == {**zero, "by_mode": {"TRIVIAL": zero, "PASAPALABRA": zero}, "best_marks": []}
 
 
 def test_progress_aggregates_all_user_sessions(client, db, topic, test_user, auth_headers):
@@ -34,6 +34,7 @@ def test_progress_aggregates_all_user_sessions(client, db, topic, test_user, aut
             "TRIVIAL": {"started": 23, "completed": 12, "unfinished": 11},
             "PASAPALABRA": {"started": 3, "completed": 1, "unfinished": 2},
         },
+        "best_marks": [],
     }
     for counts in [data, *data["by_mode"].values()]:
         assert counts["started"] == counts["completed"] + counts["unfinished"]

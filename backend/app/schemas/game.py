@@ -121,5 +121,22 @@ class ActivityCounts(BaseModel):
     unfinished: int
 
 
+class PersonalBestMark(BaseModel):
+    game_mode: QuestionType
+    topic_id: int
+    topic_name: str | None
+    category_id: int
+    category_name: str | None
+    category_name_source: str | None
+    difficulty: int
+    total_questions: int
+    best_score: int
+    session_id: int
+    started_at: datetime
+    valid_results: int
+    tied_best_results: int
+
+
 class GameProgressResponse(ActivityCounts):
     by_mode: dict[QuestionType, ActivityCounts]
+    best_marks: list[PersonalBestMark]

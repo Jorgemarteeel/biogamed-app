@@ -232,8 +232,25 @@ export interface ActivityCounts {
   unfinished: number;
 }
 
+export interface PersonalBestMark {
+  game_mode: GameMode;
+  topic_id: number;
+  topic_name: string | null;
+  category_id: number;
+  category_name: string | null;
+  category_name_source: "historical" | "current" | null;
+  difficulty: number;
+  total_questions: number;
+  best_score: number;
+  session_id: number;
+  started_at: string;
+  valid_results: number;
+  tied_best_results: number;
+}
+
 export interface GameProgress extends ActivityCounts {
   by_mode: Record<GameMode, ActivityCounts>;
+  best_marks: PersonalBestMark[];
 }
 
 export async function getGameProgress(): Promise<GameProgress> {

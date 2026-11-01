@@ -188,3 +188,19 @@ del cliente y la gestión compartida de `401` tienen pruebas automatizadas;
 la autenticación, el aislamiento entre usuarios, los ceros sin actividad y más
 de una página de partidas se probaron en el backend. Los estados de error,
 reintento, sesión caducada y usuario sin partidas no se verificaron en navegador.
+
+«Mis mejores marcas» utiliza directamente los grupos `best_marks` del servidor.
+Cada tarjeta compara partidas de igual modalidad, temática, categoría y nivel
+históricos, y número de preguntas; muestra la mejor puntuación, fecha de inicio,
+partidas válidas del grupo, empates y enlace a la partida elegida. El backend
+desempata por fecha e ID, nunca por tiempo. Las partidas antiguas sin contexto,
+mixtas o con registros incoherentes siguen en actividad aunque no tengan marca.
+La temática muestra su nombre actual; la categoría usa el histórico cuando
+existe e indica si su nombre procede del catálogo actual.
+
+Con «Pruebas UI» se comprobó una marca real en escritorio y móvil y se contrastó
+con una lectura del servicio backend. Los casos de lista vacía con actividad,
+empate, singular/plural y nombres históricos o actuales se probaron mediante
+renderizado estático de los componentes (31 pruebas frontend aprobadas en total).
+No se comprobaron visualmente en navegador porque la cuenta no tenía esos
+casos. Tipos y lint pasaron.

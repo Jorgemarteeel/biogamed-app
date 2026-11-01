@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.models import AnswerLog, Category, GameSession, Question, Topic, User
 from app.utils.answers import is_accepted_answer
 from app.services.game_questions import selectable_questions
+from app.services.game_progress import get_personal_best_marks
 from app.schemas.game import (
     AnswerCorrection, GameAvailabilityResponse, GameResultResponse, GameSessionStartResponse,
     QuestionForGame, UserAnswer,
@@ -186,7 +187,8 @@ def get_game_progress(db: Session, current_user: User):
         by_mode[mode][status] += count
         totals["started"] += count
         totals[status] += count
-    return {**totals, "by_mode": by_mode}
+    return {**totals, "by_mode": by_mode,
+            "best_marks": get_personal_best_marks(db, current_user)}
 
 
 def get_game_history_detail(db: Session, current_user: User, session_id: int):
