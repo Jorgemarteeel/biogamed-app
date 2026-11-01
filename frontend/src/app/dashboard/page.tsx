@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [historyError, setHistoryError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     if (!window.localStorage.getItem("token")) {
@@ -91,13 +92,13 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12" aria-busy={loading}>
-        <div className="mb-10">
+      <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-12" aria-busy={loading}>
+        <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-widest text-orange-700">Tu espacio de aprendizaje</p>
           <h1 className="mt-3 break-words text-3xl font-black tracking-tight text-blue-950 sm:text-4xl">
             {user ? `Hola, ${user.name || user.email}` : "Panel de estudio"}
           </h1>
-          <p className="mt-3 max-w-2xl leading-7 text-slate-600">Elige tu juego y después la temática que quieres practicar.</p>
+          <p className="mt-2 max-w-2xl leading-7 text-slate-600">Elige tu juego y después la temática que quieres practicar.</p>
         </div>
 
         {loading ? (
@@ -105,7 +106,7 @@ export default function DashboardPage() {
             Cargando tu panel…
           </div>
         ) : (
-          <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-8">
             <section className="min-w-0" aria-label="Selección de juego y temática">
               {error ? (
                 <div className="rounded-2xl border border-red-200 bg-white p-6">
@@ -116,9 +117,11 @@ export default function DashboardPage() {
             </section>
 
             {user && (
-              <aside aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 text-blue-950">
-                <p className="text-xs font-bold uppercase tracking-widest text-sky-800">Paso a paso</p>
-                <h2 id="history-heading" className="mt-2 text-xl font-bold">Tus últimas partidas</h2>
+              <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white text-blue-950">
+                <h2 id="history-heading"><button type="button" aria-expanded={historyOpen} aria-controls="recent-games" onClick={() => setHistoryOpen((value) => !value)} className="flex min-h-16 w-full items-center justify-between gap-4 rounded-2xl px-6 py-4 text-left text-xl font-bold hover:bg-sky-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+                  <span>Mis últimas partidas</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`h-6 w-6 shrink-0 transition-transform ${historyOpen ? "rotate-180" : ""}`}><path d="m5 9 7 7 7-7" /></svg>
+                </button></h2>
+                <div id="recent-games" hidden={!historyOpen} className="border-t border-slate-200 px-6 pb-6">
                 {historyError ? (
                   <div className="mt-4">
                     <p role="alert" className="notice-error">{historyError}</p>
@@ -127,7 +130,7 @@ export default function DashboardPage() {
                 ) : games.length === 0 ? (
                   <p className="mt-4 text-sm leading-7 text-slate-600">Aún no has iniciado ninguna partida. Cuando juegues, podrás consultar aquí tus resultados recientes.</p>
                 ) : (
-                  <ul className="mt-5 space-y-4">
+                  <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {games.map((game) => (
                       <li key={game.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <p className="font-bold">{game.game_mode === "TRIVIAL" ? "Trivial" : "Pasapalabra"}</p>
@@ -138,7 +141,8 @@ export default function DashboardPage() {
                     ))}
                   </ul>
                 )}
-              </aside>
+                </div>
+              </section>
             )}
           </div>
         )}

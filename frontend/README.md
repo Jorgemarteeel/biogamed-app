@@ -67,6 +67,16 @@ Las tarjetas de temática enlazan a `/game?topicId=…&mode=TRIVIAL` o `mode=PAS
 No se muestran números de preguntas por temática porque la respuesta actual
 de temas no los incluye.
 
+Las tarjetas de juegos usan ilustraciones SVG y una única acción para Trivial;
+Pasapalabra indica «En preparación» sin abrir temáticas. La selección de
+temáticas presenta los iconos transparentes copiados del prototipo para
+Erlenmeyer, Jeringuilla, Linfocito y Macrófago. La correspondencia visual está
+en `src/lib/topic-presentation.ts`; las temáticas nuevas o desconocidas usan
+un SVG genérico y la lista disponible sigue procediendo de la API. Las tarjetas
+se centran en filas de hasta tres en escritorio, dos en tamaños intermedios y
+una en móvil. «Mis últimas partidas» es una sección plegable inicialmente
+cerrada bajo los juegos; sus elementos son recientes, no el total histórico.
+
 ## Partidas de Trivial
 
 `/game` valida los parámetros y comprueba la sesión. Antes de iniciar consulta
