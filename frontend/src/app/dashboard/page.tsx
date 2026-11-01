@@ -5,6 +5,7 @@ import GamePicker from "@/components/GamePicker";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
+import Link from "next/link";
 import {
   getCurrentUser, getRecentGames, getTopics,
   type GameHistorySummary, type Topic, type UserResponse,
@@ -132,6 +133,7 @@ export default function DashboardPage() {
                         <p className="font-bold">{game.game_mode === "TRIVIAL" ? "Trivial" : "Pasapalabra"}</p>
                         <p className="mt-1 break-words text-sm text-slate-600">{topics.find((topic) => topic.id === game.topic_id)?.name || `Temática ${game.topic_id}`}</p>
                         <p className="mt-3 text-sm font-semibold text-sky-800">{game.is_completed ? `${game.score} de ${game.question_ids.length} aciertos` : "Sin finalizar"}</p>
+                        {game.is_completed && <Link href={`/partidas/${game.id}`} className="text-link mt-3 inline-flex min-h-11 items-center text-sm">Ver resultado</Link>}
                       </li>
                     ))}
                   </ul>

@@ -30,6 +30,35 @@ y muestra hasta cinco partidas recientes desde `/game/history`. Sin token
 redirige al login; una sesión rechazada utiliza el interceptor compartido.
 El cierre de sesión elimina la clave `token` sin borrar otros datos del navegador.
 
+### Consulta de partidas anteriores
+
+Las partidas completadas de «Tus últimas partidas» ofrecen el enlace «Ver
+resultado» a `/partidas/{id}`. La ruta admite acceso directo y recarga, consulta
+`GET /game/history/{id}` con el cliente autenticado y solo muestra partidas del
+usuario actual. Presenta modalidad, temática, fecha de inicio, puntuación y el
+contexto de categoría y dificultad guardado al iniciar, si existe. Las
+respuestas, correcciones y soluciones proceden de los datos conservados en el
+historial; no se recalculan a partir del banco actual. La misma presentación de
+correcciones se utiliza al finalizar una partida de Trivial.
+
+Las partidas antiguas sin `content_context` muestran que no consta esa
+clasificación; si faltan respuestas detalladas, se indica cuántas se conservan
+o que no hay corrección disponible. Las partidas sin finalizar se identifican
+como tales y no ofrecen reanudación ni corrección. La pantalla contempla carga,
+reintento tras fallo de consulta, sesión rechazada y partida no disponible.
+
+La fecha disponible es la de **inicio**, no la de finalización. El nombre de
+la temática se consulta en la lista actual de temáticas; si ya no se obtiene,
+se muestra su ID. No es una copia histórica del nombre. En el navegador
+integrado aislado se comprobó el enlace desde el panel, el acceso directo y
+la recarga de una partida existente, sus diez correcciones, el contexto,
+la navegación por teclado entre correcciones y la adaptación a escritorio y
+móvil (390 px, sin desbordamiento horizontal). También se observó el mensaje
+de una partida inexistente. **No se comprobaron en navegador** partidas
+antiguas sin contexto o con respuestas incompletas, partidas sin finalizar,
+errores de red ni sesión caducada; estos estados se trataron en el código y
+las pruebas pertinentes.
+
 El panel muestra primero Trivial y Pasapalabra. Al elegir un juego, consulta
 `/topics/?mode=TRIVIAL` o `mode=PASAPALABRA` y muestra solo temáticas con
 preguntas disponibles. Se puede volver a cambiar de juego; las respuestas

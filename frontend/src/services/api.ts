@@ -195,12 +195,38 @@ export interface GameHistorySummary {
   is_completed: boolean;
   created_at: string;
   question_ids: number[];
+  content_context: GameContentContext | null;
+}
+
+export interface AnswerHistory {
+  question_id: number;
+  question_text: string;
+  question_type: GameMode;
+  options: string[] | null;
+  letter: string | null;
+  selected_index: number | null;
+  text_answer: string | null;
+  correct_option_index: number | null;
+  exact_word: string | null;
+  accepted_answers: string[] | null;
+  is_correct: boolean;
+  response_time_ms: number | null;
+  answered_at: string;
+}
+
+export interface GameHistoryDetail extends GameHistorySummary {
+  answer_logs: AnswerHistory[];
 }
 
 export async function getRecentGames(): Promise<GameHistorySummary[]> {
   const response = await api.get<GameHistorySummary[]>("/game/history", {
     params: { limit: 5 },
   });
+  return response.data;
+}
+
+export async function getGameHistoryDetail(sessionId: number): Promise<GameHistoryDetail> {
+  const response = await api.get<GameHistoryDetail>(`/game/history/${sessionId}`);
   return response.data;
 }
 

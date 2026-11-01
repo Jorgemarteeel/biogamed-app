@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { submitTrivialGame, type GameResult, type GameSessionStart } from "@/services/api";
+import GameReview from "@/components/GameReview";
+import { describeContentContext, liveReviewItems } from "@/lib/game-review";
 
 export default function TrivialGame({ session, topicName }: { session: GameSessionStart; topicName: string }) {
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -18,22 +20,8 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   const selectedIndex = answers[question.id];
   const allAnswered = session.questions.every((item) => answers[item.id] !== undefined);
   const isLast = questionIndex === session.questions.length - 1;
-  const context = session.content_context;
-  const categoryNames = [...new Set(context?.questions.map((item) =>
-    item.category_id === null ? "Sin categoría" : item.category_name || `Categoría ${item.category_id}`) ?? [])];
-  const categoryLabel = context?.selection.category_id !== null && context?.selection.category_id !== undefined
-    ? context.selection.category_name || `Categoría ${context.selection.category_id}`
-    : categoryNames.length === 1 ? categoryNames[0] : categoryNames.length > 1
-      ? `Varias categorías${categoryNames.includes("Sin categoría") ? ", incluidas preguntas sin categoría" : ""}`
-      : "Categoría no disponible";
-  const difficulties = [...new Set(context?.questions.map((item) => item.difficulty) ?? [])];
-  const difficultyLabel = context?.selection.difficulty !== null && context?.selection.difficulty !== undefined
-    ? `Nivel ${context.selection.difficulty}`
-    : context?.selection.difficulty_unknown ? "Dificultad sin clasificar"
-      : difficulties.length === 1 ? difficulties[0] === null ? "Dificultad sin clasificar" : `Nivel ${difficulties[0]}`
-        : difficulties.length > 1 ? `Dificultad mixta${difficulties.includes(null) ? ", incluidas preguntas sin clasificar" : ""}`
-          : "Dificultad no disponible";
-  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">Temática: {topicName} · Categoría: {categoryLabel} · Dificultad: {difficultyLabel}</p>;
+  const labels = describeContentContext(session.content_context);
+  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">Temática: {topicName} · Categoría: {labels?.category ?? "Categoría no disponible"} · Dificultad: {labels?.difficulty ?? "Dificultad no disponible"}</p>;
 
   useEffect(() => {
     mounted.current = true;
@@ -71,41 +59,30 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   }
 
   const journey = (
-    <nav aria-label={result ? "Resultados por pregunta" : "Recorrido de preguntas"} className="my-3">
+    <nav aria-label="Recorrido de preguntas" className="my-3">
       <ol className="flex flex-wrap gap-2">
         {session.questions.map((item, index) => {
-          const current = !result && index === questionIndex;
+          const current = index === questionIndex;
           const answered = answers[item.id] !== undefined;
-          const correction = result?.corrections.find((entry) => entry.question_id === item.id);
-          const status = result
-            ? correction ? correction.is_correct ? "Correcta" : "Incorrecta" : "Sin corrección"
-            : answered ? "Respondida" : "Pendiente";
-          const appearance = result
-            ? correction ? correction.is_correct ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-red-300 bg-red-50 text-red-900" : "border-slate-300 bg-white text-slate-700"
-            : answered ? "border-sky-300 bg-sky-50 text-sky-900" : "border-dashed border-slate-400 bg-white text-slate-700";
+          const status = answered ? "Respondida" : "Pendiente";
+          const appearance = answered ? "border-sky-300 bg-sky-50 text-sky-900" : "border-dashed border-slate-400 bg-white text-slate-700";
           const className = `flex min-h-11 min-w-11 flex-col items-center justify-center rounded-lg border px-2 py-1 text-center transition-colors hover:border-sky-700 disabled:cursor-wait disabled:opacity-60 ${appearance} ${current ? "ring-2 ring-orange-700 ring-offset-2" : ""}`;
           const label = `Pregunta ${index + 1}${current ? ", actual" : ""}: ${status.toLowerCase()}`;
-          const marker = result ? correction ? correction.is_correct ? "✓" : "×" : "?" : answered ? "●" : "○";
+          const marker = answered ? "●" : "○";
           const content = <>
             <span aria-hidden="true" className={`text-base font-bold leading-5 ${current ? "underline decoration-2 underline-offset-2" : ""}`}>{index + 1}</span>
             <span aria-hidden="true" className="text-xs font-bold leading-4">{marker}</span>
           </>;
           return (
             <li key={item.id}>
-              {result
-                ? <a href={`#correction-${item.id}`} aria-label={`${label}. Ver corrección`} className={className}>{content}</a>
-                : <button type="button" onClick={() => setQuestionIndex(index)} disabled={submitting} aria-current={current ? "step" : undefined} aria-label={`${label}. Ir a la pregunta`} className={className}>{content}</button>}
+              <button type="button" onClick={() => setQuestionIndex(index)} disabled={submitting} aria-current={current ? "step" : undefined} aria-label={`${label}. Ir a la pregunta`} className={className}>{content}</button>
             </li>
           );
         })}
       </ol>
       <p className="mt-2 flex flex-wrap gap-x-3 text-xs leading-5 text-slate-600">
-        {result ? <>
-          <span>✓ Correcta</span><span>× Incorrecta</span><span>? Sin corrección</span>
-        </> : <>
-          <span><span className="underline decoration-2 underline-offset-2">Subrayada</span>: actual</span>
-          <span>○ Pendiente</span><span>● Respondida (sin corregir)</span>
-        </>}
+        <span><span className="underline decoration-2 underline-offset-2">Subrayada</span>: actual</span>
+        <span>○ Pendiente</span><span>● Respondida (sin corregir)</span>
       </p>
     </nav>
   );
@@ -118,24 +95,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
         {gameContext}
         <p className="mt-5 text-4xl font-black text-blue-950">{result.score} <span className="text-xl font-semibold text-slate-600">de {result.total_questions} aciertos</span></p>
         <p className="mt-3 leading-7 text-slate-600">Tu resultado se ha guardado. Revisa tus respuestas para seguir aprendiendo.</p>
-        {journey}
-        <ol className="mt-8 space-y-5" aria-label="Corrección de respuestas">
-          {session.questions.map((item, index) => {
-            const correction = result.corrections.find((entry) => entry.question_id === item.id);
-            return (
-              <li key={item.id} className="rounded-xl border border-slate-200 p-5">
-                <p className={`text-sm font-bold ${correction?.is_correct ? "text-emerald-800" : "text-red-800"}`}>
-                  {index + 1}. {correction ? correction.is_correct ? "Correcta" : "Incorrecta" : "Corrección no disponible"}
-                </p>
-                <h3 id={`correction-${item.id}`} tabIndex={-1} className="mt-2 scroll-mt-6 break-words font-bold leading-7 text-blue-950 focus:outline-2 focus:outline-offset-4 focus:outline-sky-700">{item.text}</h3>
-                {correction && <dl className="mt-4 space-y-3 text-sm leading-6">
-                  <div><dt className="font-semibold text-slate-600">Tu respuesta</dt><dd className="break-words text-slate-900">{correction.selected_index !== null ? item.options?.[correction.selected_index] ?? "No disponible" : "Sin respuesta"}</dd></div>
-                  <div><dt className="font-semibold text-emerald-800">Respuesta correcta</dt><dd className="break-words text-slate-900">{correction.correct_option_index !== null ? item.options?.[correction.correct_option_index] ?? "No disponible" : "No disponible"}</dd></div>
-                </dl>}
-              </li>
-            );
-          })}
-        </ol>
+        <GameReview items={liveReviewItems(session, result)} />
         <Link href="/dashboard" className="button-primary mt-8 w-full sm:w-auto">Volver al panel</Link>
       </div>
     );

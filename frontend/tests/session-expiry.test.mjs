@@ -141,6 +141,39 @@ test("availability uses authenticated GET and returns counts without questions",
   }
 });
 
+test("history detail uses an authenticated GET and returns saved answer snapshots", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const detail = { id: 17, topic_id: 6, game_mode: "TRIVIAL", score: 1,
+    is_completed: true, question_ids: [21], content_context: null,
+    answer_logs: [{ question_id: 21, question_text: "Enunciado original", options: ["A", "B"],
+      selected_index: 0, correct_option_index: 1, is_correct: false }] };
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "get");
+    assert.equal(config.url, "/game/history/17");
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    return { status: 200, data: detail, headers: {}, config };
+  };
+  try {
+    assert.deepEqual(await loaded.exports.getGameHistoryDetail(17), detail);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
+test("history detail leaves an unavailable session as a 404 without clearing login", async () => {
+  const { values, redirects } = browser();
+  const originalAdapter = api.defaults.adapter;
+  api.defaults.adapter = rejectWith(404);
+  try {
+    await assert.rejects(loaded.exports.getGameHistoryDetail(9999), (error) => error.response.status === 404);
+    assert.equal(values.get("token"), "old-token");
+    assert.deepEqual(redirects, []);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
 test("starting Trivial sends selected category, level or unknown difficulty", async () => {
   browser();
   const originalAdapter = api.defaults.adapter;
