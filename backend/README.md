@@ -210,3 +210,16 @@ las cuatro categorías sin bloque y modifica únicamente `category_id` y
 `difficulty` de las preguntas identificadas. Puede repetirse sin duplicados.
 No ejecuta el importador de escritura ni clasifica Pasapalabra. Los niveles son
 los del prototipo; su significado académico sigue pendiente de validación.
+
+## Resumen de actividad
+
+`GET /game/progress` requiere autenticación y no acepta un ID de usuario.
+Devuelve `started`, `completed` y `unfinished`, además de `by_mode` con los
+mismos recuentos para `TRIVIAL` y `PASAPALABRA`. Cuenta todas las partidas del
+usuario mediante agregación en la base; una partida completada con cero aciertos
+cuenta como completada. Un usuario sin actividad recibe ceros conocidos.
+
+Para las futuras mejores marcas, no se agruparán todas las partidas mixtas
+como equivalentes. La primera versión se limitará a partidas con categoría y
+dificultad históricas únicas y conocidas, e igual modalidad, temática y número
+de preguntas.

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.schemas.game import GameAvailabilityResponse, GameHistoryDetail, GameHistorySummary, GameResultResponse, GameSessionStartResponse, GameSubmit
+from app.schemas.game import GameAvailabilityResponse, GameHistoryDetail, GameHistorySummary, GameProgressResponse, GameResultResponse, GameSessionStartResponse, GameSubmit
 from app.schemas.question import QuestionType
 from app.services import game as game_service
 
@@ -39,6 +39,11 @@ def history_detail(
     current_user: User = Depends(get_current_user),
 ):
     return game_service.get_game_history_detail(db, current_user, session_id)
+
+
+@router.get("/progress", response_model=GameProgressResponse)
+def progress(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> GameProgressResponse:
+    return game_service.get_game_progress(db, current_user)
 
 
 @router.post("/start/{topic_id}", response_model=GameSessionStartResponse,

@@ -170,3 +170,21 @@ desbordamiento horizontal, con foco de teclado visible. La cuenta de pruebas
 solo tenía una página de resultados: la navegación entre páginas y los estados
 de error, vacío y sesión caducada están cubiertos por pruebas o lectura del
 código, pero no se comprobaron todos en navegador.
+
+## Mi progreso
+
+El panel enlaza con `/progreso`, que también admite acceso directo y recarga.
+La pantalla consulta `GET /game/progress` con el cliente autenticado y muestra
+partidas iniciadas, completadas y sin finalizar, en total y por modalidad.
+Son recuentos de actividad, no de aciertos; Pasapalabra figura «En preparación».
+Los ceros aparecen solo tras una respuesta correcta del servidor. Ante un error
+se ofrece reintento y un `401` utiliza la redirección compartida al login.
+
+Se comprobó en navegador aislado con «Pruebas UI» el enlace del panel y la
+presentación a 1280 y 390 px, sin desbordamiento horizontal y con foco visible.
+Los recuentos visibles (5 iniciadas, 5 completadas, 0 sin finalizar) coincidieron
+con una lectura del servicio backend para esa cuenta. La petición autenticada
+del cliente y la gestión compartida de `401` tienen pruebas automatizadas;
+la autenticación, el aislamiento entre usuarios, los ceros sin actividad y más
+de una página de partidas se probaron en el backend. Los estados de error,
+reintento, sesión caducada y usuario sin partidas no se verificaron en navegador.

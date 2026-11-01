@@ -52,6 +52,27 @@ test("401 with current token clears it and redirects once for simultaneous reque
   assert.deepEqual(redirects, ["/login?session=expired"]);
 });
 
+test("progress uses an authenticated GET and returns the server counts", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const data = { started: 1, completed: 0, unfinished: 1, by_mode: {
+    TRIVIAL: { started: 1, completed: 0, unfinished: 1 },
+    PASAPALABRA: { started: 0, completed: 0, unfinished: 0 },
+  } };
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "get");
+    assert.equal(config.url, "/game/progress");
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    assert.equal(config.params, undefined);
+    return { status: 200, data, headers: {}, config };
+  };
+  try {
+    assert.deepEqual(await loaded.exports.getGameProgress(), data);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
 for (const url of ["/auth/login", "/auth/register", "/auth/login/?x=1"]) {
   test(`public auth ${url} does not send a stored token or trigger expiry handling`, async () => {
     const { values, redirects } = browser();

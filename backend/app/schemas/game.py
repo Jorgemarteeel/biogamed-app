@@ -113,3 +113,13 @@ class GameHistorySummary(BaseModel):
 
 class GameHistoryDetail(GameHistorySummary):
     answer_logs: list[AnswerHistory]
+
+
+class ActivityCounts(BaseModel):
+    started: int
+    completed: int
+    unfinished: int
+
+
+class GameProgressResponse(ActivityCounts):
+    by_mode: dict[QuestionType, ActivityCounts]

@@ -169,6 +169,26 @@ def get_game_history(db: Session, current_user: User, skip: int, limit: int):
     ).order_by(GameSession.created_at.desc(), GameSession.id.desc()).offset(skip).limit(limit)))
 
 
+def get_game_progress(db: Session, current_user: User):
+    rows = db.execute(select(
+        GameSession.game_mode,
+        GameSession.is_completed,
+        func.count(GameSession.id),
+    ).where(GameSession.user_id == current_user.id).group_by(
+        GameSession.game_mode, GameSession.is_completed,
+    )).all()
+    by_mode = {mode: {"started": 0, "completed": 0, "unfinished": 0}
+               for mode in ("TRIVIAL", "PASAPALABRA")}
+    totals = {"started": 0, "completed": 0, "unfinished": 0}
+    for mode, completed, count in rows:
+        status = "completed" if completed else "unfinished"
+        by_mode[mode]["started"] += count
+        by_mode[mode][status] += count
+        totals["started"] += count
+        totals[status] += count
+    return {**totals, "by_mode": by_mode}
+
+
 def get_game_history_detail(db: Session, current_user: User, session_id: int):
     session = db.scalar(select(GameSession).where(
         GameSession.id == session_id, GameSession.user_id == current_user.id,

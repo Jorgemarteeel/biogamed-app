@@ -100,6 +100,7 @@ export default function DashboardPage() {
             {user ? `Hola, ${user.name || user.email}` : "Panel de estudio"}
           </h1>
           <p className="mt-2 max-w-2xl leading-7 text-slate-600">Elige tu juego y después la temática que quieres practicar.</p>
+          {user && <Link href="/progreso" className="text-link mt-3 inline-flex min-h-11 items-center">Mi progreso →</Link>}
         </div>
 
         {loading ? (
