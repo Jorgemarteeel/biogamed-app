@@ -61,7 +61,8 @@ test("progress uses an authenticated GET and returns the server counts", async (
   }, best_marks: [{ game_mode: "TRIVIAL", topic_id: 1, topic_name: "Linfocito",
     category_id: 2, category_name: "Linfocito", category_name_source: "historical",
     difficulty: 2, total_questions: 10, best_score: 4, session_id: 16,
-    started_at: "2026-10-31T12:00:00Z", valid_results: 3, tied_best_results: 2 }] };
+    started_at: "2026-10-31T12:00:00Z", valid_results: 3, tied_best_results: 2,
+    results: [{ session_id: 16, started_at: "2026-10-31T12:00:00Z", score: 4, total_questions: 10 }] }] };
   api.defaults.adapter = async (config) => {
     assert.equal(config.method, "get");
     assert.equal(config.url, "/game/progress");

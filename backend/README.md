@@ -249,3 +249,11 @@ categoría o nivel y las que tienen respuestas incompletas o incoherentes no
 aportan marcas. El nombre de temática no tiene versión histórica guardada.
 Las pruebas relacionadas se ejecutaron en bases aisladas (20 aprobadas); no se
 crearon partidas en la base habitual para verificar estos casos.
+
+Cada marca incluye `results`, con `session_id`, `started_at`, `score` y
+`total_questions` de todas sus partidas válidas. La lista usa exactamente los
+mismos criterios de clasificación y respuesta que la marca y se ordena por
+fecha de inicio e ID. No se limita ni trunca: el contrato entrega el historial
+comparable completo. Si el volumen llegara a hacer excesiva la respuesta, se
+necesitaría paginar los puntos por grupo mediante un endpoint específico,
+indicando el total y la continuación; no se perderían resultados en silencio.

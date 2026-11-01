@@ -121,6 +121,13 @@ class ActivityCounts(BaseModel):
     unfinished: int
 
 
+class ComparableResult(BaseModel):
+    session_id: int
+    started_at: datetime
+    score: int
+    total_questions: int
+
+
 class PersonalBestMark(BaseModel):
     game_mode: QuestionType
     topic_id: int
@@ -135,6 +142,7 @@ class PersonalBestMark(BaseModel):
     started_at: datetime
     valid_results: int
     tied_best_results: int
+    results: list[ComparableResult]
 
 
 class GameProgressResponse(ActivityCounts):

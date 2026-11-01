@@ -75,6 +75,12 @@ def test_best_marks_grouping_ties_zero_and_history_over_page(client, db, topic, 
                 and item["difficulty"] == 2 and item["total_questions"] == 2)
     assert (mark["best_score"], mark["session_id"], mark["valid_results"],
             mark["tied_best_results"]) == (1, early.id, 26, 3)
+    assert len(mark["results"]) == 26
+    assert mark["results"][0] == {"session_id": early.id, "started_at": early.created_at.isoformat(),
+                                  "score": 1, "total_questions": 2}
+    assert [(item["started_at"], item["session_id"]) for item in mark["results"]] == sorted(
+        (item["started_at"], item["session_id"]) for item in mark["results"])
+    assert all(item["score"] <= 1 for item in mark["results"])
     assert mark["category_name"] == "Historical category"
     assert mark["category_name_source"] == "historical"
     assert mark["topic_name"] == topic.name
@@ -132,5 +138,7 @@ def test_best_marks_reject_invalid_snapshots_and_logs(client, db, topic, test_us
     mark = data["best_marks"][0]
     assert (mark["session_id"], mark["best_score"], mark["valid_results"],
             mark["tied_best_results"]) == (good.id, 0, 1, 1)
+    assert mark["results"] == [{"session_id": good.id, "started_at": good.created_at.isoformat(),
+                                "score": 0, "total_questions": 2}]
     assert mark["category_name"] == "Original"
     assert mark["category_name_source"] == "historical"

@@ -246,6 +246,14 @@ export interface PersonalBestMark {
   started_at: string;
   valid_results: number;
   tied_best_results: number;
+  results: ComparableResult[];
+}
+
+export interface ComparableResult {
+  session_id: number;
+  started_at: string;
+  score: number;
+  total_questions: number;
 }
 
 export interface GameProgress extends ActivityCounts {

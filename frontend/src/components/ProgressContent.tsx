@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BestMarkCard from "@/components/BestMarkCard";
+import EvolutionSection from "@/components/EvolutionSection";
 import type { ActivityCounts, GameProgress } from "@/services/api";
 
 const items: { key: keyof ActivityCounts; label: string; help: string; icon: string }[] = [
@@ -30,5 +31,6 @@ export default function ProgressContent({ progress }: { progress: GameProgress }
       {progress.best_marks.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 text-slate-600">Todavía no hay partidas con clasificación suficiente para calcular tus mejores marcas.</p>
         : <ul className="mt-5 grid gap-4 md:grid-cols-2">{progress.best_marks.map((mark) => <li key={`${mark.game_mode}-${mark.topic_id}-${mark.category_id}-${mark.difficulty}-${mark.total_questions}`}><BestMarkCard mark={mark} /></li>)}</ul>}
     </section>
+    <EvolutionSection marks={progress.best_marks} />
   </>;
 }

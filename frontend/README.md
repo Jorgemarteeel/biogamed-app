@@ -204,3 +204,10 @@ empate, singular/plural y nombres históricos o actuales se probaron mediante
 renderizado estático de los componentes (31 pruebas frontend aprobadas en total).
 No se comprobaron visualmente en navegador porque la cuenta no tenía esos
 casos. Tipos y lint pasaron.
+
+«Evolución de resultados» permite elegir un grupo comparable y representa sus
+resultados en orden de inicio. Con dos o más partidas muestra puntos conectados
+y una lista accesible; con una indica que hacen falta más resultados. La lista
+vacía tiene un aviso propio. No une grupos diferentes ni interpreta las
+puntuaciones como prueba de mejora del aprendizaje. Los puntos proceden del
+backend, sin recalcular ni paginar en el navegador.

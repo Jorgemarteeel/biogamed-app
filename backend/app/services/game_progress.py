@@ -136,6 +136,7 @@ def get_personal_best_marks(db: Session, current_user: User):
         Category.id.in_(category_ids))).all())
     marks = []
     for (mode, topic_id, category_id, difficulty, total), candidates in sorted(groups.items()):
+        ordered = sorted(candidates, key=lambda item: (item[0].created_at, item[0].id))
         best_score = max(session.score for session, _ in candidates)
         tied = [(session, name) for session, name in candidates if session.score == best_score]
         winner, historical_name = min(tied, key=lambda item: (item[0].created_at, item[0].id))
@@ -149,5 +150,8 @@ def get_personal_best_marks(db: Session, current_user: User):
             "best_score": best_score, "session_id": winner.id,
             "started_at": winner.created_at,
             "valid_results": len(candidates), "tied_best_results": len(tied),
+            "results": [{"session_id": session.id, "started_at": session.created_at,
+                         "score": session.score, "total_questions": total}
+                        for session, _ in ordered],
         })
     return marks
