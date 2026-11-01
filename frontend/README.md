@@ -41,6 +41,15 @@ respuestas, correcciones y soluciones proceden de los datos conservados en el
 historial; no se recalculan a partir del banco actual. La misma presentación de
 correcciones se utiliza al finalizar una partida de Trivial.
 
+«Ver todo el historial» abre `/historial`, accesible también directamente.
+Consulta `/game/history` con `skip` y `limit` para mostrar diez partidas por
+página; `?page=N` conserva la página al recargar. El servidor devuelve una
+lista ordenada, pero no indica total ni metadatos de paginación. Se solicita
+un elemento adicional para habilitar «Siguiente» solo cuando existe, sin
+mostrar un número total de páginas. La clasificación se toma del
+`content_context` histórico; las partidas anteriores sin él indican que no
+consta. La temática usa su nombre actual o su ID si no está disponible.
+
 Las partidas antiguas sin `content_context` muestran que no consta esa
 clasificación; si faltan respuestas detalladas, se indica cuántas se conservan
 o que no hay corrección disponible. Las partidas sin finalizar se identifican
@@ -144,3 +153,20 @@ Pruebas del interceptor (tras instalar las dependencias con `npm ci`):
 ```sh
 node --test tests/session-expiry.test.mjs
 ```
+
+## Historial de partidas
+
+«Mis últimas partidas» enlaza con `/historial`, que consulta la API paginada
+sin descargar todo el historial. La página se conserva en la URL y las partidas
+completadas permiten revisar las respuestas guardadas en `/partidas/{id}`.
+Las tarjetas compartidas muestran la temática, el contexto histórico disponible,
+la fecha de inicio y el estado. En partidas nuevas completadas, el backend exige
+una respuesta por pregunta: la barra y los errores se calculan con el número de
+preguntas y los aciertos guardados. En partidas antiguas sin contexto o sin
+finalizar se muestran solo los datos conocidos.
+
+Se verificaron las tarjetas en escritorio (1280 px) y móvil (390 px), sin
+desbordamiento horizontal, con foco de teclado visible. La cuenta de pruebas
+solo tenía una página de resultados: la navegación entre páginas y los estados
+de error, vacío y sesión caducada están cubiertos por pruebas o lectura del
+código, pero no se comprobaron todos en navegador.

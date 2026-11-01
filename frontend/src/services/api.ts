@@ -226,6 +226,11 @@ export async function getRecentGames(): Promise<GameHistorySummary[]> {
   return response.data;
 }
 
+export async function getHistoryPage(skip: number, limit: number): Promise<GameHistorySummary[]> {
+  const response = await api.get<GameHistorySummary[]>("/game/history", { params: { skip, limit } });
+  return response.data;
+}
+
 export async function getGameHistoryDetail(sessionId: number): Promise<GameHistoryDetail> {
   const response = await api.get<GameHistoryDetail>(`/game/history/${sessionId}`);
   return response.data;

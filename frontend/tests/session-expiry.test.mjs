@@ -161,6 +161,23 @@ test("history detail uses an authenticated GET and returns saved answer snapshot
   }
 });
 
+test("full history requests one extra server item for the next-page check", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  api.defaults.adapter = async (config) => {
+    assert.equal(config.method, "get");
+    assert.equal(config.url, "/game/history");
+    assert.deepEqual(config.params, { skip: 10, limit: 11 });
+    assert.equal(config.headers.Authorization, "Bearer old-token");
+    return { status: 200, data: [{ id: 1 }], headers: {}, config };
+  };
+  try {
+    assert.deepEqual(await loaded.exports.getHistoryPage(10, 11), [{ id: 1 }]);
+  } finally {
+    api.defaults.adapter = originalAdapter;
+  }
+});
+
 test("history detail leaves an unavailable session as a 404 without clearing login", async () => {
   const { values, redirects } = browser();
   const originalAdapter = api.defaults.adapter;

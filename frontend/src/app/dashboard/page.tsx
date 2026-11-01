@@ -2,6 +2,7 @@
 
 import Brand from "@/components/Brand";
 import GamePicker from "@/components/GamePicker";
+import GameSummaryCard from "@/components/GameSummaryCard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
@@ -132,15 +133,11 @@ export default function DashboardPage() {
                 ) : (
                   <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {games.map((game) => (
-                      <li key={game.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="font-bold">{game.game_mode === "TRIVIAL" ? "Trivial" : "Pasapalabra"}</p>
-                        <p className="mt-1 break-words text-sm text-slate-600">{topics.find((topic) => topic.id === game.topic_id)?.name || `Temática ${game.topic_id}`}</p>
-                        <p className="mt-3 text-sm font-semibold text-sky-800">{game.is_completed ? `${game.score} de ${game.question_ids.length} aciertos` : "Sin finalizar"}</p>
-                        {game.is_completed && <Link href={`/partidas/${game.id}`} className="text-link mt-3 inline-flex min-h-11 items-center text-sm">Ver resultado</Link>}
-                      </li>
+                      <li key={game.id}><GameSummaryCard game={game} topicName={topics.find((topic) => topic.id === game.topic_id)?.name ?? `Temática ${game.topic_id}`} compact /></li>
                     ))}
                   </ul>
                 )}
+                <Link href="/historial" className="text-link mt-5 inline-flex min-h-11 items-center">Ver todo el historial →</Link>
                 </div>
               </section>
             )}
