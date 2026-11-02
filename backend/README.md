@@ -47,6 +47,23 @@ la protección de esas partidas antes de ofrecer edición general. Un bloqueo
 basado solo en partidas sin finalizar no basta: algunas pueden quedar así
 indefinidamente.
 
+### Bloques dentro de una asignatura
+
+`GET /subjects/{id}` consulta nombre y descripción de una asignatura.
+`GET /subjects/{id}/blocks?skip=0&limit=100` lista sus bloques por ID ascendente,
+con los mismos límites de paginación que asignaturas. `POST /subjects/{id}/blocks`
+crea uno y devuelve `201`, por ejemplo:
+
+```json
+{"name": "Genómica", "description": "Conceptos básicos"}
+```
+
+El `subject_id` se toma de la ruta y no puede enviarse en el cuerpo. Nombre
+recortado de 1 a 255 caracteres; descripción opcional sin límite específico
+en el modelo. Se rechazan campos adicionales. Las tres rutas requieren rol
+actual `teacher` o `admin`; una asignatura inexistente devuelve `404`.
+No se impone unicidad ni se modifican preguntas o juegos.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

@@ -19,7 +19,7 @@ function loadTypescript(url) {
 }
 
 const client = loadTypescript(new URL("../src/services/api.ts", import.meta.url));
-const { canManageSubjects, visibleSubjectsPage, SUBJECTS_PAGE_SIZE } =
+const { canManageSubjects, visibleSubjectsPage, visibleBlocksPage, SUBJECTS_PAGE_SIZE } =
   loadTypescript(new URL("../src/lib/subjects.ts", import.meta.url));
 
 afterEach(() => { delete global.window; });
@@ -74,4 +74,38 @@ test("one extra item determines next page without displaying it", () => {
   });
   assert.equal(visibleSubjectsPage(received.slice(0, SUBJECTS_PAGE_SIZE)).hasMore, false);
   assert.deepEqual(visibleSubjectsPage([]), { items: [], hasMore: false });
+});
+
+test("block requests use the subject URL and authenticated client", async () => {
+  testBrowser();
+  const originalAdapter = client.default.defaults.adapter;
+  const calls = [];
+  client.default.defaults.adapter = async (config) => {
+    calls.push(config);
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    return { status: config.method === "post" ? 201 : 200,
+      data: config.method === "post" ? { id: 9, subject_id: 4, name: "Bloque", description: null }
+        : config.url.endsWith("/blocks") ? [{ id: 8, subject_id: 4, name: "Otro", description: null }]
+          : { id: 4, name: "Asignatura", description: "Real" }, headers: {}, config };
+  };
+  try {
+    assert.equal((await client.getSubject(4)).name, "Asignatura");
+    assert.equal((await client.getContentBlocks(4, 12, 13))[0].subject_id, 4);
+    assert.equal((await client.createContentBlock(4, { name: "Bloque" })).id, 9);
+    assert.deepEqual(calls.map(({ url, method }) => [method, url]), [
+      ["get", "/subjects/4"], ["get", "/subjects/4/blocks"], ["post", "/subjects/4/blocks"],
+    ]);
+    assert.deepEqual(calls[1].params, { skip: 12, limit: 13 });
+    assert.deepEqual(JSON.parse(calls[2].data), { name: "Bloque" });
+  } finally { client.default.defaults.adapter = originalAdapter; }
+});
+
+test("blocks page uses one extra item and keeps an empty page empty", () => {
+  const received = Array.from({ length: SUBJECTS_PAGE_SIZE + 1 }, (_, index) => ({
+    id: index + 1, subject_id: 4, name: `Bloque ${index}`, description: null,
+  }));
+  assert.deepEqual(visibleBlocksPage(received), {
+    items: received.slice(0, SUBJECTS_PAGE_SIZE), hasMore: true,
+  });
+  assert.deepEqual(visibleBlocksPage([]), { items: [], hasMore: false });
 });

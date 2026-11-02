@@ -40,6 +40,10 @@ export interface SubjectCreate {
   description?: string | null;
 }
 
+export interface ContentBlock extends Subject {
+  subject_id: number;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });
@@ -206,6 +210,21 @@ export async function getSubjects(skip = 0, limit = 100): Promise<Subject[]> {
 
 export async function createSubject(subject: SubjectCreate): Promise<Subject> {
   const response = await api.post<Subject>("/subjects", subject);
+  return response.data;
+}
+
+export async function getSubject(subjectId: number): Promise<Subject> {
+  const response = await api.get<Subject>(`/subjects/${subjectId}`);
+  return response.data;
+}
+
+export async function getContentBlocks(subjectId: number, skip: number, limit: number): Promise<ContentBlock[]> {
+  const response = await api.get<ContentBlock[]>(`/subjects/${subjectId}/blocks`, { params: { skip, limit } });
+  return response.data;
+}
+
+export async function createContentBlock(subjectId: number, payload: SubjectCreate): Promise<ContentBlock> {
+  const response = await api.post<ContentBlock>(`/subjects/${subjectId}/blocks`, payload);
   return response.data;
 }
 

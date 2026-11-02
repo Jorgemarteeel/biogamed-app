@@ -129,7 +129,7 @@ export default function SubjectsView({ page }: { page: number }) {
         <section aria-labelledby="subject-list-heading" className="mt-8">
           <h2 id="subject-list-heading" className="text-xl font-bold text-blue-950">Asignaturas registradas</h2>
           {subjects.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">{created ? "El listado se cargó antes de crear la asignatura. Puedes actualizarlo para consultar su ubicación." : page === 1 ? "Todavía no hay asignaturas registradas." : "No hay asignaturas en esta página."}</p>
-            : <ol className="mt-4 grid gap-4 sm:grid-cols-2">{subjects.map((subject) => <li key={subject.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{subject.name}</h3>{subject.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{subject.description}</p>}</li>)}</ol>}
+            : <ol className="mt-4 grid gap-4 sm:grid-cols-2">{subjects.map((subject) => <li key={subject.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{subject.name}</h3>{subject.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{subject.description}</p>}<Link href={`/gestion/asignaturas/${subject.id}`} className="text-link mt-3 inline-flex min-h-11 items-center">Ver bloques →</Link></li>)}</ol>}
           <nav aria-label="Páginas de asignaturas" className="mt-6 flex flex-wrap items-center justify-between gap-4">
             {page > 1 ? <Link href={page === 2 ? "/gestion/asignaturas" : `/gestion/asignaturas?page=${page - 1}`} className="button-secondary">Anterior</Link> : <span />}
             <span className="text-sm font-semibold text-slate-600">Página {page}</span>
@@ -145,7 +145,7 @@ export default function SubjectsView({ page }: { page: number }) {
             {submitError && <p role="alert" className="notice-error">{submitError}</p>}
             <button type="submit" disabled={submitting} className="button-primary">{submitting ? "Creando…" : "Crear asignatura"}</button>
           </form>
-          {created && <div role="status" className="notice-success mt-6"><p className="font-bold">Asignatura creada</p><p className="mt-1 break-words">{created.name}</p>{created.description && <p className="mt-1 break-words">{created.description}</p>}<p className="mt-2 text-xs">ID {created.id}. El listado conserva su página actual.</p><button type="button" className="text-link mt-2 min-h-11" onClick={retry}>Actualizar listado</button></div>}
+          {created && <div role="status" className="notice-success mt-6"><p className="font-bold">Asignatura creada</p><p className="mt-1 break-words">{created.name}</p>{created.description && <p className="mt-1 break-words">{created.description}</p>}<p className="mt-2 text-xs">ID {created.id}. El listado conserva su página actual.</p><div className="mt-2 flex flex-wrap gap-4"><Link href={`/gestion/asignaturas/${created.id}`} className="text-link inline-flex min-h-11 items-center">Ver bloques →</Link><button type="button" className="text-link min-h-11" onClick={retry}>Actualizar listado</button></div></div>}
         </section>
       </>}
     </main>

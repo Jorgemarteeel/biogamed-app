@@ -50,6 +50,19 @@ devuelta por el servidor sin asumir que corresponde a la página visible.
 La pantalla contempla carga, lista vacía, reintento, sesión caducada y pérdida
 de permisos. Todavía no ofrece edición ni eliminación.
 
+Cada asignatura ofrece «Ver bloques», también tras crearla. La ruta
+`/gestion/asignaturas/{id}` consulta el detalle y los bloques de esa asignatura,
+admite recarga y `?page=N`, y permite crear bloques con el mismo tratamiento de
+permisos, validación, errores y confirmación. Solicita un elemento adicional
+para saber si existe otra página sin inventar un total. Si el listado precede
+a la creación, ofrece actualizarlo sin ocultar la confirmación.
+En una pila temporal con PostgreSQL desechable se comprobaron acceso desde
+asignaturas, ruta directa y recarga, vacío, validación, creación, doble
+pulsación sin duplicado, separación entre asignaturas, segunda página, ruta
+inexistente y adaptación móvil con controles de teclado. No se simularon en
+navegador una sesión caducada, pérdida de permisos ni un fallo de red al crear
+bloques; los contratos y permisos se cubren con pruebas aisladas.
+
 Validación visual: «Pruebas UI» no vio el acceso y recibió «Acceso no permitido»
 al abrir la ruta directamente. En una pila aislada con PostgreSQL desechable,
 una cuenta docente ficticia comprobó acceso, recarga, lista vacía, validación
