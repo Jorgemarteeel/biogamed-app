@@ -64,6 +64,18 @@ en el modelo. Se rechazan campos adicionales. Las tres rutas requieren rol
 actual `teacher` o `admin`; una asignatura inexistente devuelve `404`.
 No se impone unicidad ni se modifican preguntas o juegos.
 
+### Categorías de un bloque
+
+`GET /subjects/{subject_id}/blocks/{block_id}` devuelve el bloque y su
+asignatura. `GET /subjects/{subject_id}/blocks/{block_id}/categories?skip=0&limit=100`
+lista sus categorías por ID; `POST` a la misma ruta crea una categoría con
+`{"name":"Inmunología","description":"Conceptos"}`. El ID de bloque se toma
+de la ruta; el cuerpo no admite `block_id` ni otros campos adicionales. Nombre
+recortado de 1 a 255 caracteres y descripción opcional. Requieren rol actual
+`teacher` o `admin`; bloque inexistente o ajeno a la asignatura devuelve `404`.
+Las categorías existentes sin bloque (`block_id=NULL`) permanecen intactas,
+con sus IDs y preguntas, y no aparecen en la lista de un bloque concreto.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

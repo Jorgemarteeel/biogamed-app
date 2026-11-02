@@ -56,6 +56,19 @@ admite recarga y `?page=N`, y permite crear bloques con el mismo tratamiento de
 permisos, validación, errores y confirmación. Solicita un elemento adicional
 para saber si existe otra página sin inventar un total. Si el listado precede
 a la creación, ofrece actualizarlo sin ocultar la confirmación.
+
+Cada bloque ofrece «Ver categorías», también en su confirmación de creación.
+`/gestion/asignaturas/{id}/bloques/{blockId}` muestra asignatura y bloque,
+pagina las categorías de ese bloque y permite crear una. Reutiliza los estados
+de sesión, permisos, vacío, error y confirmación de la gestión anterior. Las
+categorías aún sin bloque no se muestran como pertenecientes a ninguno; su
+consulta y vinculación quedan para otra tarea.
+La ruta de categorías se validó en una pila temporal con docente y contenidos
+ficticios: acceso desde bloques, recarga directa, vacío, nombre en blanco,
+creación, paginación, separación entre bloques, referencia incompatible,
+vista de escritorio y móvil sin desbordamiento, y foco de teclado visible.
+No se forzaron errores de red ni caducidad de sesión en el navegador; esos
+estados conservan el tratamiento compartido con la gestión anterior.
 En una pila temporal con PostgreSQL desechable se comprobaron acceso desde
 asignaturas, ruta directa y recarga, vacío, validación, creación, doble
 pulsación sin duplicado, separación entre asignaturas, segunda página, ruta

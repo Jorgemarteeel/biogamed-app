@@ -19,7 +19,7 @@ function loadTypescript(url) {
 }
 
 const client = loadTypescript(new URL("../src/services/api.ts", import.meta.url));
-const { canManageSubjects, visibleSubjectsPage, visibleBlocksPage, SUBJECTS_PAGE_SIZE } =
+const { canManageSubjects, visibleSubjectsPage, visibleBlocksPage, visibleCategoriesPage, SUBJECTS_PAGE_SIZE } =
   loadTypescript(new URL("../src/lib/subjects.ts", import.meta.url));
 
 afterEach(() => { delete global.window; });
@@ -108,4 +108,41 @@ test("blocks page uses one extra item and keeps an empty page empty", () => {
     items: received.slice(0, SUBJECTS_PAGE_SIZE), hasMore: true,
   });
   assert.deepEqual(visibleBlocksPage([]), { items: [], hasMore: false });
+});
+
+test("category requests keep both IDs in the URL and authenticate", async () => {
+  testBrowser();
+  const originalAdapter = client.default.defaults.adapter;
+  const calls = [];
+  client.default.defaults.adapter = async (config) => {
+    calls.push(config);
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    return { status: config.method === "post" ? 201 : 200,
+      data: config.method === "post" ? { id: 9, block_id: 5, name: "Nueva", description: null }
+        : config.url.endsWith("/categories") ? [{ id: 8, block_id: 5, name: "Anterior", description: null }]
+          : { id: 5, subject_id: 4, name: "Bloque", description: null,
+              subject: { id: 4, name: "Asignatura", description: null } }, headers: {}, config };
+  };
+  try {
+    assert.equal((await client.getContentBlock(4, 5)).subject.id, 4);
+    assert.equal((await client.getCategories(4, 5, 12, 13))[0].block_id, 5);
+    assert.equal((await client.createCategory(4, 5, { name: "Nueva" })).id, 9);
+    assert.deepEqual(calls.map(({ method, url }) => [method, url]), [
+      ["get", "/subjects/4/blocks/5"],
+      ["get", "/subjects/4/blocks/5/categories"],
+      ["post", "/subjects/4/blocks/5/categories"],
+    ]);
+    assert.deepEqual(calls[1].params, { skip: 12, limit: 13 });
+    assert.deepEqual(JSON.parse(calls[2].data), { name: "Nueva" });
+  } finally { client.default.defaults.adapter = originalAdapter; }
+});
+
+test("categories use one extra server item and preserve empty state", () => {
+  const items = Array.from({ length: SUBJECTS_PAGE_SIZE + 1 }, (_, index) => ({
+    id: index + 1, block_id: 5, name: `Categoría ${index}`, description: null,
+  }));
+  assert.deepEqual(visibleCategoriesPage(items), {
+    items: items.slice(0, SUBJECTS_PAGE_SIZE), hasMore: true,
+  });
+  assert.deepEqual(visibleCategoriesPage([]), { items: [], hasMore: false });
 });

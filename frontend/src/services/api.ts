@@ -44,6 +44,14 @@ export interface ContentBlock extends Subject {
   subject_id: number;
 }
 
+export interface ContentBlockDetail extends ContentBlock {
+  subject: Subject;
+}
+
+export interface Category extends Subject {
+  block_id: number;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });
@@ -225,6 +233,24 @@ export async function getContentBlocks(subjectId: number, skip: number, limit: n
 
 export async function createContentBlock(subjectId: number, payload: SubjectCreate): Promise<ContentBlock> {
   const response = await api.post<ContentBlock>(`/subjects/${subjectId}/blocks`, payload);
+  return response.data;
+}
+
+export async function getContentBlock(subjectId: number, blockId: number): Promise<ContentBlockDetail> {
+  const response = await api.get<ContentBlockDetail>(`/subjects/${subjectId}/blocks/${blockId}`);
+  return response.data;
+}
+
+export async function getCategories(subjectId: number, blockId: number,
+                                    skip: number, limit: number): Promise<Category[]> {
+  const response = await api.get<Category[]>(`/subjects/${subjectId}/blocks/${blockId}/categories`,
+    { params: { skip, limit } });
+  return response.data;
+}
+
+export async function createCategory(subjectId: number, blockId: number,
+                                     payload: SubjectCreate): Promise<Category> {
+  const response = await api.post<Category>(`/subjects/${subjectId}/blocks/${blockId}/categories`, payload);
   return response.data;
 }
 

@@ -2,7 +2,8 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import ContentBlock, Subject
+from app.models import Category, ContentBlock, Subject
+from app.schemas.category import CategoryCreate
 from app.schemas.content_block import ContentBlockCreate
 from app.schemas.subject import SubjectCreate
 
@@ -24,6 +25,36 @@ def get_blocks(db: Session, subject_id: int, skip: int = 0, limit: int = 100) ->
     statement = (select(ContentBlock).where(ContentBlock.subject_id == subject_id)
                  .order_by(ContentBlock.id).offset(skip).limit(limit))
     return list(db.scalars(statement).all())
+
+
+def get_block(db: Session, subject_id: int, block_id: int) -> ContentBlock:
+    get_subject(db, subject_id)
+    block = db.get(ContentBlock, block_id)
+    if block is None or block.subject_id != subject_id:
+        raise HTTPException(404, "El bloque no existe en esta asignatura.")
+    return block
+
+
+def get_categories(db: Session, subject_id: int, block_id: int,
+                   skip: int = 0, limit: int = 100) -> list[Category]:
+    get_block(db, subject_id, block_id)
+    statement = (select(Category).where(Category.block_id == block_id)
+                 .order_by(Category.id).offset(skip).limit(limit))
+    return list(db.scalars(statement).all())
+
+
+def create_category(db: Session, subject_id: int, block_id: int,
+                    payload: CategoryCreate) -> Category:
+    get_block(db, subject_id, block_id)
+    category = Category(block_id=block_id, **payload.model_dump())
+    db.add(category)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(category)
+    return category
 
 
 def create_block(db: Session, subject_id: int, payload: ContentBlockCreate) -> ContentBlock:

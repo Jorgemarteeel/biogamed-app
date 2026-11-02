@@ -1,4 +1,4 @@
-import type { ContentBlock, Subject, UserResponse } from "@/services/api";
+import type { Category, ContentBlock, Subject, UserResponse } from "@/services/api";
 
 export const SUBJECTS_PAGE_SIZE = 12;
 
@@ -18,4 +18,8 @@ export function visibleBlocksPage(received: ContentBlock[]): { items: ContentBlo
     items: received.slice(0, SUBJECTS_PAGE_SIZE),
     hasMore: received.length > SUBJECTS_PAGE_SIZE,
   };
+}
+
+export function visibleCategoriesPage(received: Category[]): { items: Category[]; hasMore: boolean } {
+  return { items: received.slice(0, SUBJECTS_PAGE_SIZE), hasMore: received.length > SUBJECTS_PAGE_SIZE };
 }
