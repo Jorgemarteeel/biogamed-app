@@ -29,8 +29,19 @@ export interface Topic {
   description: string | null;
 }
 
+export interface Subject {
+  id: number;
+  name: string;
+  description: string | null;
+}
+
+export interface SubjectCreate {
+  name: string;
+  description?: string | null;
+}
+
 const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });
 
 function isPublicAuthRequest(url?: string): boolean {
@@ -185,6 +196,16 @@ export async function getTopics(mode?: GameMode): Promise<Topic[]> {
 
 export async function getCurrentUser(): Promise<UserResponse> {
   const response = await api.get<UserResponse>("/auth/me");
+  return response.data;
+}
+
+export async function getSubjects(skip = 0, limit = 100): Promise<Subject[]> {
+  const response = await api.get<Subject[]>("/subjects", { params: { skip, limit } });
+  return response.data;
+}
+
+export async function createSubject(subject: SubjectCreate): Promise<Subject> {
+  const response = await api.post<Subject>("/subjects", subject);
   return response.data;
 }
 

@@ -15,6 +15,38 @@ no clasifica preguntas ni crea asignaturas, bloques o categorías automáticamen
 Las claves foráneas impiden borrar un elemento académico referenciado; no hay
 borrado en cascada de preguntas o actividad.
 
+### Consulta y creación de asignaturas
+
+`GET /subjects?skip=0&limit=100` devuelve una lista ordenada por ID ascendente.
+`skip` admite desde 0 y `limit` de 1 a 100; la lista vacía se devuelve como `[]`.
+`POST /subjects` crea una asignatura y devuelve `201` con el ID generado:
+
+```json
+{"name": "Bioinformática", "description": "Fundamentos de la asignatura"}
+```
+
+La respuesta contiene `id`, `name` y `description`; esta última puede ser
+`null` y omitirse al crear. El nombre es obligatorio, se recortan sus espacios
+exteriores y debe tener entre 1 y 255 caracteres después del recorte. La
+descripción utiliza el campo de texto del modelo, sin límite específico. No se
+admiten campos adicionales como rol, propietario o permisos; no hay regla de
+unicidad de nombre.
+
+Ambas rutas requieren token y el rol **actual** `teacher` o `admin` en la base
+de datos: sin autenticación responden `401`, y para `student`, `403`. No hay
+todavía interfaz de gestión, edición, retirada ni eliminación de asignaturas.
+La conexión usa `DATABASE_URL` si se configura; en el entorno local conserva
+el valor existente por defecto. `BIOGAMED_CORS_ORIGIN` permite añadir un origen
+local adicional para una instancia de pruebas separada.
+
+**Pendiente antes de editar preguntas:** durante una partida abierta, el envío
+vuelve a leer la pregunta actual para corregirla. Una edición entre inicio y
+envío podría cambiar la corrección respecto al enunciado visto; cambiar
+temática o modalidad podría impedir el envío. Hay que resolver el versionado o
+la protección de esas partidas antes de ofrecer edición general. Un bloqueo
+basado solo en partidas sin finalizar no basta: algunas pueden quedar así
+indefinidamente.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

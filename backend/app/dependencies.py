@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import User
+from app.models import User, UserRole
 from app.services import user as user_service
 from app.utils.security import ALGORITHM, SECRET_KEY
 
@@ -40,3 +40,12 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def require_content_staff(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role not in {UserRole.TEACHER, UserRole.ADMIN}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para gestionar contenidos.",
+        )
+    return current_user

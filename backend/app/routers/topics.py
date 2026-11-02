@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
-from app.models import Topic, User, UserRole
+from app.dependencies import require_content_staff
+from app.models import Topic, User
 from app.schemas.topic import TopicCreate, TopicResponse
 from app.schemas.question import QuestionType
 from app.services import topic as topic_service
@@ -30,12 +30,6 @@ def list_topics(
 def create_topic(
     topic: TopicCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_content_staff),
 ) -> Topic:
-    if current_user.role not in {UserRole.ADMIN, UserRole.TEACHER}:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para crear temáticas.",
-        )
-
     return topic_service.create_topic(db=db, topic=topic)

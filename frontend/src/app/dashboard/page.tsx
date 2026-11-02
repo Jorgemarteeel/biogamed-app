@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import Link from "next/link";
+import { canManageSubjects } from "@/lib/subjects";
 import {
   getCurrentUser, getRecentGames, getTopics,
   type GameHistorySummary, type Topic, type UserResponse,
@@ -100,7 +101,10 @@ export default function DashboardPage() {
             {user ? `Hola, ${user.name || user.email}` : "Panel de estudio"}
           </h1>
           <p className="mt-2 max-w-2xl leading-7 text-slate-600">Elige tu juego y después la temática que quieres practicar.</p>
-          {user && <Link href="/progreso" className="text-link mt-3 inline-flex min-h-11 items-center">Mi progreso →</Link>}
+          {user && <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+            <Link href="/progreso" className="text-link inline-flex min-h-11 items-center">Mi progreso →</Link>
+            {canManageSubjects(user.role) && <Link href="/gestion/asignaturas" className="text-link inline-flex min-h-11 items-center">Gestión de contenidos →</Link>}
+          </div>}
         </div>
 
         {loading ? (

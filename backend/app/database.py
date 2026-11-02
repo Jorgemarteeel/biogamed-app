@@ -1,9 +1,13 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models.base import Base
 
 # Conexión a la base de datos PostgreSQL dentro de Docker
-SQLALCHEMY_DATABASE_URL = "postgresql://admin:adminpassword@db:5432/biogamed"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://admin:adminpassword@db:5432/biogamed"
+)
 
 # Creamos el motor de la base de datos
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

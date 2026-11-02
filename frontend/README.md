@@ -14,6 +14,8 @@ npm run dev
 Abre `http://localhost:3000`. El backend debe estar disponible en
 `http://localhost:8000`. Para utilizar Docker, consulta `docker-compose.yml`
 en la raíz del repositorio.
+`NEXT_PUBLIC_API_BASE_URL` permite apuntar el cliente a otro backend en un
+entorno de pruebas; sin ella se usa `http://localhost:8000`.
 
 ## Comprobaciones
 
@@ -29,6 +31,34 @@ npx tsc --noEmit
 y muestra hasta cinco partidas recientes desde `/game/history`. Sin token
 redirige al login; una sesión rechazada utiliza el interceptor compartido.
 El cierre de sesión elimina la clave `token` sin borrar otros datos del navegador.
+
+## Primera pantalla de gestión de contenidos
+
+El panel muestra «Gestión de contenidos» solo si `/auth/me` devuelve el rol
+`teacher` o `admin`. `/gestion/asignaturas` funciona por acceso directo y
+recarga: vuelve a comprobar sesión y rol antes de consultar `GET /subjects`.
+Un estudiante ve un aviso de acceso no permitido. El backend autoriza también
+cada operación; ocultar el enlace no sustituye esa comprobación.
+
+La lista muestra nombre y descripción disponible, ordenada por ID desde el
+servidor. `?page=N` conserva la página. Se solicitan 13 elementos mediante
+`skip` y `limit` para mostrar 12 y saber si existe «Siguiente», ya que la API
+no devuelve un total. El formulario envía `POST /subjects` con nombre
+obligatorio de hasta 255 caracteres y descripción opcional. Bloquea envíos
+repetidos; ante un error conserva los campos. Tras crear, confirma la entidad
+devuelta por el servidor sin asumir que corresponde a la página visible.
+La pantalla contempla carga, lista vacía, reintento, sesión caducada y pérdida
+de permisos. Todavía no ofrece edición ni eliminación.
+
+Validación visual: «Pruebas UI» no vio el acceso y recibió «Acceso no permitido»
+al abrir la ruta directamente. En una pila aislada con PostgreSQL desechable,
+una cuenta docente ficticia comprobó acceso, recarga, lista vacía, validación
+de nombre, creación, confirmación, paginación, foco y diseño móvil. Una doble
+pulsación creó una sola fila. Un fallo de red simulado deteniendo solo el
+backend temporal conservó los campos y permitió reintentar. No se midió una
+concurrencia de solicitudes con respuestas deliberadamente retrasadas ni se
+comprobó visualmente una sesión docente caducada. Las pruebas automatizadas
+de cliente y backend cubren los contratos y permisos; la pila se retiró.
 
 ### Consulta de partidas anteriores
 
