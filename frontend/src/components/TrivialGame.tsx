@@ -28,7 +28,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   const allAnswered = session.questions.every((item) => answers[item.id] !== undefined);
   const isLast = questionIndex === session.questions.length - 1;
   const labels = describeContentContext(session.content_context);
-  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">Temática: {topicName} · Categoría: {labels?.category ?? "Categoría no disponible"} · Dificultad: {labels?.difficulty ?? "Dificultad no disponible"}</p>;
+  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">Temática: {session.content_context?.topic_name ?? topicName} · Categoría: {labels?.category ?? "Categoría no disponible"} · Dificultad: {labels?.difficulty ?? "Dificultad no disponible"}</p>;
 
   useEffect(() => {
     mounted.current = true;
@@ -75,7 +75,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
       setError(status === 403 || status === 404
         ? "No puedes acceder a esta partida. Vuelve al panel para comenzar otra."
         : status === 409
-          ? "Una pregunta de esta partida ya no está disponible. Vuelve al panel para comenzar otra."
+          ? "No se puede corregir esta partida con una copia válida de las preguntas originales. Vuelve al panel para comenzar otra."
           : "No se pudo obtener el resultado. Tus respuestas siguen aquí; puedes volver a enviarlas.");
     } finally {
       pendingAnswers.current = null;

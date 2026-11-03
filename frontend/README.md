@@ -155,7 +155,9 @@ lista ordenada, pero no indica total ni metadatos de paginación. Se solicita
 un elemento adicional para habilitar «Siguiente» solo cuando existe, sin
 mostrar un número total de páginas. La clasificación se toma del
 `content_context` histórico; las partidas anteriores sin él indican que no
-consta. La temática usa su nombre actual o su ID si no está disponible.
+consta. La temática usa el nombre conservado al inicio cuando existe; en
+partidas antiguas se indica que el nombre procede del catálogo actual, o su ID
+si no está disponible.
 
 Las partidas antiguas sin `content_context` muestran que no consta esa
 clasificación; si faltan respuestas detalladas, se indica cuántas se conservan
@@ -163,9 +165,9 @@ o que no hay corrección disponible. Las partidas sin finalizar se identifican
 como tales y no ofrecen reanudación ni corrección. La pantalla contempla carga,
 reintento tras fallo de consulta, sesión rechazada y partida no disponible.
 
-La fecha disponible es la de **inicio**, no la de finalización. El nombre de
-la temática se consulta en la lista actual de temáticas; si ya no se obtiene,
-se muestra su ID. No es una copia histórica del nombre. En el navegador
+La fecha disponible es la de **inicio**, no la de finalización. Solo se usa el
+catálogo actual como alternativa explícita si no se conservó el nombre de la
+temática al inicio. En una verificación anterior en el navegador
 integrado aislado se comprobó el enlace desde el panel, el acceso directo y
 la recarga de una partida existente, sus diez correcciones, el contexto,
 la navegación por teclado entre correcciones y la adaptación a escritorio y
@@ -232,8 +234,52 @@ comprobaciones manuales quedan pendientes; la demo sigue disponible.
 El bloqueo de doble envío es del cliente, no una clave de idempotencia del
 servidor. Si se pierde la respuesta tras persistir, un reintento podría crear
 otra pregunta: el error recomienda actualizar el listado antes de reintentar.
-No se añadió edición ni eliminación; sigue pendiente proteger el contenido
-de partidas abiertas antes de ofrecer esas operaciones.
+No se añadió edición ni eliminación. La protección de partidas nuevas se
+describe a continuación; las partidas antiguas no se reconstruyen.
+
+## Contenido conservado de las partidas
+
+Las partidas nuevas reciben las preguntas públicas proyectadas desde la copia
+privada que guarda el backend al inicio. Trivial presenta y revisa ese mismo
+enunciado y opciones; la solución de la corrección procede de la copia del
+servidor. El historial utiliza sus registros guardados, sin consultar el banco
+actual. El nombre de temática conservado en `content_context` tiene prioridad
+sobre el catálogo en partida, tarjetas de historial y detalle. Las marcas usan
+el nombre guardado en la partida ganadora; cuando falta, indican su procedencia
+del catálogo actual. No cambian la agrupación, puntuación ni reglas de juego.
+
+El detalle distingue partidas con contenido conservado al inicio de partidas
+antiguas mediante `question_content_source`. Para las antiguas completadas se
+aclara que sus registros corresponden a la corrección y que no hay una versión
+original verificable. Para las antiguas abiertas sin copia se pide empezar otra
+partida: la API rechaza su corrección con `409`. Datos ausentes siguen ausentes.
+No se ha incorporado reanudación, edición ni eliminación. Pasapalabra continúa
+sin interfaz jugable; su protección se comprueba mediante la API implementada.
+
+La copia con soluciones nunca llega al navegador: el inicio mantiene su
+contrato público, y la corrección solo aparece tras enviar todas las respuestas.
+El detalle de partidas sin finalizar no incluye registros de corrección. El
+resultado y la revisión completada conservan el momento de exposición ya
+permitido por el motor.
+
+Verificación del 3 de noviembre de 2026: tipos y lint aprobados; **40 pruebas
+frontend pertinentes** aprobadas entre revisión, resumen, presentación de
+marcas, cliente de partidas y compatibilidad de sesiones. Incluyen renderizado
+del historial y tarjetas con nombres originales frente a un catálogo cambiado,
+contenido de respuestas guardado y avisos de compatibilidad antigua. Son pruebas
+automatizadas, con servicios/hooks simulados donde corresponde, no una revisión
+visual. No se repitieron las pruebas de creación ajenas a este cambio.
+
+La revisión visual pendiente de `b45b8d7` (formulario Trivial y Pasapalabra,
+validación, confirmación, teclado y móvil) continúa pendiente: al intentar abrir
+`localhost:13004`, el navegador integrado devolvió
+`The browser access host is unavailable`. No se usó Opera GX ni ninguna cuenta
+personal. Se reutilizaron las credenciales locales solo desde el backend de la
+demo para comprobar HTTP, sin exponerlas ni guardarlas en Git. Se verificó su
+base y volumen separados antes de escribir; las preguntas ficticias 18 y 19
+permitieron completar las partidas 1 y 2 tras modificar sus originales, con
+historial estable y 1/1 en ambas. La página docente respondió HTTP 200. La demo
+sigue disponible y la base habitual quedó intacta.
 
 ## Partidas de Trivial
 
@@ -344,8 +390,8 @@ históricos, y número de preguntas; muestra la mejor puntuación, fecha de inic
 partidas válidas del grupo, empates y enlace a la partida elegida. El backend
 desempata por fecha e ID, nunca por tiempo. Las partidas antiguas sin contexto,
 mixtas o con registros incoherentes siguen en actividad aunque no tengan marca.
-La temática muestra su nombre actual; la categoría usa el histórico cuando
-existe e indica si su nombre procede del catálogo actual.
+La temática usa el nombre conservado en la partida ganadora cuando existe;
+temática y categoría indican si su nombre procede del catálogo actual.
 
 Con «Pruebas UI» se comprobó una marca real en escritorio y móvil y se contrastó
 con una lectura del servicio backend. Los casos de lista vacía con actividad,

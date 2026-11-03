@@ -39,13 +39,11 @@ La conexión usa `DATABASE_URL` si se configura; en el entorno local conserva
 el valor existente por defecto. `BIOGAMED_CORS_ORIGIN` permite añadir un origen
 local adicional para una instancia de pruebas separada.
 
-**Pendiente antes de editar preguntas:** durante una partida abierta, el envío
-vuelve a leer la pregunta actual para corregirla. Una edición entre inicio y
-envío podría cambiar la corrección respecto al enunciado visto; cambiar
-temática o modalidad podría impedir el envío. Hay que resolver el versionado o
-la protección de esas partidas antes de ofrecer edición general. Un bloqueo
-basado solo en partidas sin finalizar no basta: algunas pueden quedar así
-indefinidamente.
+Las partidas nuevas conservan una copia privada del contenido al inicio,
+descrita en «Conservación del contenido de una partida». No se han añadido
+edición ni eliminación del banco. Las partidas antiguas sin esa copia no
+pueden reconstruirse; las claves foráneas de preguntas e historial siguen
+protegiendo sus referencias frente al borrado físico.
 
 ### Bloques dentro de una asignatura
 
@@ -299,10 +297,96 @@ al enviarla. El rol se comprueba contra el usuario actual de la base de datos.
 apunta a esas partidas y `GameSession.answer_logs` / `Question.answer_logs`
 permiten consultar sus respuestas en la nueva tabla `answer_logs`.
 
-Al corregir una partida se guardan las respuestas y la puntuación en la misma
-transacción. Cada respuesta conserva el enunciado, opciones, letra, respuesta
-enviada y corrección de ese momento. Los cambios posteriores del banco no
-alteran ese historial. La pareja partida/pregunta es única.
+Al corregir una partida nueva se utilizan sus preguntas conservadas al inicio,
+sin volver a consultar el banco. Respuestas, puntuación y registros históricos
+se guardan en la misma transacción. Cada registro conserva enunciado, opciones,
+letra, respuesta enviada y corrección de esa copia. Los cambios posteriores
+del banco no alteran la corrección ni el historial. La pareja partida/pregunta
+es única.
+
+### Conservación del contenido de una partida
+
+La migración `d9f65a827bc1`, posterior a `c8e54b739a21`, añade
+`game_engine_sessions.question_snapshot`, JSON nullable, sin valor por defecto
+ni relleno de partidas anteriores. Aplicar `alembic upgrade head` en el destino
+autorizado **antes** de arrancar el backend actualizado. En esta tarea se aplicó
+solo a la demostración aislada, nunca a la base habitual.
+
+Cada inicio nuevo guarda, en la misma transacción que la sesión, una copia
+privada versionada (`version: 1`) de las preguntas seleccionadas: ID, temática,
+modalidad, enunciado, opciones, posición correcta, letra, solución y alternativas.
+Se conservan los campos usados por el motor, sin deducir respuestas ni copiar
+columnas heredadas que no intervienen en la corrección. `content_context` mantiene
+los filtros, categoría y dificultad ya conservados y añade el nombre de la
+temática y los IDs/nombres de bloque y asignatura de cada pregunta cuando existen.
+Una categoría sin bloque o una pregunta sin categoría conserva esos valores
+ausentes; no se inventa jerarquía.
+
+La presentación inicial se proyecta desde la copia hacia `QuestionForGame`.
+Este contrato público continúa incluyendo únicamente ID, enunciado, opciones,
+modalidad y letra. La columna privada no aparece en inicio, disponibilidad,
+historial ni progreso; su carga es diferida para evitar leer soluciones en
+los listados de sesiones y el cálculo de marcas. La corrección valida versión,
+campos e identidad de la copia y reutiliza las reglas de selección, corrección,
+normalización y puntuación existentes. No consulta la pregunta actual, aunque
+se hayan cambiado su temática, modalidad, enunciado, clasificación o solución.
+Las nuevas partidas posteriores siguen seleccionando el banco vigente.
+
+El resultado revela la corrección solo tras el envío completo, igual que antes.
+Los registros históricos se generan desde la copia de inicio y continúan siendo
+la fuente de revisión. El detalle de una partida sin finalizar devuelve siempre
+`answer_logs: []`, incluso ante un registro parcial inconsistente; las soluciones
+no se anticipan por esa vía. Se mantienen autenticación, propiedad de la sesión,
+bloqueo de segundo envío y rollback conjunto de puntuación e historial.
+
+Compatibilidad explícita en el detalle de historial:
+
+- `question_content_source: "session_start"`: partida con copia al inicio.
+- `question_content_source: "legacy"`: partida anterior sin copia. Si está
+  completada, se muestran solo los registros realmente guardados al corregir,
+  que no garantizan el contenido que se vio al inicio. Si faltan registros o
+  contexto, siguen ausentes; no se rellenan con datos actuales.
+- Una partida antigua abierta sin copia devuelve `409` al enviar respuestas,
+  sin crear registros ni puntuación; requiere iniciar otra partida. No es
+  posible asegurar qué contenido vio su jugador. Una copia dañada o de versión
+  desconocida también devuelve `409`, sin recurrir al banco como alternativa.
+
+El downgrade se bloquea si cualquier sesión conserva una copia no nula, para
+evitar perder esta garantía. Requiere un plan explícito de archivo previo;
+no elimina sesiones automáticamente. Las claves foráneas actuales siguen
+vigentes: esto no habilita borrado físico ni incorpora edición, eliminación o
+reanudación de partidas. No protege frente a alteraciones directas de las
+propias copias o registros por un administrador de la base de datos, ni congela
+el código de las reglas para cambios futuros del motor.
+
+Verificación del 3 de noviembre de 2026: **47 pruebas backend pertinentes**
+aprobadas en SQLite aislado. Cubren ambas modalidades de API, cambios del banco
+entre inicio y envío y después de corregir, sinónimos, puntuación, contexto,
+revisión, nuevas selecciones, copia incompleta/dañada, compatibilidad antigua,
+privacidad, propiedad y transacción. La interfaz jugable sigue siendo solo
+Trivial; Pasapalabra se verifica en su flujo backend implementado.
+
+Dos pruebas de migraciones aprobaron en PostgreSQL en la base desechable
+`test_biogamed_session_snapshot`, con esquemas únicos y limpieza: upgrade,
+conservación de todas las columnas previas, ausencia de relleno y valores por
+defecto, correspondencia con el ORM, downgrade sin copias y bloqueo del
+downgrade cuando las hay. Para repetir exclusivamente esta prueba se exige
+`TEST_GAME_SNAPSHOT_POSTGRES_URL` apuntando explícitamente a PostgreSQL con
+nombre de base `test_biogamed_*`; no hay fallback a la URL habitual:
+
+```sh
+python -m pytest -q tests/test_game_snapshot_migration.py
+```
+
+En la demo `biogamed_demo` se crearon por HTTP preguntas ficticias 18 y 19 y
+partidas 1 (Trivial) y 2 (Pasapalabra). Solo se modificaron esas preguntas de
+prueba tras iniciar; ambas obtuvieron 1/1 con la solución original, conservando
+enunciado y contexto en el historial. La demo continúa en `localhost:13004`
+(API `localhost:18004`). No se escribió en la base habitual. Sigue pendiente
+la comprobación visual de creación de preguntas: el navegador integrado volvió
+a informar `The browser access host is unavailable`; no se usó Opera GX ni
+cuentas personales. Las pruebas emitieron la advertencia ya existente de
+deprecación de Starlette/httpx.
 
 La API autenticada permite consultar el historial del propio usuario:
 
@@ -375,14 +459,16 @@ La respuesta añade `best_marks` (lista vacía cuando no hay resultados válidos
 Cada elemento incluye `game_mode`, `topic_id`, `topic_name`, `category_id`,
 `category_name`, `category_name_source`, `difficulty`, `total_questions`,
 `best_score`, `session_id`, `started_at`, `valid_results` y
-`tied_best_results`. `topic_name` procede de la tabla actual de temáticas porque
-no se guarda una copia histórica de ese nombre; puede ser `null` si ya no está
-disponible. `category_name` procede de `content_context` cuando existe
+`tied_best_results`. `topic_name` utiliza el nombre conservado en la partida
+ganadora (`topic_name_source: "historical"`). En partidas antiguas utiliza el
+catálogo actual (`"current"`) o `null` si no está disponible; no se presenta
+como nombre original. `category_name` procede de `content_context` cuando existe
 (`category_name_source: "historical"`); si falta, se consulta el nombre actual
 (`"current"`) o se devuelve `null` si no está disponible.
 
 Las marcas se calculan para todo el historial del usuario autenticado mediante
-consultas por conjuntos, sin cargar enunciados ni soluciones. Solo entran
+consultas por conjuntos, sin cargar enunciados ni la copia privada de inicio;
+comprueba los campos de corrección del historial. Solo entran
 partidas completadas con preguntas distintas, puntuación entre cero y el total,
 contexto que cubre exactamente esas preguntas, categoría única con ID conocido,
 dificultad única entre 1 y 4, y un registro de respuesta coherente por pregunta.
@@ -393,7 +479,8 @@ mejor puntuación. No se usa el tiempo. Partidas excluidas de marcas siguen
 contando en `started`, `completed` y `unfinished`.
 Las partidas antiguas sin `content_context`, las mixtas, las que carecen de
 categoría o nivel y las que tienen respuestas incompletas o incoherentes no
-aportan marcas. El nombre de temática no tiene versión histórica guardada.
+aportan marcas. El nombre de temática histórico solo existe para partidas
+nuevas que lo conservaron al inicio.
 Las pruebas relacionadas se ejecutaron en bases aisladas (20 aprobadas); no se
 crearon partidas en la base habitual para verificar estos casos.
 

@@ -15,6 +15,7 @@ export default function BestMarkCard({ mark }: { mark: PersonalBestMark }) {
       <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-sky-50 p-2"><Image src={topicIllustration(mark.topic_name ?? "")} alt="" width={64} height={64} className="h-full w-full object-contain" /></span>
       <div className="min-w-0">
         <h3 className="break-words text-lg font-bold text-blue-950">{topic}</h3>
+        {mark.topic_name_source !== "historical" && <p className="mt-1 text-xs text-slate-600">Temática del catálogo actual; nombre original no registrado</p>}
         <p className="mt-1 text-sm text-slate-600">{mark.game_mode === "TRIVIAL" ? "Trivial" : "Pasapalabra"} · Nivel {mark.difficulty} · {mark.total_questions} {mark.total_questions === 1 ? "pregunta" : "preguntas"}</p>
         {showCategory && <p className="mt-1 break-words text-sm text-slate-600">Categoría: {category}{mark.category_name_source === "current" ? " (nombre actual)" : mark.category_name_source === null ? " (nombre no disponible)" : ""}</p>}
       </div>

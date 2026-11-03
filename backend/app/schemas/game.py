@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from app.schemas.question import QuestionType
 
 
@@ -19,6 +20,10 @@ class QuestionClassification(BaseModel):
     category_id: int | None
     category_name: str | None
     difficulty: int | None
+    block_id: int | None = None
+    block_name: str | None = None
+    subject_id: int | None = None
+    subject_name: str | None = None
 
 
 class SelectionContext(BaseModel):
@@ -29,6 +34,7 @@ class SelectionContext(BaseModel):
 
 
 class ContentContext(BaseModel):
+    topic_name: str | None = None
     selection: SelectionContext
     questions: list[QuestionClassification]
 
@@ -112,7 +118,13 @@ class GameHistorySummary(BaseModel):
 
 
 class GameHistoryDetail(GameHistorySummary):
+    question_content_source: Literal["session_start", "legacy"] = "legacy"
     answer_logs: list[AnswerHistory]
+
+    @field_validator("answer_logs")
+    @classmethod
+    def hide_unfinished_corrections(cls, value, info: ValidationInfo):
+        return value if info.data.get("is_completed") else []
 
 
 class ActivityCounts(BaseModel):
@@ -132,6 +144,7 @@ class PersonalBestMark(BaseModel):
     game_mode: QuestionType
     topic_id: int
     topic_name: str | None
+    topic_name_source: str | None = None
     category_id: int
     category_name: str | None
     category_name_source: str | None

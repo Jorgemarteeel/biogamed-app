@@ -174,6 +174,7 @@ export interface GameSessionStart {
 }
 
 export interface GameContentContext {
+  topic_name?: string | null;
   selection: {
     category_id: number | null;
     category_name: string | null;
@@ -185,6 +186,10 @@ export interface GameContentContext {
     category_id: number | null;
     category_name: string | null;
     difficulty: number | null;
+    block_id?: number | null;
+    block_name?: string | null;
+    subject_id?: number | null;
+    subject_name?: string | null;
   }[];
 }
 
@@ -358,6 +363,7 @@ export interface AnswerHistory {
 }
 
 export interface GameHistoryDetail extends GameHistorySummary {
+  question_content_source?: "session_start" | "legacy";
   answer_logs: AnswerHistory[];
 }
 
@@ -378,6 +384,7 @@ export interface PersonalBestMark {
   game_mode: GameMode;
   topic_id: number;
   topic_name: string | null;
+  topic_name_source?: "historical" | "current" | null;
   category_id: number;
   category_name: string | null;
   category_name_source: "historical" | "current" | null;

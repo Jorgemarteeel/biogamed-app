@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,33 @@ from app.schemas.game import (
     AnswerCorrection, GameAvailabilityResponse, GameResultResponse, GameSessionStartResponse,
     QuestionForGame, UserAnswer,
 )
+from app.schemas.game_snapshot import QuestionSnapshot, StoredQuestion
+
+
+def _session_questions(session: GameSession) -> list[StoredQuestion]:
+    if session.question_snapshot is None:
+        raise HTTPException(409, "Esta partida antigua no conserva las preguntas al inicio. Comienza una nueva partida.")
+    try:
+        snapshot = QuestionSnapshot.model_validate(session.question_snapshot)
+    except ValidationError:
+        raise HTTPException(409, "La copia de preguntas de esta partida no es válida.") from None
+    ids = [q.id for q in snapshot.questions]
+    if (ids != session.question_ids or len(set(ids)) != len(ids)
+            or any(q.topic_id != session.topic_id or q.question_type != session.game_mode
+                   for q in snapshot.questions)):
+        raise HTTPException(409, "La copia de preguntas de esta partida no es válida.")
+    return snapshot.questions
+
+
+def _classification(question: Question) -> dict:
+    category = question.category
+    block = category.block if category else None
+    subject = block.subject if block else None
+    return {"question_id": question.id, "category_id": question.category_id,
+            "category_name": category.name if category else None,
+            "difficulty": question.difficulty,
+            "block_id": block.id if block else None, "block_name": block.name if block else None,
+            "subject_id": subject.id if subject else None, "subject_name": subject.name if subject else None}
 
 
 def start_game_session(
@@ -19,28 +47,28 @@ def start_game_session(
 ) -> GameSessionStartResponse:
     statement = selectable_questions(topic_id, game_mode, category_id, difficulty,
                                      difficulty_unknown)
-    if db.get(Topic, topic_id) is None:
+    topic = db.get(Topic, topic_id)
+    if topic is None:
         raise HTTPException(404, "La temática no existe.")
     questions = list(db.scalars(statement.order_by(func.random()).limit(10)))
     if not questions:
         raise HTTPException(409, "No hay preguntas disponibles para esta combinación de filtros.")
-    public_questions = [QuestionForGame.model_validate(q) for q in questions]
+    snapshot = QuestionSnapshot(version=1, questions=[StoredQuestion.model_validate(q) for q in questions])
+    # Project explicitly into the public schema; the storage schema includes solutions.
+    public_questions = [QuestionForGame.model_validate(q.model_dump()) for q in snapshot.questions]
     content_context = {
+        "topic_name": topic.name,
         "selection": {
             "category_id": category_id,
             "category_name": questions[0].category.name if category_id is not None else None,
             "difficulty": difficulty, "difficulty_unknown": difficulty_unknown,
         },
-        "questions": [
-            {"question_id": q.id, "category_id": q.category_id,
-             "category_name": q.category.name if q.category_id is not None else None,
-             "difficulty": q.difficulty}
-            for q in questions
-        ],
+        "questions": [_classification(q) for q in questions],
     }
     session = GameSession(
         user_id=current_user.id, topic_id=topic_id, game_mode=game_mode,
         question_ids=[q.id for q in questions], content_context=content_context,
+        question_snapshot=snapshot.model_dump(),
         is_completed=False, score=0,
     )
     try:
@@ -100,9 +128,7 @@ def submit_game_session(
         if (len(set(submitted_ids)) != len(submitted_ids)
                 or set(submitted_ids) != set(session.question_ids)):
             raise HTTPException(422, "Envía una respuesta por cada pregunta de la sesión, sin duplicados.")
-        questions = {q.id: q for q in db.scalars(
-            select(Question).where(Question.id.in_(session.question_ids))
-        )}
+        questions = {q.id: q for q in _session_questions(session)}
         corrections = []
         logs = []
         for answer in answers:

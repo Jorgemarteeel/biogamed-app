@@ -129,5 +129,18 @@ test("historical and current fallback category names keep their provenance", () 
   assert.doesNotMatch(html, /Macrófago \(nombre actual\)/);
   assert.match(html, /Categoría: Jeringuilla \(nombre actual\)/);
   assert.match(html, /Categoría: Categoría 6 \(nombre no disponible\)/);
-  assert.match(html, /nombres de temática reflejan el catálogo actual/);
+  assert.match(html, /nombre de temática conservado en su partida/);
+});
+
+test("best mark identifies the topic label from its winning session or current catalog", () => {
+  const historical = renderToStaticMarkup(React.createElement(BestMarkCard, { mark: mark({
+    topic_name: "Tema conservado", topic_name_source: "historical",
+  }) }));
+  assert.match(historical, /Tema conservado/);
+  assert.doesNotMatch(historical, /nombre original no registrado/);
+  const legacy = renderToStaticMarkup(React.createElement(BestMarkCard, { mark: mark({
+    topic_name: "Tema actual", topic_name_source: "current",
+  }) }));
+  assert.match(legacy, /Tema actual/);
+  assert.match(legacy, /nombre original no registrado/);
 });

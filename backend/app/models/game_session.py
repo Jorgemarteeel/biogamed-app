@@ -23,6 +23,13 @@ class GameSession(Base):
     )
     question_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     content_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Private: contains solutions. Never serialize this column to a player response.
+    question_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True, deferred=True)
+
     game_mode: Mapped[str] = mapped_column(
         String(20), default="TRIVIAL", server_default="TRIVIAL", nullable=False
     )
+
+    @property
+    def question_content_source(self) -> str:
+        return "session_start" if self.question_snapshot is not None else "legacy"

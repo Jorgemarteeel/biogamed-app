@@ -40,6 +40,8 @@ def test_content_context_migration_preserves_existing_activity(monkeypatch):
             assert connection.scalar(text("SELECT count(*) FROM game_engine_sessions")) == 1
             assert connection.scalar(text("SELECT count(*) FROM answer_logs")) == 1
             assert connection.scalar(text("SELECT difficulty FROM questions WHERE id=1")) == 2
+        # Compare the current ORM only after applying later migrations too.
+        command.upgrade(config, "head")
         command.check(config)
     finally:
         engine.dispose()

@@ -141,9 +141,12 @@ def get_personal_best_marks(db: Session, current_user: User):
         tied = [(session, name) for session, name in candidates if session.score == best_score]
         winner, historical_name = min(tied, key=lambda item: (item[0].created_at, item[0].id))
         category_name = historical_name or categories.get(category_id)
+        historical_topic = (winner.content_context or {}).get("topic_name")
+        topic_name = historical_topic if historical_topic is not None else topics.get(topic_id)
         marks.append({
             "game_mode": mode, "topic_id": topic_id,
-            "topic_name": topics.get(topic_id),  # Topic names are not snapshotted.
+            "topic_name": topic_name,
+            "topic_name_source": ("historical" if historical_topic is not None else "current" if topic_name else None),
             "category_id": category_id, "category_name": category_name,
             "category_name_source": ("historical" if historical_name else "current" if category_name else None),
             "difficulty": difficulty, "total_questions": total,
