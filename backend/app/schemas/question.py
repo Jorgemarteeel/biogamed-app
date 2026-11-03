@@ -51,6 +51,14 @@ class QuestionBase(BaseModel):
 
 
 class QuestionCreate(QuestionBase):
+    @field_validator("text", "options")
+    @classmethod
+    def reject_blank_content(cls, value):
+        values = value if isinstance(value, list) else [value]
+        if any(isinstance(item, str) and not item.strip() for item in values):
+            raise ValueError("El enunciado y las opciones no pueden estar vacíos.")
+        return value
+
     @field_validator("accepted_answers")
     @classmethod
     def clean_answers(cls, value):
@@ -59,11 +67,15 @@ class QuestionCreate(QuestionBase):
     @model_validator(mode="after")
     def validate_game_fields(self):
         if self.question_type == "TRIVIAL":
+            if self.letter is not None or self.exact_word is not None:
+                raise ValueError("TRIVIAL no admite letter ni exact_word.")
             if self.accepted_answers:
                 raise ValueError("Las respuestas alternativas solo se utilizan en PASAPALABRA.")
             if self.options is None or self.correct_option_index is None:
                 raise ValueError("TRIVIAL requiere options y correct_option_index.")
         else:
+            if self.options is not None or self.correct_option_index is not None:
+                raise ValueError("PASAPALABRA no admite opciones de TRIVIAL.")
             if self.letter is None or not self.letter.isalpha():
                 raise ValueError("PASAPALABRA requiere una letra alfabética.")
             if self.exact_word is None or not self.exact_word.strip():
@@ -77,6 +89,10 @@ class QuestionCreate(QuestionBase):
             elif not word.startswith(letter):
                 raise ValueError("exact_word debe empezar por letter.")
         return self
+
+
+class CategoryQuestionCreate(QuestionCreate):
+    model_config = ConfigDict(extra="forbid")
 
 
 class QuestionUpdate(BaseModel):

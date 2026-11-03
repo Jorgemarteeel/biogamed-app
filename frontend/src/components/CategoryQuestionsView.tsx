@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import CreateQuestionForm from "@/components/CreateQuestionForm";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE } from "@/lib/subjects";
 import { getCategoryDetail, getCategoryQuestions, getCurrentUser,
   type CategoryDetail, type CategoryQuestion, type CategoryQuestionFilters,
@@ -93,6 +94,9 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
       <h1 className="mt-2 break-words text-3xl font-black text-blue-950">{category?.name ?? "Preguntas de la categoría"}</h1>
       {category?.description && <p className="mt-2 break-words text-slate-600">{category.description}</p>}
+      {category && (state === "ready" || state === "error") && <CreateQuestionForm
+        key={`${subjectId}-${blockId}-${categoryId}`} subjectId={subjectId} blockId={blockId}
+        categoryId={categoryId} mode={mode} level={level} onRefresh={() => setAttempt((value) => value + 1)} />}
       {state === "loading" && <p role="status" className="mt-6 rounded-2xl bg-white p-6">Cargando preguntas…</p>}
       {state === "forbidden" && <p role="alert" className="notice-warning mt-6">Acceso no permitido. La consulta de preguntas está disponible para profesores y administradores.</p>}
       {state === "missing" && <p role="alert" className="notice-warning mt-6">La asignatura, el bloque o la categoría no existe en esta ruta.</p>}

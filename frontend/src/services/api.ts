@@ -81,6 +81,27 @@ export interface CategoryQuestionFilters {
   difficulty_unknown?: boolean;
 }
 
+export type QuestionCreate = {
+  text: string; topic_id: number; difficulty: number | null;
+} & ({ question_type: "TRIVIAL"; options: string[]; correct_option_index: number }
+  | { question_type: "PASAPALABRA"; letter: string; exact_word: string; accepted_answers: string[] });
+
+export async function createCategoryQuestion(subjectId: number, blockId: number, categoryId: number,
+                                             payload: QuestionCreate): Promise<CategoryQuestion> {
+  const response = await api.post<CategoryQuestion>(
+    `/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/questions`, payload);
+  return response.data;
+}
+
+export async function getQuestionTopics(): Promise<Topic[]> {
+  const topics: Topic[] = [];
+  for (let skip = 0; ; skip += 100) {
+    const { data } = await api.get<Topic[]>("/topics/", { params: { skip, limit: 100 } });
+    topics.push(...data);
+    if (data.length < 100) return topics;
+  }
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });

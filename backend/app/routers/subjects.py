@@ -6,7 +6,7 @@ from app.dependencies import require_content_staff
 from app.models import Category, ContentBlock, Question, Subject, User
 from app.schemas.category import (BlockDetailResponse, CategoryCreate, CategoryDetailResponse, CategoryResponse,
                                   EmptyLinkRequest, UnassignedCategoryResponse)
-from app.schemas.question import CategoryQuestionResponse, QuestionType
+from app.schemas.question import CategoryQuestionCreate, CategoryQuestionResponse, QuestionType
 from app.schemas.content_block import ContentBlockCreate, ContentBlockResponse
 from app.schemas.subject import SubjectCreate, SubjectResponse
 from app.services import subject as subject_service
@@ -102,6 +102,16 @@ def category_detail(
     db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
 ) -> Category:
     return subject_service.get_category(db, subject_id, block_id, category_id)
+
+
+@router.post("/{subject_id}/blocks/{block_id}/categories/{category_id}/questions",
+             response_model=CategoryQuestionResponse, status_code=status.HTTP_201_CREATED)
+def create_category_question(
+    payload: CategoryQuestionCreate,
+    subject_id: int = Path(ge=1), block_id: int = Path(ge=1), category_id: int = Path(ge=1),
+    db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
+) -> Question:
+    return question_service.create_category_question(db, subject_id, block_id, category_id, payload)
 
 
 @router.get("/{subject_id}/blocks/{block_id}/categories/{category_id}/questions",

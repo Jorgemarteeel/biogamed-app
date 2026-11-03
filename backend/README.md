@@ -114,6 +114,54 @@ Las pruebas aisladas cubren roles, jerarquía completa, categoría vacía,
 separación entre categorías, modalidades, dificultad y paginación. No se ha
 modificado el esquema ni los endpoints de partida.
 
+### Creación docente de preguntas por categoría
+
+`POST /subjects/{subject_id}/blocks/{block_id}/categories/{category_id}/questions`
+crea una pregunta y devuelve `201` con el contrato de consulta docente,
+incluidos `id`, `category_id` y `topic`. Valida la jerarquía completa (`404`
+si falta un elemento o no pertenece al padre indicado) y exige el rol actual
+`teacher` o `admin` (`401` anónimo, `403` estudiante). El cuerpo no admite
+`category_id`, ni siquiera si coincide con la ruta, ni campos adicionales.
+
+Elige `topic_id` explícitamente de `GET /topics/`: es obligatorio, una
+temática inexistente devuelve `404` y no se deduce de la categoría académica.
+Ejemplo de cuerpo Trivial (el ID de temática debe proceder de esa consulta):
+
+```json
+{"text":"Pregunta ficticia","topic_id":1,"question_type":"TRIVIAL","options":["A","B","C","D"],"correct_option_index":1,"difficulty":2}
+```
+
+Pasapalabra utiliza `question_type: "PASAPALABRA"`, `letter`, `exact_word`
+y, opcionalmente, `accepted_answers`. La solución debe empezar por la letra,
+salvo si el enunciado empieza por `Contiene la letra `, cuando debe contenerla.
+Se reutilizan la normalización y los límites de alternativas existentes.
+Trivial requiere cuatro opciones de hasta 255 caracteres y posición correcta
+0–3. Se rechazan enunciados/opciones en blanco, campos de solución de la otra
+modalidad y dificultades distintas de `null` o entero estricto 1–4 (`422`).
+
+La nueva operación reutiliza el esquema y el servicio de creación existente.
+`POST /questions/` conserva su ruta y respuesta, crea sin categoría y admite
+los mismos cuerpos válidos; comparte el rechazo reforzado de blancos y
+combinaciones incoherentes. No hay migración, reclasificación de datos,
+edición ni eliminación nuevas. Las preguntas válidas amplían el banco que
+consulta la selección de juego existente, sin cambios en esa selección.
+
+Verificación del 3 de noviembre de 2026: suite backend completa, **175
+aprobadas y 4 omitidas** (comprobaciones opcionales de migración PostgreSQL
+sin su configuración de pruebas), con una advertencia de deprecación del
+cliente Starlette/httpx. Las pruebas usan SQLite aislado y cubren permisos,
+rol actual, jerarquía, temática inexistente, rechazo de `category_id`, ambas
+modalidades, dificultad, persistencia, consulta y compatibilidad de creación.
+
+En la demo `biogamed_docente_demo`, tras verificar su configuración, se
+reutilizó la cuenta docente de prueba sin exponer credenciales. Se crearon
+por HTTP las preguntas ficticias **16 (Trivial, nivel 2)** y **17
+(Pasapalabra, sin dificultad)** en la categoría 5; se comprobaron `422`,
+`201`, persistencia, consulta y exclusión por filtros. La base fue
+`biogamed_demo`, con volumen propio; partidas antes/después: **0/0**.
+No se escribió en la base habitual. La demo sigue disponible en
+`http://localhost:13004`, con API en `http://localhost:18004`.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

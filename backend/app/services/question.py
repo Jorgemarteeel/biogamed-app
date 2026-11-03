@@ -23,7 +23,7 @@ def update_accepted_answers(db: Session, question_id: int, answers: list[str]) -
     return question
 
 
-def create_question(db: Session, question: QuestionCreate) -> Question:
+def create_question(db: Session, question: QuestionCreate, *, category_id: int | None = None) -> Question:
     topic = db.execute(select(Topic).where(Topic.id == question.topic_id)).scalar_one_or_none()
     if topic is None:
         raise HTTPException(
@@ -33,6 +33,7 @@ def create_question(db: Session, question: QuestionCreate) -> Question:
 
     db_question = Question(
         **question.model_dump(),
+        category_id=category_id,
         correct_answer=(question.options[question.correct_option_index]
                         if question.question_type == "TRIVIAL"
                         else question.exact_word.strip()),
@@ -45,6 +46,12 @@ def create_question(db: Session, question: QuestionCreate) -> Question:
         raise
     db.refresh(db_question)
     return db_question
+
+
+def create_category_question(db: Session, subject_id: int, block_id: int,
+                             category_id: int, question: QuestionCreate) -> Question:
+    get_category(db, subject_id, block_id, category_id)
+    return create_question(db, question, category_id=category_id)
 
 
 def get_questions_by_topic(

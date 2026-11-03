@@ -193,6 +193,48 @@ se centran en filas de hasta tres en escritorio, dos en tamaños intermedios y
 una en móvil. «Mis últimas partidas» es una sección plegable inicialmente
 cerrada bajo los juegos; sus elementos son recientes, no el total histórico.
 
+## Creación docente desde una categoría
+
+La consulta de preguntas incluye «Crear pregunta», un formulario inicialmente
+plegado con etiquetas y controles nativos. Permite elegir temática de juego
+desde la API (todas las páginas, sin filtrar por modalidad), modalidad,
+enunciado y dificultad opcional 1–4. Trivial muestra cuatro opciones y la
+selección explícita de la correcta; Pasapalabra muestra letra, solución y
+alternativas, una por línea. Solo se envían los campos de la modalidad activa;
+la categoría se fija en la ruta, nunca en el cuerpo.
+
+El envío bloquea controles y envíos simultáneos, conserva los campos ante
+errores y muestra la confirmación con el ID y temática recibidos del backend.
+Tras el éxito, «Crear otra pregunta» habilita un formulario nuevo. «Actualizar
+listado» vuelve a consultar la página con sus filtros y paginación actuales:
+no cambia la selección. La confirmación explica si la pregunta queda excluida
+por esos filtros o puede aparecer en una página posterior por el orden por ID.
+Cerrar y abrir el panel conserva los campos mientras se mantiene la pantalla;
+no se guarda un borrador al recargar o salir.
+
+Validación del 3 de noviembre de 2026: tipos (`npx.cmd tsc --noEmit`), lint
+(`npm.cmd run lint`) y las 54 pruebas frontend anteriores aprobadas; las dos
+pruebas nuevas de `node --test tests/question-creation.test.mjs` también
+aprobaron. Cubren peticiones autenticadas, paginación de temáticas, doble envío,
+campos conservados ante un error del servidor, envío de campos según modalidad,
+confirmación con ID y aviso de exclusión por filtros. Estas pruebas del
+componente simulan hooks y eventos; no sustituyen una revisión en navegador.
+
+Se actualizó únicamente la demo docente aislada en `localhost:13004` y la
+ruta de categoría respondió HTTP 200. La API de esa demo creó las preguntas
+ficticias 16 y 17 y verificó su consulta, sin crear partidas. **No se pudo
+iniciar sesión ni revisar visualmente formulario, confirmación, listado,
+teclado o móvil en el navegador integrado**: el servicio devolvió
+`The browser access host is unavailable`, confirmado por el inventario de
+navegadores. No se utilizó Opera GX ni ninguna cuenta personal. Esas
+comprobaciones manuales quedan pendientes; la demo sigue disponible.
+
+El bloqueo de doble envío es del cliente, no una clave de idempotencia del
+servidor. Si se pierde la respuesta tras persistir, un reintento podría crear
+otra pregunta: el error recomienda actualizar el listado antes de reintentar.
+No se añadió edición ni eliminación; sigue pendiente proteger el contenido
+de partidas abiertas antes de ofrecer esas operaciones.
+
 ## Partidas de Trivial
 
 `/game` valida los parámetros y comprueba la sesión. Antes de iniciar consulta
