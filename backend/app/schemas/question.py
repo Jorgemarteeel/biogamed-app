@@ -2,6 +2,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.utils.answers import normalize_answer
+from app.schemas.topic import TopicResponse
 
 
 # The legacy correct_answer column accepts at most 255 characters.
@@ -100,3 +101,8 @@ class QuestionUpdate(BaseModel):
 
 class QuestionResponse(QuestionBase):
     id: int
+
+
+class CategoryQuestionResponse(QuestionResponse):
+    category_id: int
+    topic: TopicResponse

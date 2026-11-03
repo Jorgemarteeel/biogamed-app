@@ -147,6 +147,34 @@ test("categories use one extra server item and preserve empty state", () => {
   assert.deepEqual(visibleCategoriesPage([]), { items: [], hasMore: false });
 });
 
+test("category question detail and filtered page use authenticated hierarchical URLs", async () => {
+  testBrowser();
+  const originalAdapter = client.default.defaults.adapter;
+  const calls = [];
+  client.default.defaults.adapter = async (config) => {
+    calls.push(config);
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    return { status: 200, data: config.url.endsWith("/questions")
+      ? [{ id: 17, category_id: 6, question_type: "TRIVIAL", correct_option_index: 1 }]
+      : { id: 6, block_id: 5, name: "Linfocito", block: { id: 5, subject_id: 4 } },
+    headers: {}, config };
+  };
+  try {
+    assert.equal((await client.getCategoryDetail(4, 5, 6)).name, "Linfocito");
+    assert.equal((await client.getCategoryQuestions(4, 5, 6, 12, 13,
+      { mode: "TRIVIAL", difficulty: 2 }))[0].correct_option_index, 1);
+    assert.equal((await client.getCategoryQuestions(4, 5, 6, 0, 13,
+      { difficulty_unknown: true }))[0].category_id, 6);
+    assert.deepEqual(calls.map(({ method, url }) => [method, url]), [
+      ["get", "/subjects/4/blocks/5/categories/6"],
+      ["get", "/subjects/4/blocks/5/categories/6/questions"],
+      ["get", "/subjects/4/blocks/5/categories/6/questions"],
+    ]);
+    assert.deepEqual(calls[1].params, { skip: 12, limit: 13, mode: "TRIVIAL", difficulty: 2 });
+    assert.deepEqual(calls[2].params, { skip: 0, limit: 13, difficulty_unknown: true });
+  } finally { client.default.defaults.adapter = originalAdapter; }
+});
+
 test("unassigned categories and linking use authenticated routes", async () => {
   testBrowser();
   const originalAdapter = client.default.defaults.adapter;

@@ -35,7 +35,7 @@ try {
 
 test("breadcrumbs use actual subject and block names and identify the current level", () => {
   const subject = { id: 7, name: "Bioinformática avanzada" };
-  const block = { name: "Análisis de secuencias" };
+  const block = { id: 9, name: "Análisis de secuencias" };
   const html = renderToStaticMarkup(React.createElement(Breadcrumbs, { subject, block }));
   assert.match(html, /href="\/dashboard"[^>]*>Panel/);
   assert.match(html, /href="\/gestion\/asignaturas"[^>]*>Asignaturas/);
@@ -43,6 +43,11 @@ test("breadcrumbs use actual subject and block names and identify the current le
   assert.match(html, /aria-current="page"[^>]*>Análisis de secuencias/);
   const root = renderToStaticMarkup(React.createElement(Breadcrumbs));
   assert.match(root, /aria-current="page"[^>]*>Asignaturas/);
+  const questionLevel = renderToStaticMarkup(React.createElement(Breadcrumbs, {
+    subject, block, category: { name: "Linfocito" },
+  }));
+  assert.match(questionLevel, /href="\/gestion\/asignaturas\/7\/bloques\/9"[^>]*>Análisis de secuencias/);
+  assert.match(questionLevel, /aria-current="page"[^>]*>Linfocito/);
 });
 
 test("creation form starts collapsed with an announced state", () => {

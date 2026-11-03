@@ -97,6 +97,29 @@ cierre, foco, una creación de categoría ficticia con confirmación persistente
 escritorio y móvil (390 px) sin desbordamiento. La pérdida de permisos, errores
 de red y una pantalla táctil física no se probaron visualmente en esta revisión.
 El usuario revisó después personalmente las mejoras y confirmó su conformidad.
+Cada categoría del bloque, incluida la confirmación de una recién creada,
+ofrece «Ver preguntas». La ruta
+`/gestion/asignaturas/{id}/bloques/{blockId}/categorias/{categoryId}` admite
+acceso directo y recarga. Conserva la ruta de navegación y permite filtrar por
+modalidad y por dificultad sin filtrar (incluidas las preguntas sin clasificar),
+uno de los niveles 1–4 o solo dificultad sin clasificar. «Aplicar filtros»
+vuelve a la primera página; `mode`, `level` y
+`page` permanecen en la URL. Se solicitan 13 preguntas al servidor para
+mostrar 12 y detectar la página siguiente, sin inventar un total.
+La pantalla muestra las soluciones solo tras verificar la sesión docente;
+el backend vuelve a autorizar cada lectura. Identifica Topic como temática
+heredada de juego, distinta de la categoría académica. Incluye vacío, filtros
+sin resultados, error con reintento, acceso no permitido y ruta inexistente.
+No ofrece creación, edición ni eliminación de preguntas.
+
+Las pruebas automatizadas comprueban el cliente autenticado, los parámetros
+enviados y la navegación jerárquica; las pruebas de backend cubren permisos,
+relaciones y filtros. En el navegador aislado con docente ficticio se comprobó
+el enlace desde la categoría, acceso directo y recarga, segunda página, filtros,
+ausencia de resultados, categoría vacía y soluciones de ambas modalidades.
+La pantalla móvil a 390 px no desbordó horizontalmente; el foco recorrió los
+dos selectores y el botón con indicador visible. No se forzaron errores de red,
+caducidad de sesión ni cambios de rol durante esta revisión visual.
 En una pila temporal con PostgreSQL desechable se comprobaron acceso desde
 asignaturas, ruta directa y recarga, vacío, validación, creación, doble
 pulsación sin duplicado, separación entre asignaturas, segunda página, ruta

@@ -84,6 +84,36 @@ crear otra; si pertenece a otro bloque devuelve `409`. Se actualiza solo
 `block_id`, mediante una condición atómica que impide que dos destinos distintos
 ganen a la vez. No se trasladan ni desvinculan categorías.
 
+### Consulta docente de preguntas por categoría
+
+`GET /subjects/{subject_id}/blocks/{block_id}/categories/{category_id}`
+devuelve el detalle de la categoría, su bloque y su asignatura. `GET` a la misma
+ruta seguida de `/questions` lista las preguntas cuyo `category_id` coincide,
+ordenadas por ID. Ambos endpoints exigen el rol actual `teacher` o `admin`
+mediante la dependencia compartida; `401` indica falta de autenticación y
+`403` un rol sin permiso. Una relación de IDs inexistente o incompatible
+devuelve `404`; una categoría válida y vacía devuelve `[]`.
+
+La lista admite `skip` desde 0 y `limit` de 1 a 100. `mode` puede ser
+`TRIVIAL` o `PASAPALABRA`; omitirlo incluye ambas modalidades. Omitir
+`difficulty` incluye todos los niveles, `difficulty=1` a `4` selecciona uno,
+y `difficulty_unknown=true` selecciona preguntas sin dificultad. Combinar
+un nivel con `difficulty_unknown=true` devuelve `422`, al igual que filtros
+fuera de rango. Por ejemplo:
+
+```text
+GET /subjects/1/blocks/2/categories/3/questions?mode=TRIVIAL&difficulty=2&skip=0&limit=13
+```
+
+Cada pregunta incluye los campos del contrato docente existente —opciones y
+posición correcta de Trivial, o letra, solución y respuestas alternativas de
+Pasapalabra—, su `category_id` y su temática `topic` actual. Esta temática
+heredada se muestra como contexto de juego y no sustituye la categoría
+académica. Las soluciones no se exponen por esta ruta a estudiantes.
+Las pruebas aisladas cubren roles, jerarquía completa, categoría vacía,
+separación entre categorías, modalidades, dificultad y paginación. No se ha
+modificado el esquema ni los endpoints de partida.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

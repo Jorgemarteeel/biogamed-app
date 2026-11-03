@@ -32,3 +32,7 @@ class BlockDetailResponse(BaseModel):
     name: str
     description: str | None
     subject: SubjectResponse
+
+
+class CategoryDetailResponse(CategoryResponse):
+    block: BlockDetailResponse

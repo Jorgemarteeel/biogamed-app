@@ -1,11 +1,12 @@
 import Link from "next/link";
 
-export default function ContentBreadcrumbs({ subject, block }: { subject?: { id: number; name: string } | null; block?: { name: string } | null }) {
+export default function ContentBreadcrumbs({ subject, block, category }: { subject?: { id: number; name: string } | null; block?: { id: number; name: string } | null; category?: { name: string } | null }) {
   const items = [
     { label: "Panel", href: "/dashboard" },
     { label: "Asignaturas", href: subject ? "/gestion/asignaturas" : undefined },
     ...(subject ? [{ label: subject.name, href: block ? `/gestion/asignaturas/${subject.id}` : undefined }] : []),
-    ...(block ? [{ label: block.name, href: undefined }] : []),
+    ...(block ? [{ label: block.name, href: category && subject ? `/gestion/asignaturas/${subject.id}/bloques/${block.id}` : undefined }] : []),
+    ...(category ? [{ label: category.name, href: undefined }] : []),
   ];
   return <nav aria-label="Ruta de gestión"><ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold">
     {items.map((item, index) => <li key={`${index}-${item.label}`} className="flex min-w-0 items-center gap-2">

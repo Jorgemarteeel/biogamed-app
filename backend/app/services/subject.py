@@ -43,6 +43,14 @@ def get_categories(db: Session, subject_id: int, block_id: int,
     return list(db.scalars(statement).all())
 
 
+def get_category(db: Session, subject_id: int, block_id: int, category_id: int) -> Category:
+    get_block(db, subject_id, block_id)
+    category = db.get(Category, category_id)
+    if category is None or category.block_id != block_id:
+        raise HTTPException(404, "La categoría no existe en este bloque.")
+    return category
+
+
 def get_unassigned_categories(db: Session, skip: int = 0, limit: int = 100) -> list[Category]:
     statement = (select(Category).where(Category.block_id.is_(None))
                  .order_by(Category.id).offset(skip).limit(limit))

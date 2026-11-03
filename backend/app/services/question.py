@@ -1,8 +1,9 @@
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models import Question, Topic
+from app.services.subject import get_category
 from app.schemas.question import QuestionCreate
 
 
@@ -66,3 +67,22 @@ def get_questions_by_topic(
         .limit(limit)
     )
     return list(db.execute(statement).scalars().all())
+
+
+def get_questions_by_category(
+    db: Session, subject_id: int, block_id: int, category_id: int,
+    skip: int = 0, limit: int = 100, mode: str | None = None,
+    difficulty: int | None = None, difficulty_unknown: bool = False,
+) -> list[Question]:
+    get_category(db, subject_id, block_id, category_id)
+    if difficulty is not None and difficulty_unknown:
+        raise HTTPException(422, "No se puede indicar difficulty junto con difficulty_unknown.")
+    statement = select(Question).where(Question.category_id == category_id)
+    if mode is not None:
+        statement = statement.where(Question.question_type == mode)
+    if difficulty is not None:
+        statement = statement.where(Question.difficulty == difficulty)
+    elif difficulty_unknown:
+        statement = statement.where(Question.difficulty.is_(None))
+    return list(db.scalars(statement.options(selectinload(Question.topic))
+                           .order_by(Question.id).offset(skip).limit(limit)).all())

@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import require_content_staff
-from app.models import Category, ContentBlock, Subject, User
-from app.schemas.category import (BlockDetailResponse, CategoryCreate, CategoryResponse,
+from app.models import Category, ContentBlock, Question, Subject, User
+from app.schemas.category import (BlockDetailResponse, CategoryCreate, CategoryDetailResponse, CategoryResponse,
                                   EmptyLinkRequest, UnassignedCategoryResponse)
+from app.schemas.question import CategoryQuestionResponse, QuestionType
 from app.schemas.content_block import ContentBlockCreate, ContentBlockResponse
 from app.schemas.subject import SubjectCreate, SubjectResponse
 from app.services import subject as subject_service
+from app.services import question as question_service
 
 
 router = APIRouter(prefix="/subjects", tags=["Subjects"])
@@ -91,6 +93,31 @@ def create_category(
     db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
 ) -> Category:
     return subject_service.create_category(db, subject_id, block_id, payload)
+
+
+@router.get("/{subject_id}/blocks/{block_id}/categories/{category_id}",
+            response_model=CategoryDetailResponse)
+def category_detail(
+    subject_id: int = Path(ge=1), block_id: int = Path(ge=1), category_id: int = Path(ge=1),
+    db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
+) -> Category:
+    return subject_service.get_category(db, subject_id, block_id, category_id)
+
+
+@router.get("/{subject_id}/blocks/{block_id}/categories/{category_id}/questions",
+            response_model=list[CategoryQuestionResponse])
+def list_category_questions(
+    subject_id: int = Path(ge=1), block_id: int = Path(ge=1), category_id: int = Path(ge=1),
+    skip: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=100),
+    mode: QuestionType | None = Query(default=None),
+    difficulty: int | None = Query(default=None, ge=1, le=4),
+    difficulty_unknown: bool = Query(default=False),
+    db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
+) -> list[Question]:
+    return question_service.get_questions_by_category(
+        db, subject_id, block_id, category_id, skip, limit, mode,
+        difficulty, difficulty_unknown,
+    )
 
 
 @router.put("/{subject_id}/blocks/{block_id}/categories/{category_id}", response_model=CategoryResponse)

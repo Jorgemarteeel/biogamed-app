@@ -56,6 +56,31 @@ export interface UnassignedCategory extends Omit<Category, "block_id"> {
   block_id: null;
 }
 
+export interface CategoryDetail extends Category {
+  block: ContentBlockDetail;
+}
+
+export interface CategoryQuestion {
+  id: number;
+  category_id: number;
+  topic_id: number;
+  topic: Topic;
+  text: string;
+  question_type: GameMode;
+  difficulty: number | null;
+  options: string[] | null;
+  correct_option_index: number | null;
+  letter: string | null;
+  exact_word: string | null;
+  accepted_answers: string[] | null;
+}
+
+export interface CategoryQuestionFilters {
+  mode?: GameMode;
+  difficulty?: number;
+  difficulty_unknown?: boolean;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });
@@ -249,6 +274,22 @@ export async function getCategories(subjectId: number, blockId: number,
                                     skip: number, limit: number): Promise<Category[]> {
   const response = await api.get<Category[]>(`/subjects/${subjectId}/blocks/${blockId}/categories`,
     { params: { skip, limit } });
+  return response.data;
+}
+
+export async function getCategoryDetail(subjectId: number, blockId: number,
+                                        categoryId: number): Promise<CategoryDetail> {
+  const response = await api.get<CategoryDetail>(
+    `/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}`);
+  return response.data;
+}
+
+export async function getCategoryQuestions(subjectId: number, blockId: number,
+                                           categoryId: number, skip: number, limit: number,
+                                           filters: CategoryQuestionFilters = {}): Promise<CategoryQuestion[]> {
+  const response = await api.get<CategoryQuestion[]>(
+    `/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/questions`,
+    { params: { skip, limit, ...filters } });
   return response.data;
 }
 
