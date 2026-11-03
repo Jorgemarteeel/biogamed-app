@@ -52,6 +52,10 @@ export interface Category extends Subject {
   block_id: number;
 }
 
+export interface UnassignedCategory extends Omit<Category, "block_id"> {
+  block_id: null;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });
@@ -251,6 +255,16 @@ export async function getCategories(subjectId: number, blockId: number,
 export async function createCategory(subjectId: number, blockId: number,
                                      payload: SubjectCreate): Promise<Category> {
   const response = await api.post<Category>(`/subjects/${subjectId}/blocks/${blockId}/categories`, payload);
+  return response.data;
+}
+
+export async function getUnassignedCategories(skip: number, limit: number): Promise<UnassignedCategory[]> {
+  const response = await api.get<UnassignedCategory[]>("/subjects/categories/unassigned", { params: { skip, limit } });
+  return response.data;
+}
+
+export async function linkCategory(subjectId: number, blockId: number, categoryId: number): Promise<Category> {
+  const response = await api.put<Category>(`/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}`, {});
   return response.data;
 }
 

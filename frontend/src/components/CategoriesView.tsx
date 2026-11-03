@@ -5,6 +5,7 @@ import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
+import LinkCategory from "@/components/LinkCategory";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleCategoriesPage } from "@/lib/subjects";
 import { createCategory, getCategories, getContentBlock, getCurrentUser,
   type Category, type ContentBlockDetail } from "@/services/api";
@@ -131,6 +132,7 @@ export default function CategoriesView({ subjectId, blockId, page }: {
             {hasMore && <Link href={`${base}?page=${page + 1}`} className="button-secondary">Siguiente</Link>}
           </nav>
         </section>
+        {block && <LinkCategory block={block} onLinked={() => setAttempt((value) => value + 1)} />}
         <section aria-labelledby="create-category-heading" className="mt-9 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <h2 id="create-category-heading" className="text-xl font-bold text-blue-950">Crear categoría</h2>
           <form onSubmit={submit} className="mt-5 space-y-5">

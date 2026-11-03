@@ -76,6 +76,14 @@ recortado de 1 a 255 caracteres y descripción opcional. Requieren rol actual
 Las categorías existentes sin bloque (`block_id=NULL`) permanecen intactas,
 con sus IDs y preguntas, y no aparecen en la lista de un bloque concreto.
 
+`GET /subjects/categories/unassigned?skip=0&limit=100` lista por ID solo esas
+categorías sin bloque. `PUT /subjects/{subject_id}/blocks/{block_id}/categories/{category_id}`
+con cuerpo `{}` vincula una categoría existente; exige docente o administrador
+y comprueba el destino. Repetirlo en el mismo bloque devuelve la categoría sin
+crear otra; si pertenece a otro bloque devuelve `409`. Se actualiza solo
+`block_id`, mediante una condición atómica que impide que dos destinos distintos
+ganen a la vez. No se trasladan ni desvinculan categorías.
+
 ## Dificultad opcional de las preguntas
 
 `difficulty` es opcional en la creación y consulta del banco de preguntas,

@@ -4,13 +4,22 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import require_content_staff
 from app.models import Category, ContentBlock, Subject, User
-from app.schemas.category import BlockDetailResponse, CategoryCreate, CategoryResponse
+from app.schemas.category import (BlockDetailResponse, CategoryCreate, CategoryResponse,
+                                  EmptyLinkRequest, UnassignedCategoryResponse)
 from app.schemas.content_block import ContentBlockCreate, ContentBlockResponse
 from app.schemas.subject import SubjectCreate, SubjectResponse
 from app.services import subject as subject_service
 
 
 router = APIRouter(prefix="/subjects", tags=["Subjects"])
+
+
+@router.get("/categories/unassigned", response_model=list[UnassignedCategoryResponse])
+def list_unassigned_categories(
+    skip: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=100),
+    db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
+) -> list[Category]:
+    return subject_service.get_unassigned_categories(db, skip, limit)
 
 
 @router.get("", response_model=list[SubjectResponse])
@@ -82,3 +91,12 @@ def create_category(
     db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
 ) -> Category:
     return subject_service.create_category(db, subject_id, block_id, payload)
+
+
+@router.put("/{subject_id}/blocks/{block_id}/categories/{category_id}", response_model=CategoryResponse)
+def link_category(
+    payload: EmptyLinkRequest, subject_id: int = Path(ge=1), block_id: int = Path(ge=1),
+    category_id: int = Path(ge=1), db: Session = Depends(get_db),
+    current_user: User = Depends(require_content_staff),
+) -> Category:
+    return subject_service.link_category(db, subject_id, block_id, category_id)

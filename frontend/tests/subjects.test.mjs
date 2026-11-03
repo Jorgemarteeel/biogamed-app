@@ -19,7 +19,7 @@ function loadTypescript(url) {
 }
 
 const client = loadTypescript(new URL("../src/services/api.ts", import.meta.url));
-const { canManageSubjects, visibleSubjectsPage, visibleBlocksPage, visibleCategoriesPage, SUBJECTS_PAGE_SIZE } =
+const { canManageSubjects, visibleSubjectsPage, visibleBlocksPage, visibleCategoriesPage, visibleUnassignedPage, SUBJECTS_PAGE_SIZE } =
   loadTypescript(new URL("../src/lib/subjects.ts", import.meta.url));
 
 afterEach(() => { delete global.window; });
@@ -145,4 +145,37 @@ test("categories use one extra server item and preserve empty state", () => {
     items: items.slice(0, SUBJECTS_PAGE_SIZE), hasMore: true,
   });
   assert.deepEqual(visibleCategoriesPage([]), { items: [], hasMore: false });
+});
+
+test("unassigned categories and linking use authenticated routes", async () => {
+  testBrowser();
+  const originalAdapter = client.default.defaults.adapter;
+  const calls = [];
+  client.default.defaults.adapter = async (config) => {
+    calls.push(config);
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    return { status: 200, data: config.method === "put"
+      ? { id: 7, block_id: 5, name: "Origen", description: null }
+      : [{ id: 7, block_id: null, name: "Origen", description: null }], headers: {}, config };
+  };
+  try {
+    assert.equal((await client.getUnassignedCategories(12, 13))[0].block_id, null);
+    assert.equal((await client.linkCategory(4, 5, 7)).block_id, 5);
+    assert.deepEqual(calls.map(({ method, url }) => [method, url]), [
+      ["get", "/subjects/categories/unassigned"],
+      ["put", "/subjects/4/blocks/5/categories/7"],
+    ]);
+    assert.deepEqual(calls[0].params, { skip: 12, limit: 13 });
+    assert.deepEqual(JSON.parse(calls[1].data), {});
+  } finally { client.default.defaults.adapter = originalAdapter; }
+});
+
+test("unassigned pagination preserves IDs and an empty page", () => {
+  const items = Array.from({ length: SUBJECTS_PAGE_SIZE + 1 }, (_, index) => ({
+    id: index + 1, block_id: null, name: "Mismo nombre", description: null,
+  }));
+  assert.deepEqual(visibleUnassignedPage(items), {
+    items: items.slice(0, SUBJECTS_PAGE_SIZE), hasMore: true,
+  });
+  assert.deepEqual(visibleUnassignedPage([]), { items: [], hasMore: false });
 });

@@ -61,8 +61,16 @@ Cada bloque ofrece «Ver categorías», también en su confirmación de creació
 `/gestion/asignaturas/{id}/bloques/{blockId}` muestra asignatura y bloque,
 pagina las categorías de ese bloque y permite crear una. Reutiliza los estados
 de sesión, permisos, vacío, error y confirmación de la gestión anterior. Las
-categorías aún sin bloque no se muestran como pertenecientes a ninguno; su
-consulta y vinculación quedan para otra tarea.
+categorías aún sin bloque no se muestran como pertenecientes a ninguno.
+La sección «Vincular categoría existente» consulta únicamente las categorías
+sin bloque, muestra sus IDs para distinguir nombres iguales y pide confirmar
+el bloque y la asignatura. Tras vincular, actualiza ambos listados. Un conflicto
+con otra vinculación muestra el error y permite elegir de nuevo.
+La vinculación se revisó en navegador aislado con categorías ficticias: paginación,
+confirmación persistente, actualización de ambos listados y conflicto simulado
+entre bloques. No se forzaron caducidad de sesión ni error de red en navegador;
+la repetición al mismo destino y la concurrencia se comprobaron en pruebas de
+API y PostgreSQL temporal, respectivamente.
 La ruta de categorías se validó en una pila temporal con docente y contenidos
 ficticios: acceso desde bloques, recarga directa, vacío, nombre en blanco,
 creación, paginación, separación entre bloques, referencia incompatible,

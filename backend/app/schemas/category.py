@@ -16,6 +16,14 @@ class CategoryResponse(BaseModel):
     description: str | None
 
 
+class UnassignedCategoryResponse(CategoryResponse):
+    block_id: None
+
+
+class EmptyLinkRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
 class BlockDetailResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
