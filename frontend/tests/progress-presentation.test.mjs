@@ -83,10 +83,25 @@ test("multiple results draw connected points and preserve server order", () => {
   const html = render([first, second]);
   assert.match(html, /<select[^>]*id="evolution-group"/);
   assert.match(html, /Categoría Macrófago/);
-  assert.match(html, /<polyline[^>]*points="35,104 325,132"/);
+  assert.match(html, /<polyline[^>]*points="58,109\.2 126,131\.6"/);
+  assert.match(html, /Aciertos/);
+  assert.match(html, /4\/10/);
+  assert.match(html, /2\/10/);
+  assert.match(html, /Partida \(número en la lista\)/);
+  assert.doesNotMatch(html, /Temática Linfocito · Categoría Linfocito/);
   assert.match(html, /href="\/partidas\/11"/);
   assert.match(html, /href="\/partidas\/14"/);
   assert.doesNotMatch(html, /href="\/partidas\/20"[^>]*>Revisar resultado/);
+});
+
+test("many results keep a point and readable numbered position for every session", () => {
+  const results = Array.from({ length: 15 }, (_, index) => ({
+    session_id: index + 1, started_at: "2026-10-30T12:06:20Z", score: index % 11, total_questions: 10,
+  }));
+  const html = render([mark({ results })]);
+  assert.match(html, /viewBox="0 0 1052 205"/);
+  assert.equal((html.match(/<circle /g) ?? []).length, 15);
+  assert.match(html, /15\. 3 de 10 aciertos/);
 });
 
 test("tied best mark and plural valid results are visible without implying evolution", () => {

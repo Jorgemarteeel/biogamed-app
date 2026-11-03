@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import Brand from "@/components/Brand";
+import ProfileMenu from "@/components/ProfileMenu";
 import GameReview from "@/components/GameReview";
 import { describeContentContext, historyReviewItems } from "@/lib/game-review";
 import { getGameHistoryDetail, getTopics, type GameHistoryDetail } from "@/services/api";
@@ -63,7 +64,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
     <header className="site-header">
       <nav aria-label="Partida anterior" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-12">
         <Brand />
-        <button onClick={logout} className="button-primary">Cerrar sesión</button>
+        <div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button onClick={logout} className="button-primary">Cerrar sesión</button></div>
       </nav>
     </header>
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14" aria-busy={state === "loading"}>

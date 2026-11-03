@@ -1,6 +1,7 @@
 "use client";
 
 import Brand from "@/components/Brand";
+import ProfileMenu from "@/components/ProfileMenu";
 import GamePicker from "@/components/GamePicker";
 import GameSummaryCard from "@/components/GameSummaryCard";
 import { useEffect, useState } from "react";
@@ -86,7 +87,7 @@ export default function DashboardPage() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-12">
           <Brand />
           <div className="flex w-full min-w-0 items-center justify-between gap-4 sm:w-auto">
-            {user && <span className="min-w-0 max-w-48 truncate text-sm font-semibold text-sky-100" title={user.email}>{user.name || user.email}</span>}
+            <ProfileMenu name={user?.name} />
             <button onClick={logout} className="button-primary shrink-0">
               Cerrar sesión
             </button>
@@ -102,7 +103,6 @@ export default function DashboardPage() {
           </h1>
           <p className="mt-2 max-w-2xl leading-7 text-slate-600">Elige tu juego y después la temática que quieres practicar.</p>
           {user && <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-            <Link href="/progreso" className="text-link inline-flex min-h-11 items-center">Mi progreso →</Link>
             {canManageSubjects(user.role) && <Link href="/gestion/asignaturas" className="text-link inline-flex min-h-11 items-center">Gestión de contenidos →</Link>}
           </div>}
         </div>

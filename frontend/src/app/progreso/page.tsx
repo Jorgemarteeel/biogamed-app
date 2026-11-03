@@ -5,6 +5,7 @@ import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
+import ProfileMenu from "@/components/ProfileMenu";
 import ProgressContent from "@/components/ProgressContent";
 import { getCurrentUser, getGameProgress, type GameProgress } from "@/services/api";
 
@@ -35,7 +36,7 @@ export default function ProgressPage() {
   }, [router, attempt]);
 
   return <div className="min-h-screen bg-background text-slate-900">
-    <header className="site-header"><nav aria-label="Progreso" className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8"><Brand /><button className="button-primary" onClick={() => { window.localStorage.removeItem("token"); router.replace("/login"); }}>Cerrar sesión</button></nav></header>
+    <header className="site-header"><nav aria-label="Progreso" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-8"><Brand /><div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button className="button-primary" onClick={() => { window.localStorage.removeItem("token"); router.replace("/login"); }}>Cerrar sesión</button></div></nav></header>
     <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12" aria-busy={state === "loading"}>
       <Link href="/dashboard" className="text-link inline-flex min-h-11 items-center">← Volver al panel</Link>
       <h1 className="mt-5 text-3xl font-black text-blue-950">Mi progreso</h1>

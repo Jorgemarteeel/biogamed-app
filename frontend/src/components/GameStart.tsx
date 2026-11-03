@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import Brand from "@/components/Brand";
+import ProfileMenu from "@/components/ProfileMenu";
 import TrivialGame from "@/components/TrivialGame";
 import {
   getCurrentUser, getTopics, getTrivialAvailability, startTrivialGame,
@@ -148,7 +149,7 @@ export default function GameStart({ topicId, mode }: {
       <header className="site-header">
         <nav aria-label="Partida" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-12">
           <Brand />
-          <button onClick={logout} className="button-primary">Cerrar sesión</button>
+          <div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button onClick={logout} className="button-primary">Cerrar sesión</button></div>
         </nav>
       </header>
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">

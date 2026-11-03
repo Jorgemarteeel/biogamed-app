@@ -275,3 +275,13 @@ y una lista accesible; con una indica que hacen falta más resultados. La lista
 vacía tiene un aviso propio. No une grupos diferentes ni interpreta las
 puntuaciones como prueba de mejora del aprendizaje. Los puntos proceden del
 backend, sin recalcular ni paginar en el navegador.
+
+La cabecera autenticada comparte el menú del nombre obtenido de `/auth/me`
+(`Mi cuenta` si falta): abre «Mi historial» y «Mi progreso», se cierra con
+Escape o al pulsar fuera y abrevia visualmente nombres largos en móvil.
+La gráfica indica aciertos de 0 al total, anota cada puntuación y numera las
+partidas de acuerdo con la lista. Para muchos resultados, el desplazamiento
+queda dentro de la gráfica y conserva todos los puntos. En navegador aislado
+se comprobaron el menú, foco, enlaces y cuatro resultados reales en escritorio
+y móvil; quince puntos se verificaron mediante prueba de presentación, no con
+datos reales en navegador. No se probó un dispositivo táctil físico.

@@ -5,6 +5,7 @@ import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
+import ProfileMenu from "@/components/ProfileMenu";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleBlocksPage } from "@/lib/subjects";
 import { createContentBlock, getContentBlocks, getCurrentUser, getSubject,
   type ContentBlock, type Subject } from "@/services/api";
@@ -107,7 +108,7 @@ export default function BlocksView({ subjectId, page }: { subjectId: number; pag
   }
 
   return <div className="min-h-screen bg-background text-slate-900">
-    <header className="site-header"><nav aria-label="Gestión de contenidos" className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8"><Brand /><button className="button-primary" onClick={logout}>Cerrar sesión</button></nav></header>
+    <header className="site-header"><nav aria-label="Gestión de contenidos" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-8"><Brand /><div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button className="button-primary" onClick={logout}>Cerrar sesión</button></div></nav></header>
     <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12" aria-busy={state === "loading"}>
       <nav aria-label="Volver" className="flex flex-wrap gap-x-6 gap-y-1"><Link href="/gestion/asignaturas" className="text-link inline-flex min-h-11 items-center">← Asignaturas</Link><Link href="/dashboard" className="text-link inline-flex min-h-11 items-center">Volver al panel</Link></nav>
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
