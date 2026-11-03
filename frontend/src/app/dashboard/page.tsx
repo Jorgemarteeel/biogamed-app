@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import Link from "next/link";
-import { canManageSubjects } from "@/lib/subjects";
 import {
   getCurrentUser, getRecentGames, getTopics,
   type GameHistorySummary, type Topic, type UserResponse,
@@ -87,7 +86,7 @@ export default function DashboardPage() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-12">
           <Brand />
           <div className="flex w-full min-w-0 items-center justify-between gap-4 sm:w-auto">
-            <ProfileMenu name={user?.name} />
+            <ProfileMenu name={user?.name} role={user?.role} />
             <button onClick={logout} className="button-primary shrink-0">
               Cerrar sesión
             </button>
@@ -102,9 +101,6 @@ export default function DashboardPage() {
             {user ? `Hola, ${user.name || user.email}` : "Panel de estudio"}
           </h1>
           <p className="mt-2 max-w-2xl leading-7 text-slate-600">Elige tu juego y después la temática que quieres practicar.</p>
-          {user && <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-            {canManageSubjects(user.role) && <Link href="/gestion/asignaturas" className="text-link inline-flex min-h-11 items-center">Gestión de contenidos →</Link>}
-          </div>}
         </div>
 
         {loading ? (

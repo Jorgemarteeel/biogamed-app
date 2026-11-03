@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
+import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import CreateContentPanel from "@/components/CreateContentPanel";
 import LinkCategory from "@/components/LinkCategory";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleCategoriesPage } from "@/lib/subjects";
 import { createCategory, getCategories, getContentBlock, getCurrentUser,
@@ -113,7 +115,7 @@ export default function CategoriesView({ subjectId, blockId, page }: {
   return <div className="min-h-screen bg-background text-slate-900">
     <header className="site-header"><nav aria-label="Gestión de contenidos" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-8"><Brand /><div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button className="button-primary" onClick={logout}>Cerrar sesión</button></div></nav></header>
     <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12" aria-busy={state === "loading"}>
-      <nav aria-label="Volver" className="flex flex-wrap gap-x-6 gap-y-1"><Link href={`/gestion/asignaturas/${subjectId}`} className="text-link inline-flex min-h-11 items-center">← Bloques</Link><Link href="/gestion/asignaturas" className="text-link inline-flex min-h-11 items-center">Asignaturas</Link><Link href="/dashboard" className="text-link inline-flex min-h-11 items-center">Volver al panel</Link></nav>
+      <ContentBreadcrumbs subject={block?.subject} block={block} />
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
       {block && <p className="mt-2 break-words text-sm font-semibold text-sky-800">{block.subject.name}</p>}
       <h1 className="mt-2 break-words text-3xl font-black text-blue-950">{block?.name ?? "Categorías"}</h1>
@@ -134,16 +136,15 @@ export default function CategoriesView({ subjectId, blockId, page }: {
           </nav>
         </section>
         {block && <LinkCategory block={block} onLinked={() => setAttempt((value) => value + 1)} />}
-        <section aria-labelledby="create-category-heading" className="mt-9 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <h2 id="create-category-heading" className="text-xl font-bold text-blue-950">Crear categoría</h2>
-          <form onSubmit={submit} className="mt-5 space-y-5">
+        <CreateContentPanel id="create-category" label="Crear categoría" busy={submitting}>
+          <form onSubmit={submit} className="space-y-5">
             <div><label htmlFor="category-name" className="form-label">Nombre</label><input id="category-name" type="text" required maxLength={255} value={name} onChange={(event) => setName(event.target.value)} disabled={submitting} className="form-input" /></div>
             <div><label htmlFor="category-description" className="form-label">Descripción (opcional)</label><textarea id="category-description" rows={3} value={description} onChange={(event) => setDescription(event.target.value)} disabled={submitting} className="form-input resize-y" /></div>
             {submitError && <p role="alert" className="notice-error">{submitError}</p>}
             <button type="submit" disabled={submitting} className="button-primary">{submitting ? "Creando…" : "Crear categoría"}</button>
           </form>
-          {created && <div role="status" className="notice-success mt-6"><p className="font-bold">Categoría creada</p><p className="mt-1 break-words">{created.name}</p>{created.description && <p className="mt-1 break-words">{created.description}</p>}<p className="mt-2 text-xs">ID {created.id}. El listado conserva su página actual.</p><button type="button" className="text-link mt-2 min-h-11" onClick={retry}>Actualizar listado</button></div>}
-        </section>
+        </CreateContentPanel>
+        {created && <div role="status" className="notice-success mt-4"><p className="font-bold">Categoría creada</p><p className="mt-1 break-words">{created.name}</p>{created.description && <p className="mt-1 break-words">{created.description}</p>}<p className="mt-2 text-xs">ID {created.id}. El listado conserva su página actual.</p><button type="button" className="text-link mt-2 min-h-11" onClick={retry}>Actualizar listado</button></div>}
       </>}
     </main>
   </div>;

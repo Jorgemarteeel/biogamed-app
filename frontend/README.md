@@ -34,11 +34,20 @@ El cierre de sesión elimina la clave `token` sin borrar otros datos del navegad
 
 ## Primera pantalla de gestión de contenidos
 
-El panel muestra «Gestión de contenidos» solo si `/auth/me` devuelve el rol
-`teacher` o `admin`. `/gestion/asignaturas` funciona por acceso directo y
+El menú del usuario muestra «Gestión de contenidos», separado de la navegación
+personal, solo si `/auth/me` devuelve el rol `teacher` o `admin`. Este acceso
+compartido está disponible en las cabeceras autenticadas; el panel ya no muestra
+una tarjeta docente. `/gestion/asignaturas` funciona por acceso directo y
 recarga: vuelve a comprobar sesión y rol antes de consultar `GET /subjects`.
 Un estudiante ve un aviso de acceso no permitido. El backend autoriza también
 cada operación; ocultar el enlace no sustituye esa comprobación.
+En la demostración aislada se comprobó el enlace docente, la separación visual,
+la apertura con teclado, el cierre con Escape y al pulsar fuera, y el menú móvil
+sin desbordamiento a 390 px. La prueba automatizada de roles comprueba que
+`student` no recibe el acceso; el usuario confirmó además el resultado en su
+revisión manual. El agente no pudo repetir esa comprobación visual con la
+cuenta estudiante porque la pestaña autenticada no estaba disponible para
+control.
 
 La lista muestra nombre y descripción disponible, ordenada por ID desde el
 servidor. `?page=N` conserva la página. Se solicitan 13 elementos mediante
@@ -77,6 +86,17 @@ creación, paginación, separación entre bloques, referencia incompatible,
 vista de escritorio y móvil sin desbordamiento, y foco de teclado visible.
 No se forzaron errores de red ni caducidad de sesión en el navegador; esos
 estados conservan el tratamiento compartido con la gestión anterior.
+
+La gestión usa una ruta de navegación común desde Panel hasta asignatura y
+bloque, con nombres obtenidos de la API. Los formularios de asignatura, bloque
+y categoría empiezan plegados; el botón comunica su estado y lleva el foco al
+primer campo al abrir, y de vuelta al botón al cerrar. Las confirmaciones se
+mantienen visibles fuera del panel plegable.
+En la demostración aislada se comprobaron los tres recorridos, apertura y
+cierre, foco, una creación de categoría ficticia con confirmación persistente,
+escritorio y móvil (390 px) sin desbordamiento. La pérdida de permisos, errores
+de red y una pantalla táctil física no se probaron visualmente en esta revisión.
+El usuario revisó después personalmente las mejoras y confirmó su conformidad.
 En una pila temporal con PostgreSQL desechable se comprobaron acceso desde
 asignaturas, ruta directa y recarga, vacío, validación, creación, doble
 pulsación sin duplicado, separación entre asignaturas, segunda página, ruta

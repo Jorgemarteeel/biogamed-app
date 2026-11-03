@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
+import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import CreateContentPanel from "@/components/CreateContentPanel";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleSubjectsPage } from "@/lib/subjects";
 import { createSubject, getCurrentUser, getSubjects, type Subject } from "@/services/api";
 
@@ -118,7 +120,7 @@ export default function SubjectsView({ page }: { page: number }) {
   return <div className="min-h-screen bg-background text-slate-900">
     <header className="site-header"><nav aria-label="Gestión de contenidos" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-8"><Brand /><div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button className="button-primary" onClick={logout}>Cerrar sesión</button></div></nav></header>
     <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12" aria-busy={state === "loading"}>
-      <Link href="/dashboard" className="text-link inline-flex min-h-11 items-center">← Volver al panel</Link>
+      <ContentBreadcrumbs />
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
       <h1 className="mt-2 text-3xl font-black text-blue-950">Asignaturas</h1>
       <p className="mt-2 max-w-2xl text-slate-600">Consulta y crea asignaturas para organizar el contenido académico.</p>
@@ -138,16 +140,15 @@ export default function SubjectsView({ page }: { page: number }) {
           </nav>
         </section>
 
-        <section aria-labelledby="create-subject-heading" className="mt-9 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <h2 id="create-subject-heading" className="text-xl font-bold text-blue-950">Crear asignatura</h2>
-          <form onSubmit={submit} className="mt-5 space-y-5">
+        <CreateContentPanel id="create-subject" label="Crear asignatura" busy={submitting}>
+          <form onSubmit={submit} className="space-y-5">
             <div><label htmlFor="subject-name" className="form-label">Nombre</label><input id="subject-name" name="name" type="text" required maxLength={255} value={name} onChange={(event) => setName(event.target.value)} disabled={submitting} className="form-input" /></div>
             <div><label htmlFor="subject-description" className="form-label">Descripción (opcional)</label><textarea id="subject-description" name="description" rows={3} value={description} onChange={(event) => setDescription(event.target.value)} disabled={submitting} className="form-input resize-y" /></div>
             {submitError && <p role="alert" className="notice-error">{submitError}</p>}
             <button type="submit" disabled={submitting} className="button-primary">{submitting ? "Creando…" : "Crear asignatura"}</button>
           </form>
-          {created && <div role="status" className="notice-success mt-6"><p className="font-bold">Asignatura creada</p><p className="mt-1 break-words">{created.name}</p>{created.description && <p className="mt-1 break-words">{created.description}</p>}<p className="mt-2 text-xs">ID {created.id}. El listado conserva su página actual.</p><div className="mt-2 flex flex-wrap gap-4"><Link href={`/gestion/asignaturas/${created.id}`} className="text-link inline-flex min-h-11 items-center">Ver bloques →</Link><button type="button" className="text-link min-h-11" onClick={retry}>Actualizar listado</button></div></div>}
-        </section>
+        </CreateContentPanel>
+        {created && <div role="status" className="notice-success mt-4"><p className="font-bold">Asignatura creada</p><p className="mt-1 break-words">{created.name}</p>{created.description && <p className="mt-1 break-words">{created.description}</p>}<p className="mt-2 text-xs">ID {created.id}. El listado conserva su página actual.</p><div className="mt-2 flex flex-wrap gap-4"><Link href={`/gestion/asignaturas/${created.id}`} className="text-link inline-flex min-h-11 items-center">Ver bloques →</Link><button type="button" className="text-link min-h-11" onClick={retry}>Actualizar listado</button></div></div>}
       </>}
     </main>
   </div>;
