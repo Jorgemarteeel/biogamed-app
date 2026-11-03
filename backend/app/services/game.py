@@ -12,11 +12,12 @@ from app.schemas.game import (
     QuestionForGame, UserAnswer,
 )
 from app.schemas.game_snapshot import QuestionSnapshot, StoredQuestion
+from app.utils.game_errors import LEGACY_SESSION_NO_SNAPSHOT, LEGACY_SESSION_MESSAGE
 
 
 def _session_questions(session: GameSession) -> list[StoredQuestion]:
     if session.question_snapshot is None:
-        raise HTTPException(409, "Esta partida antigua no conserva las preguntas al inicio. Comienza una nueva partida.")
+        raise HTTPException(409, {"code": LEGACY_SESSION_NO_SNAPSHOT, "message": LEGACY_SESSION_MESSAGE})
     try:
         snapshot = QuestionSnapshot.model_validate(session.question_snapshot)
     except ValidationError:

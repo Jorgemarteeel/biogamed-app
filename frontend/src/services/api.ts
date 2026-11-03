@@ -93,6 +93,19 @@ export async function createCategoryQuestion(subjectId: number, blockId: number,
   return response.data;
 }
 
+export async function editCategoryQuestion(subjectId: number, blockId: number, categoryId: number,
+                                           questionId: number, payload: QuestionCreate): Promise<CategoryQuestion> {
+  const response = await api.put<CategoryQuestion>(
+    `/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/questions/${questionId}`, payload);
+  return response.data;
+}
+
+export const LEGACY_SESSION_NO_SNAPSHOT = "LEGACY_SESSION_NO_SNAPSHOT";
+export function isLegacySessionError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 409
+    && error.response?.data?.detail?.code === LEGACY_SESSION_NO_SNAPSHOT;
+}
+
 export async function getQuestionTopics(): Promise<Topic[]> {
   const topics: Topic[] = [];
   for (let skip = 0; ; skip += 100) {
@@ -244,7 +257,7 @@ export async function submitTrivialGame(sessionId: number, answers: TrivialAnswe
     const response = await api.post<GameResult>(`/game/submit/${sessionId}`, { answers });
     return response.data;
   } catch (error: unknown) {
-    if (!axios.isAxiosError(error) || error.response?.status !== 409) throw error;
+    if (!axios.isAxiosError(error) || error.response?.status !== 409 || isLegacySessionError(error)) throw error;
     // A previous submission may have succeeded even if its response was lost.
     const { data } = await api.get<GameHistorySummary & { answer_logs: GameCorrection[] }>(`/game/history/${sessionId}`);
     if (!data.is_completed) throw error;
@@ -363,6 +376,7 @@ export interface AnswerHistory {
 }
 
 export interface GameHistoryDetail extends GameHistorySummary {
+  continuation_error_code?: typeof LEGACY_SESSION_NO_SNAPSHOT | null;
   question_content_source?: "session_start" | "legacy";
   answer_logs: AnswerHistory[];
 }

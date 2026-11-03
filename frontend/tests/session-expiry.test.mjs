@@ -328,3 +328,17 @@ test("expired sessions during submission redirect to login without fetching hist
     api.defaults.adapter = originalAdapter;
   }
 });
+
+test("specific legacy conflict is preserved without trying completed-result recovery", async () => {
+  browser();
+  const originalAdapter = api.defaults.adapter;
+  const calls = [];
+  const legacy = new AxiosError("legacy", "ERR_BAD_RESPONSE", undefined, undefined, {
+    status: 409, data: { detail: { code: "LEGACY_SESSION_NO_SNAPSHOT" } }, headers: {}, config: {},
+  });
+  api.defaults.adapter = async (config) => { calls.push(config.url); throw legacy; };
+  try {
+    await assert.rejects(loaded.exports.submitTrivialGame(17, [{ question_id: 21, selected_index: 0 }]), (error) => error === legacy);
+    assert.deepEqual(calls, ["/game/submit/17"]);
+  } finally { api.defaults.adapter = originalAdapter; }
+});

@@ -23,20 +23,26 @@ def update_accepted_answers(db: Session, question_id: int, answers: list[str]) -
     return question
 
 
-def create_question(db: Session, question: QuestionCreate, *, category_id: int | None = None) -> Question:
-    topic = db.execute(select(Topic).where(Topic.id == question.topic_id)).scalar_one_or_none()
+def _require_topic(db: Session, topic_id: int) -> None:
+    topic = db.get(Topic, topic_id)
     if topic is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="La temática no existe.",
         )
 
+
+def _question_values(question: QuestionCreate) -> dict:
+    return {**question.model_dump(), "correct_answer": (
+        question.options[question.correct_option_index] if question.question_type == "TRIVIAL"
+        else question.exact_word.strip())}
+
+
+def create_question(db: Session, question: QuestionCreate, *, category_id: int | None = None) -> Question:
+    _require_topic(db, question.topic_id)
     db_question = Question(
-        **question.model_dump(),
+        **_question_values(question),
         category_id=category_id,
-        correct_answer=(question.options[question.correct_option_index]
-                        if question.question_type == "TRIVIAL"
-                        else question.exact_word.strip()),
     )
     db.add(db_question)
     try:
@@ -52,6 +58,28 @@ def create_category_question(db: Session, subject_id: int, block_id: int,
                              category_id: int, question: QuestionCreate) -> Question:
     get_category(db, subject_id, block_id, category_id)
     return create_question(db, question, category_id=category_id)
+
+
+def edit_category_question(db: Session, subject_id: int, block_id: int, category_id: int,
+                           question_id: int, payload: QuestionCreate) -> Question:
+    get_category(db, subject_id, block_id, category_id)
+    question = db.scalar(select(Question).where(
+        Question.id == question_id, Question.category_id == category_id,
+    ).with_for_update())
+    if question is None:
+        raise HTTPException(404, "La pregunta no existe en esta categoría.")
+    if payload.question_type != question.question_type:
+        raise HTTPException(422, "No se puede cambiar la modalidad de la pregunta.")
+    _require_topic(db, payload.topic_id)
+    for field, value in _question_values(payload).items():
+        setattr(question, field, value)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(question)
+    return question
 
 
 def get_questions_by_topic(

@@ -118,6 +118,7 @@ class GameHistorySummary(BaseModel):
 
 
 class GameHistoryDetail(GameHistorySummary):
+    continuation_error_code: Literal["LEGACY_SESSION_NO_SNAPSHOT"] | None = None
     question_content_source: Literal["session_start", "legacy"] = "legacy"
     answer_logs: list[AnswerHistory]
 

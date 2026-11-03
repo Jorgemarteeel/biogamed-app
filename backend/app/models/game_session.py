@@ -5,6 +5,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.utils.game_errors import LEGACY_SESSION_NO_SNAPSHOT
 
 
 class GameSession(Base):
@@ -33,3 +34,7 @@ class GameSession(Base):
     @property
     def question_content_source(self) -> str:
         return "session_start" if self.question_snapshot is not None else "legacy"
+
+    @property
+    def continuation_error_code(self) -> str | None:
+        return LEGACY_SESSION_NO_SNAPSHOT if not self.is_completed and self.question_snapshot is None else None

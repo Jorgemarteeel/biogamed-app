@@ -7,8 +7,9 @@ import { isAxiosError } from "axios";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import GameReview from "@/components/GameReview";
+import LegacySessionNotice from "@/components/LegacySessionNotice";
 import { describeContentContext, historyReviewItems } from "@/lib/game-review";
-import { getGameHistoryDetail, getTopics, type GameHistoryDetail } from "@/services/api";
+import { getGameHistoryDetail, getTopics, LEGACY_SESSION_NO_SNAPSHOT, type GameHistoryDetail } from "@/services/api";
 
 type LoadState = "loading" | "ready" | "unavailable" | "error";
 
@@ -86,11 +87,13 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
             <div><dt className="font-semibold text-slate-600">Fecha de inicio</dt><dd className="mt-1 text-blue-950">{dateLabel}</dd></div>
             <div><dt className="font-semibold text-slate-600">Puntuación</dt><dd className="mt-1 text-blue-950">{game.is_completed ? `${game.score} de ${game.question_ids.length} aciertos` : "No disponible: partida sin finalizar"}</dd></div>
           </dl>
-          <p className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">{game.question_content_source === "session_start"
+          {game.continuation_error_code === LEGACY_SESSION_NO_SNAPSHOT && !game.is_completed
+            ? <LegacySessionNotice topicId={game.topic_id} mode={game.game_mode} />
+            : <p className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">{game.question_content_source === "session_start"
             ? "Esta partida conserva las preguntas y soluciones tal como estaban al iniciarse. La corrección usa esa copia."
             : game.is_completed
               ? "Partida antigua: solo se muestran los detalles guardados al corregir. No consta una versión de las preguntas al inicio; no se reconstruye con el banco actual."
-              : "Partida antigua sin copia de las preguntas originales. No puede corregirse con garantías; comienza una partida nueva."}</p>
+              : "Partida antigua sin copia de las preguntas originales. No puede corregirse con garantías; comienza una partida nueva."}</p>}
           {context ? <dl className="mt-6 grid gap-4 border-t border-slate-200 pt-6 text-sm sm:grid-cols-2">
             <div><dt className="font-semibold text-slate-600">Categoría al iniciar</dt><dd className="mt-1 break-words text-blue-950">{context.category}</dd></div>
             <div><dt className="font-semibold text-slate-600">Dificultad al iniciar</dt><dd className="mt-1 text-blue-950">{context.difficulty}</dd></div>

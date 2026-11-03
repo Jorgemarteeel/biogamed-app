@@ -95,6 +95,10 @@ class CategoryQuestionCreate(QuestionCreate):
     model_config = ConfigDict(extra="forbid")
 
 
+class CategoryQuestionEdit(CategoryQuestionCreate):
+    question_type: QuestionType
+
+
 class QuestionUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

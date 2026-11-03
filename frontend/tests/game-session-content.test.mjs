@@ -32,9 +32,10 @@ try {
     if (request === "@/lib/game-review") return review;
     if (request === "@/lib/game-summary") return summary;
     if (request === "@/lib/topic-presentation") return { topicIllustration: () => "/generic.svg" };
-    if (request === "@/services/api") return {};
+    if (request === "@/services/api") return { LEGACY_SESSION_NO_SNAPSHOT: "LEGACY_SESSION_NO_SNAPSHOT" };
     if (request === "@/components/Brand" || request === "@/components/ProfileMenu") return () => null;
     if (request === "@/components/GameReview") return load("../src/components/GameReview.tsx").default;
+    if (request === "@/components/LegacySessionNotice") return load("../src/components/LegacySessionNotice.tsx").default;
     return original.call(this, request, parent, main);
   };
   HistoryView = load("../src/components/GameHistoryView.tsx").default;
@@ -73,4 +74,14 @@ test("legacy history states provenance and does not fabricate an original versio
   const open = history({ ...game, question_content_source: "legacy", content_context: null, is_completed: false, answer_logs: [] });
   assert.match(open, /No puede corregirse con garantías/);
   assert.doesNotMatch(open, /Enunciado original|Original B/);
+});
+
+test("specific legacy incompatibility shows preparation and history actions without fabricating correction", () => {
+  const html = history({ ...game, question_content_source: "legacy", continuation_error_code: "LEGACY_SESSION_NO_SNAPSHOT", is_completed: false, answer_logs: [] });
+  assert.match(html, /Esta partida se inició con una versión anterior y ya no puede continuarse. Puedes empezar una nueva/);
+  assert.match(html, /href="\/game\?topicId=1&amp;mode=TRIVIAL"/);
+  assert.match(html, /href="\/historial"/);
+  assert.doesNotMatch(html, /Enunciado original|Original B/);
+  const completed = history({ ...game, continuation_error_code: null });
+  assert.doesNotMatch(completed, /Preparar otra partida/);
 });

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
-import { submitTrivialGame, type GameResult, type GameSessionStart } from "@/services/api";
+import { submitTrivialGame, isLegacySessionError, type GameResult, type GameSessionStart } from "@/services/api";
+import LegacySessionNotice from "@/components/LegacySessionNotice";
 import GameReview from "@/components/GameReview";
 import { describeContentContext, liveReviewItems } from "@/lib/game-review";
 import { QuestionExposure } from "@/lib/question-exposure";
@@ -16,6 +17,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [legacyIncompatible, setLegacyIncompatible] = useState(false);
   const [result, setResult] = useState<GameResult | null>(null);
   const sending = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -53,7 +55,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   }, [questionIndex, result]);
 
   async function finish() {
-    if (!allAnswered || sending.current || result) return;
+    if (!allAnswered || sending.current || result || legacyIncompatible) return;
     sending.current = true;
     exposure.current!.stop();
     const payload = session.questions.map((item) => ({
@@ -72,6 +74,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
       if (!mounted.current) return;
       const status = isAxiosError(err) ? err.response?.status : undefined;
       if (status === 401) return;
+      if (isLegacySessionError(err)) { setLegacyIncompatible(true); return; }
       setError(status === 403 || status === 404
         ? "No puedes acceder a esta partida. Vuelve al panel para comenzar otra."
         : status === 409
@@ -112,6 +115,8 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
       </p>
     </nav>
   );
+
+  if (legacyIncompatible) return <LegacySessionNotice topicId={session.topic_id} mode="TRIVIAL" />;
 
   if (result) {
     return (

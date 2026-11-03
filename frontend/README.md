@@ -110,7 +110,8 @@ La pantalla muestra las soluciones solo tras verificar la sesión docente;
 el backend vuelve a autorizar cada lectura. Identifica Topic como temática
 heredada de juego, distinta de la categoría académica. Incluye vacío, filtros
 sin resultados, error con reintento, acceso no permitido y ruta inexistente.
-No ofrece creación, edición ni eliminación de preguntas.
+Ofrece creación y edición de preguntas, descritas más abajo, sin retirada ni
+eliminación.
 
 Las pruebas automatizadas comprueban el cliente autenticado, los parámetros
 enviados y la navegación jerárquica; las pruebas de backend cubren permisos,
@@ -234,8 +235,64 @@ comprobaciones manuales quedan pendientes; la demo sigue disponible.
 El bloqueo de doble envío es del cliente, no una clave de idempotencia del
 servidor. Si se pierde la respuesta tras persistir, un reintento podría crear
 otra pregunta: el error recomienda actualizar el listado antes de reintentar.
-No se añadió edición ni eliminación. La protección de partidas nuevas se
-describe a continuación; las partidas antiguas no se reconstruyen.
+La edición utiliza el mismo formulario, descrito a continuación. No hay
+retirada ni eliminación; las partidas antiguas no se reconstruyen.
+
+## Edición docente de preguntas y guía de partidas antiguas
+
+Cada pregunta del listado de categoría ofrece «Editar». El formulario compartido
+con creación se precarga y permite cambiar enunciado, temática de juego obtenida
+de la API, dificultad y los campos de solución propios de Trivial o Pasapalabra.
+La modalidad permanece visible y bloqueada; no hay selector de categoría.
+El backend verifica ambas restricciones. Mientras se edita se ocultan el
+listado y sus controles; la URL, filtros y página se conservan.
+
+«Guardar cambios» bloquea controles y dobles envíos; los errores mantienen el
+borrador. La confirmación muestra el ID guardado y recibe el foco. Si la nueva
+dificultad deja la pregunta fuera de los filtros, se explica sin cambiarlos.
+«Volver al listado» consulta la misma página y filtros; el foco vuelve a
+«Editar» o al título del listado si la pregunta ya no aparece. «Cancelar» pide
+confirmar el descarte o seguir editando, y no envía modificaciones al servidor.
+El aviso al regresar confirma la cancelación. Si un envío falló sin poder
+confirmar si persistió, la cancelación lo advierte y vuelve a consultar el banco;
+no afirma que el servidor no guardó cambios. No se conserva el borrador al salir
+de la pantalla o recargar, ni hay detección de edición concurrente entre docentes.
+
+El cliente reconoce exclusivamente el `409` cuyo `detail.code` es
+`LEGACY_SESSION_NO_SNAPSHOT`. La pantalla activa sustituye el envío por el aviso:
+«Esta partida se inició con una versión anterior y ya no puede continuarse.
+Puedes empezar una nueva». El detalle de historial usa el mismo aviso solo
+cuando la API devuelve ese `continuation_error_code` para una partida abierta.
+El aviso recibe el foco y ofrece «Preparar otra partida» y «Ver historial».
+La preparación usa navegación completa para reiniciar el estado local incluso
+si ya se estaba en esa URL; no inicia automáticamente una sesión. Otros `409`
+mantienen su manejo de conflicto y la recuperación del resultado completado.
+No se elimina ni completa la partida antigua y su contenido no se reconstruye.
+
+Verificación de esta tarea, 3 de noviembre de 2026: tipos y lint aprobados;
+**37 pruebas frontend pertinentes aprobadas**. Incluyen formulario compartido,
+precarga de ambas modalidades, errores, doble envío, guardado, confirmación de
+cancelación y envío incierto, cliente autenticado, mantenimiento de filtros y
+página al guardar/cancelar, foco alternativo simulado, mensaje/acciones en partida
+activa e historial, código específico frente a otros conflictos y recuperación
+de resultados ya guardados. Son pruebas automatizadas con hooks/servicios
+simulados donde corresponde; no equivalen a revisión visual de teclado o foco.
+
+La demo aislada en `localhost:13004` se mantuvo disponible. Se verificaron por
+HTTP la creación y edición real de preguntas 20 y 21, las partidas antes y
+después del cambio (3–6), su corrección e historial estable, y el código de la
+partida antigua ficticia 7 sin completarla. La ruta docente respondió HTTP 200.
+Se reutilizaron credenciales locales de la demo sin exponerlas; no se escribió
+en la base habitual.
+
+**Revisión visual pendiente:** el navegador integrado volvió a devolver
+`The browser access host is unavailable`. No se pudo iniciar sesión en él.
+Quedan sin comprobar visualmente creación de Trivial y Pasapalabra, sus
+validaciones y confirmaciones; edición de ambas modalidades, errores, guardado,
+cancelación y retorno con filtros; el aviso de la partida antigua y sus enlaces;
+y los recorridos de teclado, foco real y adaptación móvil de esos flujos.
+No se usó Opera GX ni ninguna cuenta personal. Las comprobaciones HTTP anteriores
+no se presentan como revisión visual.
 
 ## Contenido conservado de las partidas
 
@@ -252,8 +309,9 @@ El detalle distingue partidas con contenido conservado al inicio de partidas
 antiguas mediante `question_content_source`. Para las antiguas completadas se
 aclara que sus registros corresponden a la corrección y que no hay una versión
 original verificable. Para las antiguas abiertas sin copia se pide empezar otra
-partida: la API rechaza su corrección con `409`. Datos ausentes siguen ausentes.
-No se ha incorporado reanudación, edición ni eliminación. Pasapalabra continúa
+partida: la API rechaza su corrección con `409` y el código específico descrito
+arriba. Datos ausentes siguen ausentes. No se ha incorporado reanudación ni
+eliminación; la edición del banco reutiliza estas copias. Pasapalabra continúa
 sin interfaz jugable; su protección se comprueba mediante la API implementada.
 
 La copia con soluciones nunca llega al navegador: el inicio mantiene su

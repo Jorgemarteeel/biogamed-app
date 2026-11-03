@@ -40,8 +40,9 @@ el valor existente por defecto. `BIOGAMED_CORS_ORIGIN` permite añadir un origen
 local adicional para una instancia de pruebas separada.
 
 Las partidas nuevas conservan una copia privada del contenido al inicio,
-descrita en «Conservación del contenido de una partida». No se han añadido
-edición ni eliminación del banco. Las partidas antiguas sin esa copia no
+descrita en «Conservación del contenido de una partida». La edición docente
+desde una categoría conserva esas copias; no hay retirada ni eliminación.
+Las partidas antiguas sin esa copia no
 pueden reconstruirse; las claves foráneas de preguntas e historial siguen
 protegiendo sus referencias frente al borrado físico.
 
@@ -140,8 +141,8 @@ modalidad y dificultades distintas de `null` o entero estricto 1–4 (`422`).
 La nueva operación reutiliza el esquema y el servicio de creación existente.
 `POST /questions/` conserva su ruta y respuesta, crea sin categoría y admite
 los mismos cuerpos válidos; comparte el rechazo reforzado de blancos y
-combinaciones incoherentes. No hay migración, reclasificación de datos,
-edición ni eliminación nuevas. Las preguntas válidas amplían el banco que
+combinaciones incoherentes. La creación no exige migración ni reclasifica datos;
+la edición se describe a continuación. Las preguntas válidas amplían el banco que
 consulta la selección de juego existente, sin cambios en esa selección.
 
 Verificación del 3 de noviembre de 2026: suite backend completa, **175
@@ -159,6 +160,86 @@ por HTTP las preguntas ficticias **16 (Trivial, nivel 2)** y **17
 `biogamed_demo`, con volumen propio; partidas antes/después: **0/0**.
 No se escribió en la base habitual. La demo sigue disponible en
 `http://localhost:13004`, con API en `http://localhost:18004`.
+
+### Edición docente dentro de una categoría
+
+`PUT /subjects/{subject_id}/blocks/{block_id}/categories/{category_id}/questions/{question_id}`
+sustituye los campos editables de una pregunta y devuelve `200` con el mismo
+contrato docente que la creación (`id`, `category_id` y `topic` incluidos).
+Comprueba el rol **actual** `teacher` o `admin` mediante la dependencia
+compartida: `401` anónimo y `403` estudiante. La jerarquía completa y la
+pertenencia de la pregunta a esa categoría deben ser válidas (`404` en caso
+contrario, incluso si la pregunta existe en otra categoría).
+
+El cuerpo es completo, con las reglas de `QuestionCreate` reutilizadas:
+enunciado no vacío, temática existente elegida explícitamente, dificultad
+nullable o entero estricto 1–4 y campos coherentes con cada modalidad. Trivial
+requiere cuatro opciones y posición correcta; Pasapalabra requiere letra y
+solución, con las alternativas y normalización existentes. Se sincroniza
+también `correct_answer`, igual que al crear. Omitir dificultad o alternativas
+las deja sin valor; no es una operación de actualización parcial.
+
+`question_type` es obligatorio y verifica la modalidad existente: cambiarla
+devuelve `422`. No se admite `category_id` en el cuerpo, ni otros campos ajenos
+como `id`, `subject_id` o `block_id`; la categoría y el ID se conservan.
+Una temática inexistente devuelve `404`. Se bloquea la fila durante la edición
+y se confirma una sola transacción; no se escribe en sesiones ni respuestas.
+Las partidas ya iniciadas conservan su copia; las siguientes seleccionan el
+banco actualizado sin cambios en selección o puntuación. No se incorporan
+retirada, eliminación, traslado de categoría ni cambio de modalidad.
+
+No se necesita migración nueva. Las copias de sesión requieren la migración
+ya incorporada en `b7df60c`. No hay control de versión optimista del formulario:
+si dos docentes guardan sobre la misma pregunta, prevalece el último guardado.
+La interfaz evita envíos simultáneos, pero no impide ediciones concurrentes
+desde navegadores distintos.
+
+### Código específico de partida antigua incompatible
+
+Solo una partida abierta sin copia al inicio devuelve `409` con:
+
+```json
+{"detail":{"code":"LEGACY_SESSION_NO_SNAPSHOT","message":"Esta partida se inició con una versión anterior y ya no puede continuarse. Puedes empezar una nueva"}}
+```
+
+El detalle de historial de esa partida añade
+`continuation_error_code: "LEGACY_SESSION_NO_SNAPSHOT"`; para partidas con
+copia o completadas devuelve `null`. No se deduce la incompatibilidad a partir
+de cualquier `409`: una copia dañada, un modo inválido o un segundo envío
+mantienen sus conflictos existentes. La recuperación de un resultado ya
+guardado sigue funcionando para los conflictos ordinarios; el cliente no la
+intenta ante este código específico.
+
+No se reconstruye contenido, no se borra la sesión ni se marca completada.
+Las antiguas completadas conservan la consulta de sus registros reales.
+Las pantallas de envío de Trivial e historial ofrecen el mensaje indicado,
+preparación de otra partida e historial. La preparación no crea una sesión
+automáticamente. Pasapalabra mantiene su flujo backend y su aviso de interfaz
+en preparación, sin añadir juego nuevo.
+
+Verificación de esta tarea, 3 de noviembre de 2026: **101 pruebas backend
+pertinentes aprobadas** en SQLite aislado (edición, creación con lógica
+compartida, permisos y copias de partida). Un fallo inicial de la prueba de
+jerarquía al leer un objeto ORM expirado se corrigió; se repitió solo ese caso.
+Se comprobaron permisos actuales, jerarquía, separación entre categorías,
+modalidad/categoría fijas, temática, dificultad estricta, validación de ambas
+modalidades, alternativas, persistencia y sincronización de solución. Mediante
+la operación real `PUT` se verificó que la partida previa conserva contenido,
+contexto y corrección y que la posterior usa el banco editado. También se
+comprobaron el código específico, la continuidad de registros completados y que
+las copias dañadas no reciben ese código. Persiste la advertencia existente de
+deprecación de Starlette/httpx. No se repitieron pruebas de migraciones porque
+no cambió el esquema.
+
+Antes de escribir se verificaron los puertos de la demo, su conexión a
+`biogamed_demo` y el volumen exclusivo `biogamed_docente_demo_demo_data`.
+Por HTTP se crearon y editaron las preguntas ficticias **20 (Trivial)** y
+**21 (Pasapalabra)**: partidas previas **3 y 5**, posteriores **4 y 6**, todas
+corregidas con 1/1 según su propia copia. La partida ficticia antigua **7**
+devolvió el código específico y siguió abierta con cero puntos y sin registros.
+Solo se usaron la demo y sus credenciales locales; no hubo escrituras ni
+migraciones en la base habitual. La demostración sigue disponible en
+`localhost:13004`, con API en `localhost:18004`.
 
 ## Dificultad opcional de las preguntas
 
@@ -346,7 +427,8 @@ Compatibilidad explícita en el detalle de historial:
   completada, se muestran solo los registros realmente guardados al corregir,
   que no garantizan el contenido que se vio al inicio. Si faltan registros o
   contexto, siguen ausentes; no se rellenan con datos actuales.
-- Una partida antigua abierta sin copia devuelve `409` al enviar respuestas,
+- Una partida antigua abierta sin copia devuelve `409` con el código específico
+  `LEGACY_SESSION_NO_SNAPSHOT` al enviar respuestas,
   sin crear registros ni puntuación; requiere iniciar otra partida. No es
   posible asegurar qué contenido vio su jugador. Una copia dañada o de versión
   desconocida también devuelve `409`, sin recurrir al banco como alternativa.
@@ -354,8 +436,9 @@ Compatibilidad explícita en el detalle de historial:
 El downgrade se bloquea si cualquier sesión conserva una copia no nula, para
 evitar perder esta garantía. Requiere un plan explícito de archivo previo;
 no elimina sesiones automáticamente. Las claves foráneas actuales siguen
-vigentes: esto no habilita borrado físico ni incorpora edición, eliminación o
-reanudación de partidas. No protege frente a alteraciones directas de las
+vigentes: esto no habilita borrado físico, eliminación ni reanudación de
+partidas. La edición del banco se ofrece por la ruta docente descrita arriba.
+No protege frente a alteraciones directas de las
 propias copias o registros por un administrador de la base de datos, ni congela
 el código de las reglas para cambios futuros del motor.
 

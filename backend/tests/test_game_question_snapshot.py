@@ -136,11 +136,13 @@ def test_legacy_open_games_fail_closed_and_completed_history_is_preserved(client
     answer = {"question_id": question.id, **({"selected_index": 1} if mode == "TRIVIAL" else {"text_answer": "Luna"})}
     response = client.post(f"/game/submit/{session.id}", json={"answers": [answer]}, headers=auth_headers)
     assert response.status_code == 409
-    assert "antigua" in response.json()["detail"]
+    assert response.json()["detail"]["code"] == "LEGACY_SESSION_NO_SNAPSHOT"
+    assert response.json()["detail"]["message"] == "Esta partida se inició con una versión anterior y ya no puede continuarse. Puedes empezar una nueva"
     db.refresh(session)
     assert session.question_snapshot is None and not session.is_completed and session.score == 0
     assert list(db.scalars(select(AnswerLog))) == []
     assert client.get(f"/game/history/{session.id}", headers=auth_headers).json()["question_content_source"] == "legacy"
+    assert client.get(f"/game/history/{session.id}", headers=auth_headers).json()["continuation_error_code"] == "LEGACY_SESSION_NO_SNAPSHOT"
     # Legacy completed games only have the content captured at correction time.
     session.is_completed = True
     session.score = 1
@@ -157,6 +159,7 @@ def test_legacy_open_games_fail_closed_and_completed_history_is_preserved(client
     assert before["answer_logs"][0]["question_text"] == "Legacy saved text"
     assert before["content_context"] is None
     assert before["question_content_source"] == "legacy"
+    assert before["continuation_error_code"] is None
 
 
 @pytest.mark.parametrize("damage", ["missing", "version", "id", "topic", "mode", "duplicate", "field", "missing_version"])
@@ -175,6 +178,7 @@ def test_snapshot_corruption_never_falls_back_to_bank(client, db, topic, auth_he
     db.commit()
     result = client.post(f"/game/submit/{session.id}", json={"answers": [{"question_id": question.id, "selected_index": 1}]}, headers=auth_headers)
     assert result.status_code == 409
+    assert isinstance(result.json()["detail"], str)  # Other conflicts are not legacy-session errors.
     db.refresh(session)
     assert not session.is_completed and session.score == 0
     assert list(db.scalars(select(AnswerLog))) == []
