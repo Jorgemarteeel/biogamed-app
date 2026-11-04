@@ -26,6 +26,12 @@ class GameSession(Base):
     content_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     # Private: contains solutions. Never serialize this column to a player response.
     question_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True, deferred=True)
+    shared_match_id: Mapped[int | None] = mapped_column(ForeignKey("pasapalabra_matches.id"), nullable=True, index=True)
+    format_key: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    match_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    completion_reason: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    wrong_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pending_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     game_mode: Mapped[str] = mapped_column(
         String(20), default="TRIVIAL", server_default="TRIVIAL", nullable=False

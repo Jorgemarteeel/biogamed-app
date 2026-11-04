@@ -85,3 +85,20 @@ test("specific legacy incompatibility shows preparation and history actions with
   const completed = history({ ...game, continuation_error_code: null });
   assert.doesNotMatch(completed, /Preparar otra partida/);
 });
+
+test("shared abandoned history retains personal correction and separates pending questions", () => {
+  const shared = { ...game, game_mode: "PASAPALABRA", shared_match_id: 2,
+    is_completed: false, match_status: "FINISHED", completion_reason: "ABANDONMENT",
+    wrong_count: 2, pending_count: 17, question_ids: Array.from({ length: 20 }, (_, i) => i + 1),
+    answer_logs: [{ question_id: 1, question_text: "Pista conservada", question_type: "PASAPALABRA",
+      text_answer: "Respuesta personal", exact_word: "Solución conservada", accepted_answers: [], is_correct: true }] };
+  const html = history(shared);
+  assert.match(html, /Finalizada por abandono/);
+  assert.match(html, /1 aciertos · 2 fallos · 17 pendientes/);
+  assert.match(html, /Pista conservada/);
+  assert.doesNotMatch(html, /No hay una corrección guardada/);
+  const card = renderToStaticMarkup(React.createElement(SummaryCard, { game: shared, topicName: "Tema" }));
+  assert.match(card, /17 pendientes/);
+  assert.match(card, /× 2 errores/);
+  assert.doesNotMatch(card, /19 errores|Sin puntuación disponible/);
+});

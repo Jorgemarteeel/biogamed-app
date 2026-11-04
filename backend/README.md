@@ -1,5 +1,14 @@
 # Base de datos y banco de preguntas
 
+## Pasapalabra: motor compartido y API local
+
+Disponible la API local de dos jugadores, 20 preguntas por jugador y diez
+minutos individuales, con reloj de servidor, operaciones idempotentes y
+persistencia. La interfaz jugable y las salas en línea siguen pendientes.
+Contratos, reglas, migración, permisos, historial y comprobaciones:
+[Pasapalabra local](docs/pasapalabra-local.md). Esta sección describe el flujo
+nuevo; las referencias posteriores al envío completo describen el flujo heredado.
+
 ## Retirada y reactivación de preguntas
 
 `Question.is_active` conserva el contenido y controla su elegibilidad para

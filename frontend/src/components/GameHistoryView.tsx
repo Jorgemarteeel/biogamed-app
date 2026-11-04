@@ -59,7 +59,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
   const dateLabel = date && !Number.isNaN(date.getTime())
     ? new Intl.DateTimeFormat("es-ES", { dateStyle: "long", timeStyle: "short", timeZone: "Atlantic/Canary" }).format(date)
     : "Fecha no disponible";
-  const answers = game?.is_completed ? historyReviewItems(game) : [];
+  const answers = game && (game.is_completed || game.match_status === "FINISHED") ? historyReviewItems(game) : [];
 
   return <div className="min-h-screen bg-background text-slate-900">
     <header className="site-header">
@@ -80,12 +80,12 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
           <button onClick={() => { setState("loading"); setAttempt((value) => value + 1); }} className="button-secondary mt-4">Reintentar</button>
         </>}
         {state === "ready" && game && <>
-          <p className="text-xs font-bold uppercase tracking-widest text-sky-800">{game.is_completed ? "Partida completada" : "Sin finalizar"}</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-sky-800">{game.completion_reason === "ABANDONMENT" ? "Finalizada por abandono" : game.is_completed ? "Partida completada" : game.shared_match_id != null ? "En curso" : "Sin finalizar"}</p>
           <h2 className="mt-3 text-2xl font-black text-blue-950">{mode}</h2>
           <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
             <div><dt className="font-semibold text-slate-600">{game.content_context?.topic_name ? "Temática al iniciar" : "Temática del catálogo actual (nombre original no registrado)"}</dt><dd className="mt-1 break-words text-blue-950">{game.content_context?.topic_name ?? topicName ?? `Temática ${game.topic_id}`}</dd></div>
             <div><dt className="font-semibold text-slate-600">Fecha de inicio</dt><dd className="mt-1 text-blue-950">{dateLabel}</dd></div>
-            <div><dt className="font-semibold text-slate-600">Puntuación</dt><dd className="mt-1 text-blue-950">{game.is_completed ? `${game.score} de ${game.question_ids.length} aciertos` : "No disponible: partida sin finalizar"}</dd></div>
+            <div><dt className="font-semibold text-slate-600">Puntuación</dt><dd className="mt-1 text-blue-950">{game.shared_match_id != null ? `${game.score} aciertos · ${game.wrong_count} fallos · ${game.pending_count} pendientes` : game.is_completed ? `${game.score} de ${game.question_ids.length} aciertos` : "No disponible: partida sin finalizar"}</dd></div>
           </dl>
           {game.continuation_error_code === LEGACY_SESSION_NO_SNAPSHOT && !game.is_completed
             ? <LegacySessionNotice topicId={game.topic_id} mode={game.game_mode} />
@@ -98,7 +98,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
             <div><dt className="font-semibold text-slate-600">Categoría al iniciar</dt><dd className="mt-1 break-words text-blue-950">{context.category}</dd></div>
             <div><dt className="font-semibold text-slate-600">Dificultad al iniciar</dt><dd className="mt-1 text-blue-950">{context.difficulty}</dd></div>
           </dl> : <p className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">Esta partida es anterior al registro del contexto de categoría y dificultad; no consta esa clasificación histórica.</p>}
-          {!game.is_completed ? <p className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">La partida quedó sin finalizar. No hay una corrección guardada ni se puede reanudar desde aquí.</p>
+          {game.shared_match_id != null ? <><p className="mt-8 text-sm text-slate-600">Partida local compartida. Las pendientes no cuentan como fallos.{game.match_status === "RUNNING" && " El reloj sigue corriendo aunque cierres esta página."}</p><GameReview items={answers} /></> : !game.is_completed ? <p className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">La partida quedó sin finalizar. No hay una corrección guardada ni se puede reanudar desde aquí.</p>
             : <>
               {(answers.length === 0 || answers.length < game.question_ids.length) && <p className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">{answers.length === 0 ? "Esta partida no conserva respuestas detalladas; no es posible mostrar su corrección." : `Solo se conservan ${answers.length} de ${game.question_ids.length} respuestas detalladas.`}</p>}
               <GameReview items={answers} />

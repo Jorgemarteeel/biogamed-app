@@ -1,6 +1,11 @@
 import type { GameHistorySummary } from "@/services/api";
 
 export function gameSummary(game: GameHistorySummary) {
+  if (game.shared_match_id != null) return {
+    correct: game.score,
+    total: game.question_ids.length,
+    errors: game.wrong_count ?? null,
+  };
   const total = game.question_ids.length;
   const scoreKnown = game.is_completed && Number.isInteger(game.score) && game.score >= 0
     && (game.content_context !== null || game.score > 0);

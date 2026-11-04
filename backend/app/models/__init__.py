@@ -9,9 +9,10 @@ from app.models.category import Category
 from app.models.question import Question
 from app.models.game_session import GameSession
 from app.models.answer_log import AnswerLog
+from app.models.pasapalabra import PasapalabraMatch, MatchParticipant, MatchQuestion, MatchCommand
 
 __all__ = [
     "Base", "User", "UserRole", "Topic", "Subject", "ContentBlock",
     "Category", "Question", "GameSession",
-    "AnswerLog",
+    "AnswerLog", "PasapalabraMatch", "MatchParticipant", "MatchQuestion", "MatchCommand",
 ]

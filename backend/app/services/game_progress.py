@@ -15,7 +15,8 @@ def _positive_id(value):
 
 def _classification(session):
     ids = session.question_ids
-    if (not isinstance(ids, list) or not 1 <= len(ids) <= 10
+    shared = session.shared_match_id is not None
+    if (not isinstance(ids, list) or not (len(ids) == 20 if shared else 1 <= len(ids) <= 10)
             or not all(_positive_id(value) for value in ids)
             or len(set(ids)) != len(ids)):
         return None
@@ -66,9 +67,17 @@ def _classification(session):
 
 
 def _complete_answers(session, rows):
-    if len(rows) != len(session.question_ids):
-        return False
-    if {row.question_id for row in rows} != set(session.question_ids):
+    if session.shared_match_id is not None:
+        if (session.completion_reason != "NORMAL" or session.format_key != "pasapalabra-local-v1"
+                or session.match_status != "FINISHED" or session.wrong_count is None
+                or session.pending_count is None
+                or min(session.score, session.wrong_count, session.pending_count) < 0
+                or session.score + session.wrong_count + session.pending_count != len(session.question_ids)
+                or len(rows) != session.score + session.wrong_count
+                or len({r.question_id for r in rows}) != len(rows)
+                or not {r.question_id for r in rows} <= set(session.question_ids)):
+            return False
+    elif len(rows) != len(session.question_ids) or {r.question_id for r in rows} != set(session.question_ids):
         return False
     for row in rows:
         if row.question_type != session.game_mode or type(row.is_correct) is not bool:
@@ -124,7 +133,7 @@ def get_personal_best_marks(db: Session, current_user: User):
             continue
         category_id, difficulty, historical_name = classification
         key = (session.game_mode, session.topic_id, category_id,
-               difficulty, len(session.question_ids))
+               difficulty, len(session.question_ids), session.format_key or "legacy")
         groups[key].append((session, historical_name))
     if not groups:
         return []
@@ -135,7 +144,7 @@ def get_personal_best_marks(db: Session, current_user: User):
     categories = dict(db.execute(select(Category.id, Category.name).where(
         Category.id.in_(category_ids))).all())
     marks = []
-    for (mode, topic_id, category_id, difficulty, total), candidates in sorted(groups.items()):
+    for (mode, topic_id, category_id, difficulty, total, format_key), candidates in sorted(groups.items()):
         ordered = sorted(candidates, key=lambda item: (item[0].created_at, item[0].id))
         best_score = max(session.score for session, _ in candidates)
         tied = [(session, name) for session, name in candidates if session.score == best_score]
@@ -145,6 +154,7 @@ def get_personal_best_marks(db: Session, current_user: User):
         topic_name = historical_topic if historical_topic is not None else topics.get(topic_id)
         marks.append({
             "game_mode": mode, "topic_id": topic_id,
+            "format_key": None if format_key == "legacy" else format_key,
             "topic_name": topic_name,
             "topic_name_source": ("historical" if historical_topic is not None else "current" if topic_name else None),
             "category_id": category_id, "category_name": category_name,

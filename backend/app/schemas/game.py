@@ -115,6 +115,12 @@ class GameHistorySummary(BaseModel):
     created_at: datetime
     question_ids: list[int]
     content_context: ContentContext | None = None
+    shared_match_id: int | None = None
+    format_key: str | None = None
+    match_status: str | None = None
+    completion_reason: str | None = None
+    wrong_count: int | None = None
+    pending_count: int | None = None
 
 
 class GameHistoryDetail(GameHistorySummary):
@@ -125,7 +131,7 @@ class GameHistoryDetail(GameHistorySummary):
     @field_validator("answer_logs")
     @classmethod
     def hide_unfinished_corrections(cls, value, info: ValidationInfo):
-        return value if info.data.get("is_completed") else []
+        return value if info.data.get("is_completed") or info.data.get("match_status") == "FINISHED" else []
 
 
 class ActivityCounts(BaseModel):
@@ -143,6 +149,7 @@ class ComparableResult(BaseModel):
 
 class PersonalBestMark(BaseModel):
     game_mode: QuestionType
+    format_key: str | None = None
     topic_id: int
     topic_name: str | None
     topic_name_source: str | None = None

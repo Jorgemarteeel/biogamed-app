@@ -369,6 +369,12 @@ export interface GameHistorySummary {
   created_at: string;
   question_ids: number[];
   content_context: GameContentContext | null;
+  shared_match_id?: number | null;
+  format_key?: string | null;
+  match_status?: "RUNNING" | "FINISHED" | null;
+  completion_reason?: "NORMAL" | "ABANDONMENT" | null;
+  wrong_count?: number | null;
+  pending_count?: number | null;
 }
 
 export interface AnswerHistory {
@@ -407,6 +413,7 @@ export interface ActivityCounts {
 }
 
 export interface PersonalBestMark {
+  format_key?: string | null;
   game_mode: GameMode;
   topic_id: number;
   topic_name: string | null;

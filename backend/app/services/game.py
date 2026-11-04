@@ -121,6 +121,8 @@ def submit_game_session(
             raise HTTPException(404, "La sesión no existe.")
         if session.user_id != current_user.id:
             raise HTTPException(403, "La sesión pertenece a otro usuario.")
+        if session.shared_match_id is not None:
+            raise HTTPException(409, {"code": "SHARED_MATCH_REQUIRES_COMMANDS"})
         if session.is_completed:
             raise HTTPException(409, "La sesión ya está completada.")
         if session.game_mode not in {"TRIVIAL", "PASAPALABRA"}:
@@ -192,12 +194,16 @@ def submit_game_session(
 
 
 def get_game_history(db: Session, current_user: User, skip: int, limit: int):
+    from app.services.pasapalabra import reconcile_for_user
+    reconcile_for_user(db, current_user)
     return list(db.scalars(select(GameSession).where(
         GameSession.user_id == current_user.id,
     ).order_by(GameSession.created_at.desc(), GameSession.id.desc()).offset(skip).limit(limit)))
 
 
 def get_game_progress(db: Session, current_user: User):
+    from app.services.pasapalabra import reconcile_for_user
+    reconcile_for_user(db, current_user)
     rows = db.execute(select(
         GameSession.game_mode,
         GameSession.is_completed,
@@ -219,6 +225,8 @@ def get_game_progress(db: Session, current_user: User):
 
 
 def get_game_history_detail(db: Session, current_user: User, session_id: int):
+    from app.services.pasapalabra import reconcile_for_user
+    reconcile_for_user(db, current_user)
     session = db.scalar(select(GameSession).where(
         GameSession.id == session_id, GameSession.user_id == current_user.id,
     ))

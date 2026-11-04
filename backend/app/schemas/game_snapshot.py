@@ -25,3 +25,10 @@ class QuestionSnapshot(BaseModel):
 
     version: Literal[1]
     questions: list[StoredQuestion] = Field(min_length=1, max_length=10)
+
+
+class SharedQuestionSnapshot(BaseModel):
+    """Private local-match history contract; legacy and Trivial limits stay unchanged."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+    version: Literal[2]
+    questions: list[StoredQuestion] = Field(min_length=20, max_length=20)

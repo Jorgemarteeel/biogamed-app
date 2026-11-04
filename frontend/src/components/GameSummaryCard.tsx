@@ -28,12 +28,13 @@ export default function GameSummaryCard({ game, topicName, compact = false }: { 
         {!context && <p className="mt-1 text-sm leading-5 text-slate-600">Clasificación histórica no disponible</p>}
       </div>
     </div>
-    {game.is_completed ? <>
+    {game.is_completed || game.shared_match_id != null ? <>
+      {game.shared_match_id != null && <p className="mt-4 text-sm font-bold text-slate-600">{game.completion_reason === "ABANDONMENT" ? "Finalizada por abandono" : game.match_status === "FINISHED" ? "Finalizada" : "En curso"} · {game.pending_count ?? 0} pendientes</p>}
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-bold">
         {summary.correct !== null ? <span className="text-emerald-800">✓ {summary.correct} {correctLabel}</span> : <span className="text-slate-600">Aciertos no disponibles</span>}
         {summary.errors !== null && <span className="text-red-800">× {summary.errors} {errorLabel}</span>}
       </div>
-      {summary.total !== null && <div className="mt-3" role="img" aria-label={`${summary.correct} ${correctLabel} de ${summary.total} ${questionLabel}, ${summary.errors} ${errorLabel}`}>
+      {summary.total !== null && game.shared_match_id == null && <div className="mt-3" role="img" aria-label={`${summary.correct} ${correctLabel} de ${summary.total} ${questionLabel}, ${summary.errors} ${errorLabel}`}>
         <div className="h-1.5 overflow-hidden rounded-full bg-red-200"><div className="h-full rounded-full bg-emerald-600" style={{ width: `${(summary.correct! / summary.total) * 100}%` }} /></div>
       </div>}
       <Link href={`/partidas/${game.id}`} className="text-link mt-3 inline-flex min-h-11 items-center text-sm">Revisar respuestas</Link>

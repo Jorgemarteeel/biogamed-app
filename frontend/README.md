@@ -2,6 +2,15 @@
 
 Aplicación Next.js con React, TypeScript y Tailwind CSS.
 
+## Historial de Pasapalabra compartido
+
+El backend incorpora el motor y la API local; la tarjeta sigue «En preparación»
+y no existe todavía interfaz jugable ni salas. El historial acepta los campos
+aditivos de las sesiones compartidas: muestra aciertos, fallos y pendientes
+por separado y distingue en curso y finalización por abandono, conservando
+el comportamiento de Trivial y partidas antiguas. No interpreta pendientes
+como errores. Contratos: [API local](../backend/docs/pasapalabra-local.md).
+
 ## Estado de preguntas del banco docente
 
 El listado por categoría muestra «Activa» o «Retirada» y permite retirar o
