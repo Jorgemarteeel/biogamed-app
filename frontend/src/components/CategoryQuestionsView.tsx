@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,15 +9,15 @@ import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
 import CreateQuestionForm from "@/components/CreateQuestionForm";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE } from "@/lib/subjects";
-import { getCategoryDetail, getCategoryQuestions, getCurrentUser,
+import { getCategoryDetail, getCategoryQuestions, getCurrentUser, setCategoryQuestionState,
   type CategoryDetail, type CategoryQuestion, type CategoryQuestionFilters,
-  type GameMode } from "@/services/api";
+  type GameMode, type QuestionStateFilter } from "@/services/api";
 
 type ViewState = "loading" | "ready" | "error" | "forbidden" | "missing" | "invalid";
 
-export default function CategoryQuestionsView({ subjectId, blockId, categoryId, page, mode, level,
-  invalidFilters }: { subjectId: number; blockId: number; categoryId: number; page: number;
-  mode: GameMode | ""; level: string; invalidFilters: boolean }) {
+export default function CategoryQuestionsView({ subjectId, blockId, categoryId, page, mode, level, questionState = "all",
+  invalidFilters, adjusted = false }: { subjectId: number; blockId: number; categoryId: number; page: number;
+  mode: GameMode | ""; level: string; questionState?: QuestionStateFilter; invalidFilters: boolean; adjusted?: boolean }) {
   const router = useRouter();
   const [state, setState] = useState<ViewState>("loading");
   const [category, setCategory] = useState<CategoryDetail | null>(null);
@@ -26,10 +26,25 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
   const [attempt, setAttempt] = useState(0);
   const [selectedMode, setSelectedMode] = useState(mode);
   const [selectedLevel, setSelectedLevel] = useState(level);
+  const [selectedState, setSelectedState] = useState(questionState);
+  const [pendingRetirement, setPendingRetirement] = useState<CategoryQuestion | null>(null);
+  const [changingId, setChangingId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState("");
+  const sendingState = useRef(false);
   const [editing, setEditing] = useState<CategoryQuestion | null>(null);
   const [notice, setNotice] = useState("");
+  const adjustPage = useRef(false);
   const returnFocusId = useRef<number | null>(null);
   const base = `/gestion/asignaturas/${subjectId}/bloques/${blockId}/categorias/${categoryId}`;
+
+  const urlFor = useCallback((nextPage: number, nextMode = mode, nextLevel = level, nextState = questionState) => {
+    const query = new URLSearchParams();
+    query.set("state", nextState);
+    if (nextMode) query.set("mode", nextMode);
+    if (nextLevel) query.set("level", nextLevel);
+    if (nextPage > 1) query.set("page", String(nextPage));
+    return `${base}${query.size ? `?${query}` : ""}`;
+  }, [base, mode, level, questionState]);
 
   useEffect(() => {
     if (!window.localStorage.getItem("token")) { router.replace("/login"); return; }
@@ -43,7 +58,7 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
           setState("missing"); return;
         }
         if (invalidFilters) { setState("invalid"); return; }
-        const filters: CategoryQuestionFilters = {};
+        const filters: CategoryQuestionFilters = { state: questionState };
         if (mode) filters.mode = mode;
         if (level === "unknown") filters.difficulty_unknown = true;
         else if (level) filters.difficulty = Number(level);
@@ -53,6 +68,10 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
             (page - 1) * SUBJECTS_PAGE_SIZE, SUBJECTS_PAGE_SIZE + 1, filters),
         ]);
         if (!active || !window.localStorage.getItem("token")) return;
+        if (received.length === 0 && page > 1 && adjustPage.current) {
+          router.replace(`${urlFor(1)}&adjusted=1`);
+          return;
+        }
         setCategory(detail);
         setQuestions(received.slice(0, SUBJECTS_PAGE_SIZE));
         setHasMore(received.length > SUBJECTS_PAGE_SIZE);
@@ -75,24 +94,40 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
     }
     void load();
     return () => { active = false; };
-  }, [attempt, blockId, categoryId, invalidFilters, level, mode, page, router, subjectId]);
+  }, [attempt, blockId, categoryId, invalidFilters, level, mode, page, questionState, router, subjectId, urlFor]);
 
   function retry() { setState("loading"); setAttempt((value) => value + 1); }
-  function urlFor(nextPage: number, nextMode = mode, nextLevel = level) {
-    const query = new URLSearchParams();
-    if (nextMode) query.set("mode", nextMode);
-    if (nextLevel) query.set("level", nextLevel);
-    if (nextPage > 1) query.set("page", String(nextPage));
-    return `${base}${query.size ? `?${query}` : ""}`;
-  }
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    router.push(urlFor(1, selectedMode, selectedLevel));
+    router.push(urlFor(1, selectedMode, selectedLevel, selectedState));
   }
   function logout() {
     window.localStorage.removeItem("token");
     setCategory(null); setQuestions([]); setState("loading");
     router.replace("/login");
+  }
+
+  async function changeState(question: CategoryQuestion, isActive: boolean) {
+    if (sendingState.current) return;
+    sendingState.current = true;
+    setChangingId(question.id); setActionError(""); setNotice("");
+    try {
+      const saved = await setCategoryQuestionState(subjectId, blockId, categoryId, question.id, isActive);
+      const excluded = questionState !== "all" && (questionState === "active") !== saved.is_active;
+      setNotice(`Pregunta ${question.id} ${saved.is_active ? "reactivada" : "retirada"}.${excluded ? " Deja de coincidir con el filtro actual; se ha ajustado el listado y la paginación." : " Listado actualizado."}`);
+      setPendingRetirement(null);
+      adjustPage.current = true;
+      returnFocusId.current = question.id;
+      setAttempt((value) => value + 1);
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 401) return;
+      setActionError("No se pudo confirmar el estado. Puedes repetir la misma acción de forma segura o actualizar el listado para comprobarlo.");
+    } finally { sendingState.current = false; setChangingId(null); }
+  }
+  function cancelRetirement() {
+    const id = pendingRetirement?.id;
+    setPendingRetirement(null); setActionError("");
+    requestAnimationFrame(() => document.getElementById(`state-${id}`)?.focus());
   }
 
   function closeEditor(saved: boolean, uncertain = false) {
@@ -110,10 +145,12 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
       <h1 className="mt-2 break-words text-3xl font-black text-blue-950">{category?.name ?? "Preguntas de la categoría"}</h1>
       {category?.description && <p className="mt-2 break-words text-slate-600">{category.description}</p>}
+      {actionError && <p role="alert" className="notice-error mt-4">{actionError}<button type="button" disabled={changingId !== null} className="button-secondary ml-3" onClick={retry}>Actualizar listado</button></p>}
+      {adjusted && !notice && <p role="status" className="notice-success mt-4">Estado actualizado. La pregunta deja de coincidir con el filtro actual; se muestra la primera página disponible con los mismos filtros.</p>}
       {notice && <p role="status" className="notice-success mt-4">{notice}</p>}
       {category && (state === "ready" || state === "error") && <CreateQuestionForm
         key={`${subjectId}-${blockId}-${categoryId}-${editing?.id ?? "new"}`} subjectId={subjectId} blockId={blockId}
-        categoryId={categoryId} mode={mode} level={level} question={editing ?? undefined} onClose={closeEditor}
+        categoryId={categoryId} questionState={questionState} disabled={changingId !== null || pendingRetirement !== null} mode={mode} level={level} question={editing ?? undefined} onClose={closeEditor}
         onRefresh={() => setAttempt((value) => value + 1)} />}
       {state === "loading" && <p role="status" className="mt-6 rounded-2xl bg-white p-6">Cargando preguntas…</p>}
       {state === "forbidden" && <p role="alert" className="notice-warning mt-6">Acceso no permitido. La consulta de preguntas está disponible para profesores y administradores.</p>}
@@ -125,15 +162,25 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
         <form onSubmit={applyFilters} className="mt-7 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Filtrar preguntas">
           <div className="min-w-44 flex-1"><label htmlFor="question-mode" className="form-label">Modalidad</label><select id="question-mode" value={selectedMode} onChange={(event) => setSelectedMode(event.target.value as GameMode | "")} className="form-input"><option value="">Ambas modalidades</option><option value="TRIVIAL">Trivial</option><option value="PASAPALABRA">Pasapalabra</option></select></div>
           <div className="min-w-44 flex-1"><label htmlFor="question-level" className="form-label">Dificultad</label><select id="question-level" value={selectedLevel} onChange={(event) => setSelectedLevel(event.target.value)} className="form-input"><option value="">Sin filtrar (incluye sin clasificar)</option>{[1, 2, 3, 4].map((value) => <option key={value} value={value}>Nivel {value}</option>)}<option value="unknown">Solo sin clasificar</option></select></div>
-          <button type="submit" className="button-secondary">Aplicar filtros</button>
+          <div className="min-w-44 flex-1"><label htmlFor="question-state" className="form-label">Estado</label><select id="question-state" value={selectedState} onChange={(event) => setSelectedState(event.target.value as QuestionStateFilter)} className="form-input"><option value="all">Todas</option><option value="active">Activas</option><option value="retired">Retiradas</option></select></div>
+          <button type="submit" disabled={changingId !== null} className="button-secondary">Aplicar filtros</button>
         </form>
         <section aria-labelledby="question-list-heading" className="mt-8">
           <h2 id="question-list-heading" tabIndex={-1} className="text-xl font-bold text-blue-950">Preguntas</h2>
-          {questions.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">{page > 1 ? "No hay preguntas en esta página." : mode || level ? "No hay preguntas que coincidan con estos filtros." : "Todavía no hay preguntas en esta categoría."}</p>
+          {questions.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">{page > 1 ? "No hay preguntas en esta página." : mode || level || questionState !== "all" ? "No hay preguntas que coincidan con estos filtros." : "Todavía no hay preguntas en esta categoría."}</p>
             : <ol className="mt-4 space-y-4">{questions.map((question) => <li key={question.id} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <p className="break-words text-sm font-semibold text-sky-800">{question.question_type === "TRIVIAL" ? "Trivial" : "Pasapalabra"} · {question.difficulty === null ? "Dificultad sin clasificar" : `Nivel ${question.difficulty}`} · ID {question.id}</p>
+              <p className="break-words text-sm font-semibold text-sky-800">{question.question_type === "TRIVIAL" ? "Trivial" : "Pasapalabra"} · {question.difficulty === null ? "Dificultad sin clasificar" : `Nivel ${question.difficulty}`} · ID {question.id} · {question.is_active ? "Activa" : "Retirada"}</p>
               <h3 className="mt-2 break-words text-lg font-bold text-blue-950">{question.text}</h3>
-              <button id={`edit-${question.id}`} type="button" className="button-secondary mt-3" aria-label={`Editar pregunta ${question.id}`} onClick={() => { setNotice(""); setEditing(question); }}>Editar</button>
+              <button id={`edit-${question.id}`} type="button" className="button-secondary mt-3" disabled={changingId !== null || pendingRetirement !== null} aria-label={`Editar pregunta ${question.id}`} onClick={() => { setNotice(""); setEditing(question); }}>Editar</button>
+              <button id={`state-${question.id}`} type="button" className="button-secondary mt-3 ml-3" disabled={changingId !== null || pendingRetirement !== null}
+                aria-label={`${question.is_active ? "Retirar" : "Reactivar"} pregunta ${question.id}`}
+                onClick={() => { setActionError(""); if (question.is_active) { setPendingRetirement(question); requestAnimationFrame(() => document.getElementById("cancel-retirement")?.focus()); } else void changeState(question, true); }}>
+                {changingId === question.id ? "Guardando…" : question.is_active ? "Retirar" : "Reactivar"}</button>
+              {pendingRetirement?.id === question.id && <div role="group" aria-labelledby="retirement-warning" className="notice-warning mt-4" onKeyDown={(event) => { if (event.key === "Escape" && changingId === null) cancelRetirement(); }}>
+                <p id="retirement-warning">Retirar la pregunta {question.id}: dejará de aparecer en partidas nuevas. Las partidas anteriores, sus correcciones y el historial se conservarán.</p>
+                <div className="mt-3 flex flex-wrap gap-3"><button type="button" className="button-primary" disabled={changingId !== null} onClick={() => void changeState(question, false)}>Confirmar retirada</button>
+                <button id="cancel-retirement" type="button" className="button-secondary" disabled={changingId !== null} onClick={cancelRetirement}>Cancelar</button></div>
+              </div>}
               <p className="mt-2 break-words text-sm text-slate-600">Temática de juego (Topic): {question.topic.name} · ID {question.topic_id}</p>
               {question.question_type === "TRIVIAL" ? <div className="mt-4"><p className="font-semibold text-blue-950">Opciones</p>{question.options ? <ol className="mt-2 space-y-1 list-inside list-[upper-alpha]">{question.options.map((option, index) => <li key={index} className="break-words">{option}{index === question.correct_option_index && <strong className="ml-2 text-green-800">Correcta</strong>}</li>)}</ol> : <p className="text-sm text-slate-600">No constan opciones.</p>}{question.options && question.correct_option_index === null && <p className="mt-2 text-sm text-slate-600">No consta la opción correcta.</p>}</div>
                 : <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2"><div><dt className="font-semibold">Letra</dt><dd>{question.letter ?? "No consta"}</dd></div><div><dt className="font-semibold">Solución</dt><dd className="break-words">{question.exact_word ?? "No consta"}</dd></div><div className="sm:col-span-2"><dt className="font-semibold">Respuestas alternativas</dt><dd className="break-words">{question.accepted_answers === null ? "No constan datos" : question.accepted_answers.length ? question.accepted_answers.join(", ") : "Ninguna registrada"}</dd></div></dl>}

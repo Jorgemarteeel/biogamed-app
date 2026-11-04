@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy.orm import Session
 
@@ -6,7 +8,7 @@ from app.dependencies import require_content_staff
 from app.models import Category, ContentBlock, Question, Subject, User
 from app.schemas.category import (BlockDetailResponse, CategoryCreate, CategoryDetailResponse, CategoryResponse,
                                   EmptyLinkRequest, UnassignedCategoryResponse)
-from app.schemas.question import CategoryQuestionCreate, CategoryQuestionEdit, CategoryQuestionResponse, QuestionType
+from app.schemas.question import CategoryQuestionCreate, CategoryQuestionEdit, CategoryQuestionResponse, QuestionStateUpdate, QuestionType
 from app.schemas.content_block import ContentBlockCreate, ContentBlockResponse
 from app.schemas.subject import SubjectCreate, SubjectResponse
 from app.services import subject as subject_service
@@ -125,6 +127,19 @@ def edit_category_question(
     return question_service.edit_category_question(db, subject_id, block_id, category_id, question_id, payload)
 
 
+@router.put("/{subject_id}/blocks/{block_id}/categories/{category_id}/questions/{question_id}/state",
+            response_model=CategoryQuestionResponse)
+def set_category_question_state(
+    payload: QuestionStateUpdate,
+    subject_id: int = Path(ge=1), block_id: int = Path(ge=1), category_id: int = Path(ge=1),
+    question_id: int = Path(ge=1), db: Session = Depends(get_db),
+    current_user: User = Depends(require_content_staff),
+) -> Question:
+    return question_service.set_category_question_state(
+        db, subject_id, block_id, category_id, question_id, payload.is_active,
+    )
+
+
 @router.get("/{subject_id}/blocks/{block_id}/categories/{category_id}/questions",
             response_model=list[CategoryQuestionResponse])
 def list_category_questions(
@@ -133,11 +148,12 @@ def list_category_questions(
     mode: QuestionType | None = Query(default=None),
     difficulty: int | None = Query(default=None, ge=1, le=4),
     difficulty_unknown: bool = Query(default=False),
+    state: Literal["active", "retired", "all"] = Query(default="all"),
     db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
 ) -> list[Question]:
     return question_service.get_questions_by_category(
         db, subject_id, block_id, category_id, skip, limit, mode,
-        difficulty, difficulty_unknown,
+        difficulty, difficulty_unknown, state,
     )
 
 

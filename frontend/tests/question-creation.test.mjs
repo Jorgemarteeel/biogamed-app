@@ -36,7 +36,7 @@ test("authenticated creation uses category route; topic selector loads all pages
     assert.deepEqual(JSON.parse(calls[2].data), payload);
   } finally { client.default.defaults.adapter = adapter; delete global.window; }
 });
-function harness(question) {
+function harness(question, questionState = "all") {
   const states = []; let cursor = 0;
   const effects = [], calls = [];
   let resolve, reject;
@@ -62,7 +62,7 @@ function harness(question) {
   let refreshed = 0;
   const closed = [];
   const closureDetails = [];
-  const render = () => { cursor = 0; return Form({ subjectId: 3, blockId: 7, categoryId: 9, mode: "TRIVIAL", level: "2", question, onClose: (saved, uncertain) => { closed.push(saved); closureDetails.push({ saved, uncertain }); }, onRefresh: () => refreshed++ }); };
+  const render = () => { cursor = 0; return Form({ subjectId: 3, blockId: 7, categoryId: 9, mode: "TRIVIAL", level: "2", question, questionState, onClose: (saved, uncertain) => { closed.push(saved); closureDetails.push({ saved, uncertain }); }, onRefresh: () => refreshed++ }); };
   function all(node) { return !node || typeof node !== "object" ? [] : [node, ...React.Children.toArray(node.props?.children).flatMap(all)]; }
   const find = (predicate) => all(render()).find(predicate);
   const change = (id, value) => find((n) => n.props?.id === id).props.onChange({ target: { value } });
@@ -160,4 +160,17 @@ test("closing after an unconfirmed save warns that the server might have persist
   assert.match(JSON.stringify(h.find((n) => n.props?.role === "alert" && n.props.className === "notice-warning").props.children), /podría haberse guardado/);
   h.find((n) => n.type === "button" && n.props.children === "Descartar cambios").props.onClick();
   assert.deepEqual(h.closureDetails, [{ saved: false, uncertain: true }]);
+});
+
+test("new active question warns when the current filter is retired", async () => {
+  const h = harness(undefined, "retired");
+  h.render(); h.effects.forEach(e => e()); await Promise.resolve();
+  h.change("create-topic", "19"); h.change("create-text", "Fictitious");
+  h.change("create-difficulty", "2"); h.change("create-correct", "0");
+  for (let i = 0; i < 4; i++) h.change(`create-option-${i}`, String(i));
+  const pending = h.find(n => n.type === "form").props.onSubmit({ preventDefault() {} });
+  assert.equal(h.calls[0][3].is_active, undefined);
+  h.resolve({ id: 81, is_active: true, question_type: "TRIVIAL", difficulty: 2, topic: { name: "Topic" } });
+  await pending;
+  assert.match(JSON.stringify(h.find(n => n.props?.role === "status").props.children), /filtros actuales excluyen/);
 });

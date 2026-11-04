@@ -1,5 +1,68 @@
 # Base de datos y banco de preguntas
 
+## Retirada y reactivación de preguntas
+
+`Question.is_active` conserva el contenido y controla su elegibilidad para
+partidas nuevas. La migración `e2b47c91a306` añade un booleano no nulo con
+valor predeterminado `true`, tanto en SQL como en el ORM: todas las preguntas
+previas y las nuevas quedan activas. La edición no modifica este estado.
+El downgrade se bloquea mientras existan preguntas retiradas, para evitar
+perder su estado inadvertidamente. No hay eliminación definitiva.
+
+`PUT /subjects/{subject_id}/blocks/{block_id}/categories/{category_id}/questions/{question_id}/state`
+recibe exclusivamente `{"is_active": false}` para retirar o
+`{"is_active": true}` para reactivar. Exige autenticación y rol actual
+`teacher` o `admin` mediante `require_content_staff`; valida toda la jerarquía
+y la pertenencia de la pregunta. Es idempotente, bloquea la fila durante la
+transacción y devuelve la pregunta docente con su estado. El booleano es
+estricto; valores nulos, cadenas, números y campos adicionales se rechazan.
+
+La consulta docente de categoría admite `state=active|retired|all` (por
+defecto `all`), combinado con modalidad, dificultad, sin clasificar y
+paginación. Sigue permitiendo consultar y editar las retiradas, con las
+soluciones reservadas a docentes. La consulta docente heredada por Topic
+también conserva acceso al banco completo.
+
+Selección de temáticas por modalidad, disponibilidad y creación de partidas
+comparten `playable_question_filter`: exige estado activo y los campos
+jugables actuales de cada modalidad. `selectable_questions` conserva los
+filtros de temática, categoría y dificultad. Retirar o reactivar no cambia
+copias de inicio, correcciones, puntuaciones ni historial, ni las reglas de
+juego. Las respuestas públicas siguen usando su esquema sin soluciones.
+
+Verificación del 4 de noviembre de 2026: 153 pruebas backend pertinentes
+aprobadas en SQLite en memoria (incluidos siete casos nuevos de retirada);
+una prueba nueva de migración y la prueba de compatibilidad de copias
+aprobaron en PostgreSQL desechable `test_biogamed_retirement`, en esquemas
+únicos con limpieza. Se comprobaron conservación de columnas previas,
+activación inicial, valor SQL por defecto, concordancia con el ORM y
+downgrade protegido. Para la prueba nueva, se exige explícitamente
+`TEST_RETIREMENT_POSTGRES_URL` con base PostgreSQL `test_biogamed_*`, sin
+fallback a la conexión habitual:
+
+```sh
+python -m pytest -q tests/test_question_retirement.py tests/test_question_retirement_migration.py
+```
+
+Antes de escribir se verificaron proyecto Docker `biogamed_docente_demo`,
+volumen independiente `biogamed_docente_demo_demo_data`, conexión efectiva a
+`biogamed_demo`, API `localhost:18004` y frontend `localhost:13004`. Tras probar
+la migración, se aplicó solo a esa demo. Una cuenta ficticia nueva realizó
+por HTTP retirada y reactivación repetidas, disponibilidad, rechazo de nuevos
+inicios, filtros y edición sin reactivar; la corrección e historial de las
+partidas anteriores conservaron su contenido original. Preguntas ficticias
+22 y 23; partidas 8–11, en ambas modalidades. La demo sigue disponible.
+No se escribió ni se migró la base habitual. Persiste el aviso previo de
+deprecación Starlette/httpx.
+
+La revisión de la interfaz de consulta, creación y edición docente anterior
+fue realizada y comunicada por el **usuario**, que la considera correcta.
+Se registra como revisión del usuario, sin repetirla ni atribuirla al agente.
+La nueva funcionalidad de retirada no tiene revisión visual: el navegador
+integrado devolvió `The browser access host is unavailable`. Las pruebas
+automatizadas y HTTP no sustituyen esa revisión; no se usó Opera GX ni
+cuentas personales.
+
 ## Organización académica de contenidos
 
 `Subject` (asignatura) contiene bloques `ContentBlock`; cada bloque puede

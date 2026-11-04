@@ -108,11 +108,14 @@ def get_questions_by_category(
     db: Session, subject_id: int, block_id: int, category_id: int,
     skip: int = 0, limit: int = 100, mode: str | None = None,
     difficulty: int | None = None, difficulty_unknown: bool = False,
+    state: str = "all",
 ) -> list[Question]:
     get_category(db, subject_id, block_id, category_id)
     if difficulty is not None and difficulty_unknown:
         raise HTTPException(422, "No se puede indicar difficulty junto con difficulty_unknown.")
     statement = select(Question).where(Question.category_id == category_id)
+    if state != "all":
+        statement = statement.where(Question.is_active.is_(state == "active"))
     if mode is not None:
         statement = statement.where(Question.question_type == mode)
     if difficulty is not None:
@@ -121,3 +124,21 @@ def get_questions_by_category(
         statement = statement.where(Question.difficulty.is_(None))
     return list(db.scalars(statement.options(selectinload(Question.topic))
                            .order_by(Question.id).offset(skip).limit(limit)).all())
+
+
+def set_category_question_state(db: Session, subject_id: int, block_id: int, category_id: int,
+                                question_id: int, is_active: bool) -> Question:
+    get_category(db, subject_id, block_id, category_id)
+    question = db.scalar(select(Question).where(
+        Question.id == question_id, Question.category_id == category_id,
+    ).with_for_update())
+    if question is None:
+        raise HTTPException(404, "La pregunta no existe en esta categoría.")
+    question.is_active = is_active
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(question)
+    return question

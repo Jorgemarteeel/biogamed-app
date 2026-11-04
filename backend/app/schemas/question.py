@@ -119,8 +119,15 @@ class QuestionUpdate(BaseModel):
         return value
 
 
+class QuestionStateUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    is_active: bool = Field(strict=True)
+
+
 class QuestionResponse(QuestionBase):
     id: int
+    is_active: bool
 
 
 class CategoryQuestionResponse(QuestionResponse):

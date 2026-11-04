@@ -61,6 +61,7 @@ export interface CategoryDetail extends Category {
 }
 
 export interface CategoryQuestion {
+  is_active: boolean;
   id: number;
   category_id: number;
   topic_id: number;
@@ -75,7 +76,10 @@ export interface CategoryQuestion {
   accepted_answers: string[] | null;
 }
 
+export type QuestionStateFilter = "active" | "retired" | "all";
+
 export interface CategoryQuestionFilters {
+  state?: QuestionStateFilter;
   mode?: GameMode;
   difficulty?: number;
   difficulty_unknown?: boolean;
@@ -97,6 +101,14 @@ export async function editCategoryQuestion(subjectId: number, blockId: number, c
                                            questionId: number, payload: QuestionCreate): Promise<CategoryQuestion> {
   const response = await api.put<CategoryQuestion>(
     `/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/questions/${questionId}`, payload);
+  return response.data;
+}
+
+export async function setCategoryQuestionState(subjectId: number, blockId: number, categoryId: number,
+                                               questionId: number, isActive: boolean): Promise<CategoryQuestion> {
+  const response = await api.put<CategoryQuestion>(
+    `/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/questions/${questionId}/state`,
+    { is_active: isActive });
   return response.data;
 }
 

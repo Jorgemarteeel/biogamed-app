@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, JSON, String, Text, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -14,6 +14,7 @@ class Question(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true(), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     # Source levels from the prototype; their academic meaning is not validated yet.
     difficulty: Mapped[int | None] = mapped_column(Integer, nullable=True)

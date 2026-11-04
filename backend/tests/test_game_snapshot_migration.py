@@ -73,5 +73,5 @@ def test_migration_preserves_old_content_without_backfill_and_guards_downgrade(s
         command.downgrade(config, "c8e54b739a21")
     with engine.connect() as conn:
         assert conn.scalar(text("SELECT question_snapshot FROM game_engine_sessions WHERE id=2")) == {"version": 1, "questions": []}
-        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "d9f65a827bc1"
+        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "e2b47c91a306"
     assert read_old() == before

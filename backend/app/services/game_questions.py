@@ -11,7 +11,7 @@ def playable_question_filter(mode: str):
         if mode == "TRIVIAL"
         else (Question.letter.is_not(None), Question.exact_word.is_not(None))
     )
-    return and_(Question.question_type == mode, *fields)
+    return and_(Question.is_active.is_(True), Question.question_type == mode, *fields)
 
 
 def selectable_questions(topic_id: int, mode: str, category_id: int | None = None,

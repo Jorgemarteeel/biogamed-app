@@ -13,6 +13,7 @@ for (const saved of [false, true]) test(`returning after ${saved ? "save" : "can
   const hooks = { ...React,
     useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = initial; return [slots[i], (v) => { slots[i] = typeof v === "function" ? v(slots[i]) : v; }]; },
     useRef(initial) { const i = cursor++; return slots[i] ??= { current: initial }; },
+    useCallback(fn, deps) { const i = cursor++; if (!slots[i] || deps.some((v, j) => slots[i].deps[j] !== v)) slots[i] = { fn, deps }; return slots[i].fn; },
     useEffect(effect, deps) { const i = cursor++; if (!slots[i] || deps.some((v, j) => slots[i][j] !== v)) { slots[i] = deps; effects.push(effect); } },
   };
   const question = { id: 81, text: "Original", question_type: "TRIVIAL", difficulty: 2, topic: { id: 19, name: "Topic" }, topic_id: 19, options: ["A", "B", "C", "D"], correct_option_index: 1 };
@@ -57,7 +58,7 @@ for (const saved of [false, true]) test(`returning after ${saved ? "save" : "can
     editor.props.onClose(saved);
     render(); await flush(); render();
     assert.equal(calls.length, saved ? 2 : 1);
-    assert.deepEqual(calls[0], [3, 7, 9, 12, 13, { mode: "TRIVIAL", difficulty: 2 }]);
+    assert.deepEqual(calls[0], [3, 7, 9, 12, 13, { state: "all", mode: "TRIVIAL", difficulty: 2 }]);
     if (saved) assert.deepEqual(calls[1], calls[0]);
     assert.equal(all(render()).find((node) => node.props?.id === "question-mode").props.value, "TRIVIAL");
     assert.equal(all(render()).find((node) => node.props?.id === "question-level").props.value, "2");

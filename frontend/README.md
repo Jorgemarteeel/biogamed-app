@@ -2,6 +2,46 @@
 
 Aplicación Next.js con React, TypeScript y Tailwind CSS.
 
+## Estado de preguntas del banco docente
+
+El listado por categoría muestra «Activa» o «Retirada» y permite retirar o
+reactivar. Antes de retirar, una confirmación en la tarjeta explica que se
+excluirá de partidas nuevas y se conservarán las anteriores, sus correcciones
+y el historial. Se puede cancelar con el botón o Escape; el foco vuelve al
+control de origen. Los controles usan botones y selectores nativos, etiquetas
+accesibles, avisos de estado/error y los estilos adaptables existentes.
+El envío bloquea acciones simultáneas; ante un fallo se permite repetir la
+petición explícita de forma segura o actualizar para comprobar el estado.
+
+El filtro «Estado» permite activas, retiradas y todas (valor predeterminado).
+`state=active|retired|all`, modalidad, dificultad y página se conservan en la
+URL; aplicar filtros vuelve a la primera página. Guardar o cancelar una
+edición conserva esta selección, y editar una retirada no la reactiva.
+Una pregunta creada es activa: si el filtro de retiradas la excluye, se avisa.
+Tras cambiar estado se vuelve a consultar el listado para rellenar la página
+y recalcular «Siguiente». Si desaparece la última coincidencia de una página
+posterior, se vuelve a la primera con los mismos filtros y un aviso
+(`adjusted=1`). Las retiradas siguen accesibles para consulta y edición.
+
+Verificación del 4 de noviembre de 2026: tipos (`tsc --noEmit`), lint y
+20 pruebas frontend pertinentes aprobados, incluyendo confirmación,
+cancelación, Escape, foco programático, doble envío, error recuperable,
+reactivación, filtros de URL, paginación y edición. Se ejecutaron con las
+dependencias de la demo aislada:
+
+```sh
+node --test tests/question-retirement.test.mjs tests/category-edit-navigation.test.mjs tests/question-creation.test.mjs tests/content-navigation.test.mjs tests/question-exposure.test.mjs
+```
+
+El usuario revisó personalmente la interfaz anterior de consulta, creación y
+edición docente y la considera correcta; esta comprobación se registra como
+**revisión del usuario** y no se repitió. Para los nuevos controles de retirada,
+el navegador integrado respondió `The browser access host is unavailable`.
+Por ello quedan pendientes la revisión visual, el recorrido real de teclado
+y la comprobación móvil de esta funcionalidad. Las pruebas de componentes
+y HTTP no se presentan como revisión visual. Demo disponible en
+`localhost:13004`, con API `localhost:18004`; sin Opera GX ni cuentas personales.
+
 ## Ejecución local
 
 Desde `frontend/`, con Node.js y las dependencias instaladas:
