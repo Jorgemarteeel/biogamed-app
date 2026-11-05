@@ -2,6 +2,13 @@
 
 Aplicación Next.js con React, TypeScript y Tailwind CSS.
 
+## Pasapalabra local jugable
+
+Disponible preparación, dos roscos numerados, respuesta/paso, relojes de servidor,
+recuperación y resultado. [Detalles y verificación](docs/pasapalabra-local.md).
+Actualización del 5 de noviembre de 2026: sustituye los avisos históricos siguientes
+que describían la interfaz como «En preparación». Las salas en línea siguen pendientes.
+
 ## Historial de Pasapalabra compartido
 
 El backend incorpora el motor y la API local; la tarjeta sigue «En preparación»

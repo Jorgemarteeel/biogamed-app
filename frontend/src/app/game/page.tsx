@@ -1,3 +1,4 @@
+import {PasapalabraPrepare} from "@/components/Pasapalabra";
 import GameStart from "@/components/GameStart";
 
 export default async function GamePage({
@@ -14,5 +15,6 @@ export default async function GamePage({
     ? params.mode
     : null;
 
+  if (mode === "PASAPALABRA" && topicId !== null) return <PasapalabraPrepare key={topicId} topicId={topicId}/>;
   return <GameStart key={`${topicId}-${mode}`} topicId={topicId} mode={mode} />;
 }

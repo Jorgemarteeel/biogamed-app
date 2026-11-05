@@ -43,10 +43,10 @@ export default function Home() {
           <div className="mx-auto max-w-7xl">
             <p className="text-xs font-bold uppercase tracking-widest text-orange-700">Dos formas de practicar</p>
             <h2 id="games-title" className="mt-3 text-3xl font-black text-blue-950">Elige cómo poner a prueba lo que sabes.</h2>
-            <p className="mt-4 max-w-2xl leading-7 text-slate-600">Ya puedes jugar a Trivial y consultar tus resultados. Pasapalabra estará disponible más adelante.</p>
+            <p className="mt-4 max-w-2xl leading-7 text-slate-600">Juega a Trivial o a Pasapalabra local y consulta tus resultados.</p>
             <div className="mt-8 grid gap-6 md:grid-cols-2">
               {games.map((game) => <article key={game.name} className={`rounded-2xl border p-6 sm:p-8 ${game.name === "Trivial" ? "border-sky-200 bg-sky-50/40" : "border-teal-200 bg-teal-50/40"}`}>
-                <div className="flex items-center justify-between"><span aria-hidden="true" className={`flex h-12 w-12 items-center justify-center rounded-xl text-xl font-black ${game.name === "Trivial" ? "bg-sky-100 text-sky-800" : "bg-teal-100 text-teal-800"}`}>{game.name === "Trivial" ? "✓" : "Aa"}</span><span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">{game.name === "Trivial" ? "Disponible" : "En preparación"}</span></div>
+                <div className="flex items-center justify-between"><span aria-hidden="true" className={`flex h-12 w-12 items-center justify-center rounded-xl text-xl font-black ${game.name === "Trivial" ? "bg-sky-100 text-sky-800" : "bg-teal-100 text-teal-800"}`}>{game.name === "Trivial" ? "✓" : "Aa"}</span><span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">Disponible</span></div>
                 <h3 className="mt-5 text-2xl font-black text-blue-950">{game.name}</h3>
                 <p className="mt-3 leading-7 text-slate-600">{game.description}</p>
                 <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5"><p className={`text-xs font-bold uppercase tracking-wider ${game.name === "Trivial" ? "text-sky-800" : "text-teal-800"}`}>Ejemplo ilustrativo</p><p className="mt-3 font-semibold leading-7 text-blue-950">{game.example}</p></div>

@@ -1,5 +1,12 @@
 # Pasapalabra: motor compartido y API local
 
+Actualización del 5 de noviembre de 2026: disponible la interfaz jugable local,
+preparación, roscos numerados y recuperación por identificador. Véase
+[interfaz y verificaciones](../../frontend/docs/pasapalabra-local.md).
+Las referencias siguientes a la interfaz pendiente describen la entrega original
+del motor del 4 de noviembre; se mantienen como registro histórico. Salas en línea
+siguen pendientes. No cambia el contrato ni las reglas del motor.
+
 Primera fase: motor persistente y API. No incluye pantalla jugable, rosco de
 frontend, salas, códigos, confirmaciones ni sincronización en línea. La tarjeta
 de Pasapalabra continúa «En preparación». La siguiente fase en línea reutilizará
