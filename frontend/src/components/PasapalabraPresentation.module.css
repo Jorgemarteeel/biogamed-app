@@ -1,0 +1,11 @@
+.result { isolation: isolate; }
+.entrance { animation: reveal .55s ease-out both; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: -1; }
+.confetti span { position: absolute; top: -20px; width: 9px; height: 15px; opacity: 0; animation: fall 2.4s ease-in both; }
+@keyframes reveal { from { opacity: .5; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes fall { 0% { opacity: 0; transform: translateY(0) rotate(0); } 10% { opacity: .85; } 80% { opacity: .7; } 100% { opacity: 0; transform: translateY(620px) rotate(460deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .entrance { animation: none; }
+  .confetti { display: none; }
+  .confetti span { animation: none; }
+}

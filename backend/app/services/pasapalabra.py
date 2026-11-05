@@ -4,7 +4,7 @@ from random import SystemRandom
 
 from fastapi import HTTPException
 from sqlalchemy import select, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from app.models import AnswerLog, GameSession, Question, Topic, User
 from app.models.pasapalabra import PasapalabraMatch, MatchParticipant, MatchQuestion, MatchCommand
@@ -187,6 +187,14 @@ def project(db, match):
 
 
 def public_state(match, now):
+    db = object_session(match)
+    # Include the command being acknowledged, even with autoflush disabled.
+    db.flush()
+    resolution_order = {
+        (command.result["participant"], command.result["number"]): command.result["version"]
+        for command in db.scalars(select(MatchCommand).where(MatchCommand.match_id == match.id))
+        if command.result["kind"] == "answer"
+    }
     participant = active(match)
     current = participant.questions[participant.cursor - 1] if participant else None
     return {"id": match.id, "version": match.version, "play_mode": match.play_mode,
@@ -200,6 +208,7 @@ def public_state(match, now):
                               "remaining_ms": p.remaining_ms, **counts(p),
                               "slots": [{"number": q.number, "state": q.state} for q in p.questions],
                               "resolved": [{"number": q.number, "text": q.snapshot["text"],
+                                            "resolution_order": resolution_order[(p.position, q.number)],
                                             "text_answer": q.text_answer, "exact_word": q.snapshot["exact_word"],
                                             "accepted_answers": q.snapshot["accepted_answers"] or [],
                                             "is_correct": q.state == "CORRECT"}

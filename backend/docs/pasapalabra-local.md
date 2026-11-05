@@ -75,6 +75,16 @@ El estado contiene `id`, `version`, `play_mode:LOCAL`, `rules_version`, `status`
 invitada, motivo de finalización, tiempo y contadores separados, casillas
 numeradas y correcciones de las preguntas ya resueltas.
 
+Actualización de presentación (5 de noviembre de 2026): cada elemento de
+`participants[].resolved` incorpora `resolution_order`, la versión de la acción
+de respuesta guardada en `pasapalabra_commands`. Es un orden global del
+enfrentamiento, independiente del jugador, número de casilla y resolución
+temporal del reloj. Puede tener huecos por pasos u otras acciones. La proyección
+incluye la acción que se está confirmando y conserva el mismo valor al recuperar
+estado o reintentar. No requiere migraciones, no entrega soluciones futuras y
+no modifica turnos, reloj, corrección o puntuación. La interfaz lo usa para
+identificar la última respuesta real, también tras una vuelta circular.
+
 `active_question` contiene exclusivamente participante, número, enunciado y
 letra. No se entregan las preguntas futuras, las copias privadas ni sus
 soluciones. Las correcciones resueltas contienen respuesta, solución exacta y

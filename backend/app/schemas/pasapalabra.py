@@ -64,6 +64,7 @@ class PublicSlot(BaseModel):
 
 class ResolvedQuestion(BaseModel):
     number: int
+    resolution_order: int
     text: str
     text_answer: str
     exact_word: str

@@ -1,5 +1,62 @@
 # Interfaz local de Pasapalabra
 
+## Presentación aprobada por el usuario (5 de noviembre de 2026)
+
+La última respuesta resuelta se presenta en una tarjeta con jugador, casilla,
+respuesta, acierto/fallo y solución. El resto se conserva íntegramente en un
+plegable nativo, inicialmente cerrado, con contador. El orden global procede
+de `resolution_order` de la API; no se deduce de los números de pregunta ni de
+la posición de los jugadores. Los polls no limpian el borrador ni mueven el foco.
+La leyenda describe los cinco estados con indicadores y texto, además del color.
+
+El resultado final es el contenido principal: ganador del servidor en grande,
+trofeo, desglose de ambos participantes y acciones separadas «Ver mi historial»
+y «Preparar otra partida». Los roscos finales pasan a un plegable secundario;
+las correcciones siguen disponibles. En empate se destacan ambos jugadores.
+En abandono se usa una presentación sobria sin celebración y se explica el motivo.
+El historial enlazado sigue siendo exclusivamente el del anfitrión.
+
+La entrada animada y 28 piezas de confeti solo aparecen al observar una
+transición de `RUNNING` a `FINISHED` normal. Su duración CSS es finita; el
+indicador se apaga a los tres segundos. Un estado final repetido no la inicia,
+y abrir o recargar un resultado antiguo tampoco. El confeti no intercepta
+controles. `prefers-reduced-motion: reduce` elimina ambas animaciones y oculta
+el confeti, conservando toda la información estática.
+
+### Comprobaciones de esta mejora
+
+- Automatizadas: 92 tests frontend aprobados (incluidos cinco nuevos de
+  presentación); tipos, lint y compilación de producción correctos.
+  Las 17 pruebas backend relacionadas aprobaron en SQLite en memoria: el caso
+  nuevo demuestra que una pregunta 1 resuelta tras recorrer el rosco sigue siendo
+  la última, incluso con timestamps iguales, y conserva el orden al recargar.
+  No se repitió la batería completa del motor ni se cambiaron sus reglas.
+- Navegador integrado real: sesión con la cuenta docente ficticia, escritorio
+  1280×900 y móvil 390×844; leyenda, última corrección, plegable con Enter,
+  conservación del borrador y foco, y ausencia de desbordamiento. Se verificaron
+  anfitrión ganador (partida 5), invitada ganadora (7), empate (6) y abandono (2).
+  Se observó confeti real durante la transición, su desaparición y una recarga de
+  resultado antiguo sin repetición. La repetición del mismo estado final también
+  está cubierta por tests. Las consultas periódicas cesan al finalizar.
+- Movimiento reducido: el navegador integrado no expone emulación de preferencias
+  CSS. Se revisó visualmente la misma variante estática forzando temporalmente
+  su regla CSS a `@media all` **solo en la demo** (partida 8). Durante una transición
+  real se comprobaron `animation-name: none` y `display: none` del confeti.
+  Se restauró después el archivo original con `prefers-reduced-motion` y se
+  comprobó esa regla en tests. No se afirma haber emulado la preferencia del SO.
+- Aislamiento verificado antes de escribir: `biogamed_demo`, volumen
+  `biogamed_docente_demo_demo_data`, puertos 13004/18004. Se reutilizaron las
+  credenciales locales sin exponerlas. Solo se crearon partidas ficticias allí;
+  no hubo escrituras en la base habitual ni migraciones. Demo actualizada y
+  disponible. Pendiente auditoría con lector de pantalla y móvil físico.
+
+El 5 de noviembre de 2026, el **usuario revisó personalmente y aprobó los ajustes visuales y la celebración**, y autorizó el commit de esta tarea. Se registra como revisión visual del usuario, distinta de las comprobaciones automatizadas y de la revisión del agente descritas arriba. No se modificó código tras esta aprobación: se reutilizan las 92 pruebas frontend, 17 backend relacionadas, tipos, lint y compilación aprobadas. Se conservan las limitaciones documentadas sobre movimiento reducido y la ausencia de emulación nativa de la preferencia del SO.
+
+Para inspeccionar resultados estáticos: `/pasapalabra/5`, `/6`, `/7`
+y `/2` en la demo. Al abrirlos no se reproduce la celebración, por diseño.
+
+## Entrega de la interfaz jugable original
+
 Disponible desde el selector de juegos y `/game?topicId=…&mode=PASAPALABRA`.
 La preparación consulta disponibilidad académica de la modalidad y valida la
 selección mediante `/pasapalabra/preparations`. No reduce las 40 preguntas ni

@@ -300,3 +300,19 @@ def test_partial_rival_clock_is_not_reset_after_timeout(db, client, topic, auth_
     assert state["status"] == "FINISHED"
     assert state["finished_at"].startswith("2030-01-01T00:20:00")
     assert [p["remaining_ms"] for p in state["participants"]] == [0, 0]
+
+
+def test_resolution_order_survives_circular_revisit_and_reload(db, client, topic, auth_headers, clock):
+    bank(db, topic)
+    state, _ = start(client, auth_headers, topic)
+    state = apply(client, auth_headers, state, kind="pass")
+    state = apply(client, auth_headers, state, text="incorrecta")
+    for _ in range(20):
+        state = apply(client, auth_headers, state)
+    resolved = [(p["position"], q) for p in state["participants"] for q in p["resolved"]]
+    latest = max(resolved, key=lambda entry: entry[1]["resolution_order"])
+    assert latest[0] == 1 and latest[1]["number"] == 1
+    assert latest[1]["resolution_order"] == state["version"]
+    assert len({q["resolution_order"] for _, q in resolved}) == 21
+    reloaded = client.get(f"/pasapalabra/matches/{state['id']}", headers=auth_headers).json()
+    assert [p["resolved"] for p in reloaded["participants"]] == [p["resolved"] for p in state["participants"]]

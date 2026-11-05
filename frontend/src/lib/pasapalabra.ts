@@ -15,6 +15,7 @@ export interface Player {
     }[];
     resolved: {
         number: number;
+        resolution_order: number;
         text: string;
         text_answer: string;
         exact_word: string;
@@ -54,3 +55,11 @@ export const questionKey = (s: Match) => s.active_question ? `${s.active_questio
 export async function getMatch(id: number): Promise<Match> { return (await api.get(`/pasapalabra/matches/${id}`)).data; }
 export async function sendOperation(id: number, operation: Operation): Promise<Match> { return (await api.post(`/pasapalabra/matches/${id}/${operation.kind}`, operation.body)).data.state; }
 export function remaining(s: Match, p: Player, elapsed: number) { return s.active_participant === p.position && s.turn_deadline_at ? Math.max(0, Date.parse(s.turn_deadline_at) - Date.parse(s.server_now) - elapsed) : p.remaining_ms; }
+
+export function resolvedInOrder(s: Match) {
+    return s.participants.flatMap(p => p.resolved.map(r => ({ ...r, name: p.name, position: p.position })))
+        .sort((a, b) => b.resolution_order - a.resolution_order);
+}
+export function startsCelebration(previous: Match | null, next: Match) {
+    return previous?.status === "RUNNING" && next.status === "FINISHED" && next.outcome === "NORMAL";
+}

@@ -6,7 +6,8 @@ import { isAxiosError } from "axios";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import api, { type GameAvailability } from "@/services/api";
-import { getMatch, sendOperation, newer, questionKey, remaining, type Match, type Player, type Operation } from "@/lib/pasapalabra";
+import { getMatch, sendOperation, newer, questionKey, remaining, startsCelebration, type Match, type Player, type Operation } from "@/lib/pasapalabra";
+import { StateLegend, Corrections, ResultHero } from "@/components/PasapalabraPresentation";
 function message(e: unknown) { const status = isAxiosError(e) ? e.response?.status : 0; return status === 404 || status === 403 ? "Esta partida no está disponible para tu cuenta." : status === 401 ? "Tu sesión ha caducado. Inicia sesión para recuperar la partida." : status === 409 ? "La partida ha cambiado. Consulta el estado antes de continuar." : "No se pudo confirmar la operación. Comprueba tu conexión y reintenta."; }
 function Frame({ children }: {
     children: React.ReactNode;
@@ -106,7 +107,8 @@ export function PasapalabraPrepare({ topicId }: {
     </Frame>;
 }
 function timeLabel(ms: number) { const seconds = Math.ceil(ms / 1000); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
-function Rosco({ p, s, elapsed }: {
+function Rosco({ p, s, elapsed, secondary = false }: {
+    secondary?: boolean;
     p: Player;
     s: Match;
     elapsed: number;
@@ -116,7 +118,7 @@ function Rosco({ p, s, elapsed }: {
     const sec = Math.ceil(ms / 1000);
     const symbols: Record<string, string> = { PENDING: "·", PASSED: "↻", CORRECT: "✓", WRONG: "×" };
     const labels: Record<string, string> = { PENDING: "Pendiente", PASSED: "Pasada", CORRECT: "Acertada", WRONG: "Fallada" };
-    return <section className={`min-w-0 rounded-2xl border-2 bg-white p-3 lg:row-start-1 ${p.position === 1 ? "lg:col-start-1" : "lg:col-start-3"} ${active ? "border-sky-700" : "border-slate-200"}`} aria-label={`Rosco de ${p.name}`}>
+    return <section className={`min-w-0 rounded-2xl border-2 bg-white p-3 ${secondary ? "" : p.position === 1 ? "lg:row-start-1 lg:col-start-1" : "lg:row-start-1 lg:col-start-3"} ${active ? "border-sky-700" : "border-slate-200"}`} aria-label={`Rosco de ${p.name}`}>
     <h2 className="break-words text-xl font-bold">{p.name} {active && "· Tu turno"}</h2>
     <p className="text-2xl font-black tabular-nums" aria-label="Tiempo restante">{Math.floor(sec / 60)}:{String(sec % 60).padStart(2, '0')}</p>
     <p>✓ {p.correct} aciertos · × {p.wrong} fallos · {p.pending} pendientes</p>{p.status === "FINISHED" && <p>Finalizado: {p.finish_reason === "TIMEOUT" ? "tiempo agotado" : p.finish_reason === "RESOLVED" ? "preguntas resueltas" : "abandono"}</p>}<ol className="sr-only">{p.slots.map(slot => <li key={slot.number}>{slot.number}: {labels[slot.state]}{active && s.active_question?.number === slot.number ? ", actual" : ""}</li>)}</ol>
@@ -140,6 +142,8 @@ export function PasapalabraGame({ id }: {
     id: number;
 }) {
     const [state, setState] = useState<Match | null>(null);
+    const [celebrate, setCelebrate] = useState(false);
+    useEffect(() => { if (!celebrate) return; const timer = setTimeout(() => setCelebrate(false), 3000); return () => clearTimeout(timer); }, [celebrate]);
     const latest = useRef<Match | null>(null);
     const [text, setText] = useState("");
     const [error, setError] = useState("");
@@ -156,6 +160,7 @@ export function PasapalabraGame({ id }: {
             return;
         if (latest.current && questionKey(latest.current) !== questionKey(s))
             setText("");
+        if (startsCelebration(latest.current, s)) setCelebrate(true);
         latest.current = s;
         received.current = performance.now();
         setElapsed(0);
@@ -235,11 +240,11 @@ export function PasapalabraGame({ id }: {
     }
     const s = state;
     const q = s?.active_question;
-    const corrections = s?.participants.flatMap(p => p.resolved.map(r => ({ ...r, name: p.name, position: p.position }))) ?? [];
     return <Frame>{error && <p role="alert" className="notice-error my-4">{error} <Link href="/login">Iniciar sesión</Link>
         </p>}{!s ? <p role="status">{error ? "No se pudo cargar la partida. Revisa el aviso anterior o vuelve al panel." : "Cargando partida…"}</p> : <>
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1.2fr_1fr] lg:gap-4">
-        <div className="order-2 grid gap-5 lg:contents">
+        <>{s.status === "FINISHED" && <ResultHero match={s} celebrate={celebrate}/>}
+        {s.status !== "FINISHED" && <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1.2fr_1fr] lg:gap-4">
+        <div className="order-3 grid gap-5 lg:contents">
         <Rosco p={s.participants[0]} s={s} elapsed={elapsed}/>
         <Rosco p={s.participants[1]} s={s} elapsed={elapsed}/>
         </div>
@@ -247,12 +252,7 @@ export function PasapalabraGame({ id }: {
         <div className="mb-4 grid grid-cols-2 gap-3 lg:hidden" aria-label="Relojes de ambos jugadores">{s.participants.map(p => <p key={p.position} className="min-w-0 break-words text-sm">
             <strong>{p.name}</strong>
             <br />{timeLabel(remaining(s, p, elapsed))}{s.active_participant === p.position ? " · Turno activo" : ""}</p>)}</div>
-        <p className="text-sm">· Pendiente · ↻ Pasada · ✓ Acertada · × Fallada · Borde azul: actual</p>{s.status === "FINISHED" ? <>
-            <h2 className="my-3 break-words text-2xl font-bold">{s.winner_position ? `Gana ${s.participants.find(p => p.position === s.winner_position)?.name}` : "Empate"}</h2>
-            <p>{s.outcome === "ABANDONMENT" ? "Victoria por abandono del rival" : "Finalización normal"}</p>
-            <Link className="button-primary mr-3 inline-flex" href={`/partidas/${s.personal_session_id}`}>Historial personal del anfitrión</Link>
-            <Link className="text-link" href="/dashboard">Preparar otra partida</Link>
-            </> : q && <>
+        <StateLegend />{q && <>
             <h2 className="my-3 break-words text-xl font-bold">Turno de {s.participants.find(p => p.position === q.participant)?.name} · Pregunta {q.number}</h2>
             <p className="my-4 break-words text-lg leading-8" aria-live="polite">{q.text}</p>
             <form onSubmit={e => {
@@ -275,9 +275,8 @@ export function PasapalabraGame({ id }: {
                 <button className="button-primary" disabled={busy} onClick={() => act('abandon', abandon)}>Confirmar abandono</button>
                 <button className="button-secondary" onClick={() => setAbandon(null)}>Cancelar</button>
                 </div>}</>}{uncertain && <button className="button-primary" disabled={busy} onClick={() => act(pending.current!.kind)}>Reintentar la misma acción</button>}</section>
-        </div>
-        <section aria-label="Correcciones" className="rounded-2xl bg-white p-5">
-        <h2 className="text-xl font-bold">Respuestas resueltas</h2>{corrections.length === 0 ? <p>Aún no hay respuestas corregidas.</p> : corrections.map(r => <p key={`${r.position}-${r.number}`} className="my-3 break-words">{r.is_correct ? '✓' : '×'} {r.name} · {r.number}: {r.text_answer}. Solución: <strong>{r.exact_word}</strong>
-            </p>)}</section>
-        </>}</Frame>;
+        <div className="order-2 lg:col-span-3"><Corrections match={s}/></div></div>}
+        {s.status === "FINISHED" && <details className="my-5 rounded-2xl border border-slate-200 bg-white p-5"><summary className="min-h-11 cursor-pointer py-3 font-bold text-sky-900">Ver los roscos finales</summary><div className="grid gap-4 sm:grid-cols-2">{s.participants.map(p=><Rosco key={p.position} p={p} s={s} elapsed={elapsed} secondary/>)}</div></details>}
+        {s.status === "FINISHED" && <Corrections match={s}/>}
+        </></>}</Frame>;
 }
