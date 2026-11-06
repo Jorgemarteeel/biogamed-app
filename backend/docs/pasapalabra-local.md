@@ -1,5 +1,9 @@
 # Pasapalabra: motor compartido y API local
 
+Ampliación del 5 de noviembre de 2026: [salas privadas en línea](pasapalabra-online.md),
+reutilizando este motor. Las verificaciones originales siguientes conservan su
+fecha y alcance local.
+
 Actualización del 5 de noviembre de 2026: disponible la interfaz jugable local,
 preparación, roscos numerados y recuperación por identificador. Véase
 [interfaz y verificaciones](../../frontend/docs/pasapalabra-local.md).

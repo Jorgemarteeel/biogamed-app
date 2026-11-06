@@ -42,6 +42,15 @@ function rejectWith(status, beforeReject = () => {}) {
 
 afterEach(() => { delete global.window; });
 
+test("expired Pasapalabra auth retains only current path for login recovery", async () => {
+  browser();
+  const saved = new Map();
+  global.window.location.pathname = "/pasapalabra/rooms/17";
+  global.window.sessionStorage = { setItem: (key, value) => saved.set(key, value) };
+  await assert.rejects(api.get("/pasapalabra/rooms/17", { adapter: rejectWith(401) }));
+  assert.equal(saved.get("pasapalabra-return"), "/pasapalabra/rooms/17");
+});
+
 test("401 with current token clears it and redirects once for simultaneous requests", async () => {
   const { values, redirects } = browser();
   await Promise.allSettled([

@@ -68,7 +68,7 @@ def _classification(session):
 
 def _complete_answers(session, rows):
     if session.shared_match_id is not None:
-        if (session.completion_reason != "NORMAL" or session.format_key != "pasapalabra-local-v1"
+        if (session.completion_reason != "NORMAL" or session.format_key not in {"pasapalabra-local-v1", "pasapalabra-online-v1"}
                 or session.match_status != "FINISHED" or session.wrong_count is None
                 or session.pending_count is None
                 or min(session.score, session.wrong_count, session.pending_count) < 0

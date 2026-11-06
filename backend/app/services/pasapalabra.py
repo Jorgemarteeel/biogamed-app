@@ -52,17 +52,24 @@ def _classification(q):
 
 
 def start_local(db, owner, request):
+    return start_shared(db, owner, request)
+
+
+def start_shared(db, owner, request, *, online_guest=None, auto_commit=True, start_before=None):
     # Serialize starts by this owner, including retries with the same key.
-    db.scalar(select(User).where(User.id == owner.id).with_for_update())
+    db.scalar(select(User).where(User.id == owner.id).with_for_update(key_share=True))
     payload = request.model_dump(mode="json", exclude={"operation_id"})
+    if online_guest:
+        payload.update(play_mode="ONLINE", online_guest_id=str(online_guest.id))
     existing = db.scalar(select(PasapalabraMatch).where(
         PasapalabraMatch.owner_id == owner.id,
         PasapalabraMatch.start_operation_id == str(request.operation_id)))
     if existing:
         if existing.start_payload != payload:
             raise HTTPException(409, {"code": "IDEMPOTENCY_CONFLICT"})
-        db.rollback()
-        return read_state(db, owner, existing.id)
+        if auto_commit:
+            db.rollback()
+        return read_state(db, owner, existing.id) if auto_commit else existing.id
     selection = request.model_dump(exclude={"operation_id", "guest_name"})
     statement = selectable_questions(**selection, mode="PASAPALABRA")
     topic = db.get(Topic, request.topic_id)
@@ -75,12 +82,15 @@ def start_local(db, owner, request):
                                   "required": COUNT * 2, "selection": selection})
     chosen = RNG.sample(candidates, COUNT * 2)
     now = server_now(db)
+    if start_before is not None and now >= utc(start_before):
+        raise HTTPException(409, {"code": "ROOM_EXPIRED"})
     match = PasapalabraMatch(owner_id=owner.id, start_operation_id=str(request.operation_id),
                              start_payload=payload, created_at=now, turn_started_at=now,
-                             active_position=RNG.choice([1, 2]), rules_version=RULES)
+                             active_position=RNG.choice([1, 2]), rules_version="pasapalabra-online-v1" if online_guest else RULES,
+                             play_mode="ONLINE" if online_guest else "LOCAL")
     db.add(match)
     db.flush()
-    for position, name, user_id in [(1, owner.name, owner.id), (2, request.guest_name, None)]:
+    for position, name, user_id in [(1, owner.name, owner.id), (2, online_guest.name if online_guest else request.guest_name, online_guest.id if online_guest else None)]:
         assigned = chosen[(position - 1) * COUNT:position * COUNT]
         context = {"topic_name": topic.name,
                    "selection": {"category_id": request.category_id,
@@ -94,7 +104,7 @@ def start_local(db, owner, request):
             session = GameSession(user_id=user_id, topic_id=topic.id, game_mode="PASAPALABRA",
                                   question_ids=[q.id for q in assigned], content_context=context,
                                   question_snapshot=SharedQuestionSnapshot(version=2, questions=snapshots).model_dump(),
-                                  shared_match_id=match.id, format_key=RULES, score=0,
+                                  shared_match_id=match.id, format_key=match.rules_version, score=0,
                                   wrong_count=0, pending_count=COUNT, match_status="RUNNING")
             db.add(session)
             db.flush()
@@ -105,6 +115,9 @@ def start_local(db, owner, request):
         for number, (q, snapshot, classification) in enumerate(zip(assigned, snapshots, context["questions"]), 1):
             db.add(MatchQuestion(match_id=match.id, participant_id=participant.id, number=number,
                                  question_id=q.id, snapshot={**snapshot, "classification": classification}))
+    if not auto_commit:
+        db.flush()
+        return match.id
     db.commit()
     return read_state(db, owner, match.id)
 
@@ -112,7 +125,8 @@ def start_local(db, owner, request):
 def locked_match(db, owner, match_id):
     db.expire_all()
     match = db.scalar(select(PasapalabraMatch).where(
-        PasapalabraMatch.id == match_id, PasapalabraMatch.owner_id == owner.id).with_for_update())
+        PasapalabraMatch.id == match_id,
+        ((PasapalabraMatch.owner_id == owner.id) | ((PasapalabraMatch.play_mode == "ONLINE") & PasapalabraMatch.participants.any(MatchParticipant.user_id == owner.id)))).with_for_update())
     if match is None:
         raise HTTPException(404, "La partida no existe.")
     return match
@@ -186,7 +200,7 @@ def project(db, match):
             session.is_completed = match.status == "FINISHED" and match.outcome == "NORMAL"
 
 
-def public_state(match, now):
+def public_state(match, now, viewer_id=None):
     db = object_session(match)
     # Include the command being acknowledged, even with autoflush disabled.
     db.flush()
@@ -197,12 +211,15 @@ def public_state(match, now):
     }
     participant = active(match)
     current = participant.questions[participant.cursor - 1] if participant else None
-    return {"id": match.id, "version": match.version, "play_mode": match.play_mode,
+    own = next((p for p in match.participants if p.user_id == viewer_id), match.participants[0] if match.play_mode == "LOCAL" else None)
+    if own is None:
+        raise HTTPException(404, "La partida no existe.")
+    return {"id": match.id, "version": match.version, "play_mode": match.play_mode, "self_position": own.position,
             "rules_version": match.rules_version, "status": match.status, "server_now": now,
             "turn_deadline_at": utc(match.turn_started_at) + timedelta(milliseconds=participant.remaining_ms) if participant else None,
             "active_participant": match.active_position,
             "active_question": {"participant": participant.position, "number": current.number,
-                                "text": current.snapshot["text"], "letter": current.snapshot["letter"]} if current else None,
+                                "text": current.snapshot["text"], "letter": current.snapshot["letter"]} if current and (match.play_mode == "LOCAL" or participant.user_id == viewer_id) else None,
             "participants": [{"position": p.position, "name": p.name, "registered": p.user_id is not None,
                               "status": p.status, "finish_reason": p.finish_reason,
                               "remaining_ms": p.remaining_ms, **counts(p),
@@ -212,11 +229,11 @@ def public_state(match, now):
                                             "text_answer": q.text_answer, "exact_word": q.snapshot["exact_word"],
                                             "accepted_answers": q.snapshot["accepted_answers"] or [],
                                             "is_correct": q.state == "CORRECT"}
-                                           for q in p.questions if q.state not in UNRESOLVED]}
+                                           for q in p.questions if q.state not in UNRESOLVED and (match.play_mode == "LOCAL" or p.user_id == viewer_id)]}
                              for p in match.participants],
             "outcome": match.outcome, "winner_position": match.winner_position,
             "finished_at": match.finished_at,
-            "personal_session_id": next(p.session_id for p in match.participants if p.session_id)}
+            "personal_session_id": own.session_id}
 
 
 def read_state(db, owner, match_id, result_only=False):
@@ -224,7 +241,7 @@ def read_state(db, owner, match_id, result_only=False):
     now = server_now(db)
     settle(match, now)
     project(db, match)
-    state = public_state(match, now)
+    state = public_state(match, now, owner.id)
     db.commit()
     if result_only and state["status"] != "FINISHED":
         raise HTTPException(409, {"code": "MATCH_NOT_FINISHED"})
@@ -234,13 +251,15 @@ def read_state(db, owner, match_id, result_only=False):
 def execute(db, owner, match_id, kind, request):
     match = locked_match(db, owner, match_id)
     payload = {"kind": kind, **request.model_dump(mode="json", exclude={"operation_id"})}
+    if match.play_mode == "ONLINE":
+        payload["actor_id"] = str(owner.id)
     previous = db.scalar(select(MatchCommand).where(MatchCommand.match_id == match.id,
                                                    MatchCommand.operation_id == str(request.operation_id)))
     now = server_now(db)
     settle(match, now)
     project(db, match)
     if previous and previous.payload == payload:
-        response = {"operation": previous.result, "state": public_state(match, now)}
+        response = {"operation": previous.result, "state": public_state(match, now, owner.id)}
         db.commit()
         return response
     error = None
@@ -251,6 +270,9 @@ def execute(db, owner, match_id, kind, request):
     elif request.expected_version != match.version:
         error = "STALE_VERSION"
     participant = next(p for p in match.participants if p.position == request.participant)
+    if match.play_mode == "ONLINE" and participant.user_id != owner.id:
+        db.commit()
+        raise HTTPException(403, {"code": "ONLY_OWN_ACTIONS"})
     if not error and kind != "abandon":
         if participant.position != match.active_position:
             error = "OUT_OF_TURN"
@@ -292,13 +314,13 @@ def execute(db, owner, match_id, kind, request):
               "state": question.state}
     db.add(MatchCommand(match_id=match.id, operation_id=str(request.operation_id), payload=payload, result=result))
     project(db, match)
-    response = {"operation": result, "state": public_state(match, now)}
+    response = {"operation": result, "state": public_state(match, now, owner.id)}
     db.commit()
     return response
 
 
 def reconcile_for_user(db, owner):
     ids = list(db.scalars(select(PasapalabraMatch.id).where(
-        PasapalabraMatch.owner_id == owner.id, PasapalabraMatch.status == "RUNNING").order_by(PasapalabraMatch.id)))
+        ((PasapalabraMatch.owner_id == owner.id) | ((PasapalabraMatch.play_mode == "ONLINE") & PasapalabraMatch.participants.any(MatchParticipant.user_id == owner.id))), PasapalabraMatch.status == "RUNNING").order_by(PasapalabraMatch.id)))
     for match_id in ids:
         read_state(db, owner, match_id)

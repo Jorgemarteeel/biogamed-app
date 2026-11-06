@@ -123,7 +123,26 @@ class GameHistorySummary(BaseModel):
     pending_count: int | None = None
 
 
+class SharedParticipantSummary(BaseModel):
+    position: int
+    name: str
+    correct: int
+    wrong: int
+    pending: int
+
+
+class SharedMatchSummary(BaseModel):
+    id: int
+    play_mode: Literal["LOCAL", "ONLINE"]
+    self_position: int
+    status: str
+    outcome: str | None
+    winner_position: int | None
+    participants: list[SharedParticipantSummary]
+
+
 class GameHistoryDetail(GameHistorySummary):
+    shared_summary: SharedMatchSummary | None = None
     continuation_error_code: Literal["LEGACY_SESSION_NO_SNAPSHOT"] | None = None
     question_content_source: Literal["session_start", "legacy"] = "legacy"
     answer_logs: list[AnswerHistory]

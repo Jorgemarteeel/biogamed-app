@@ -1,5 +1,13 @@
 # Interfaz local de Pasapalabra
 
+Revisión de altura y distribución posterior: [mediciones, cambios y límites](pasapalabra-layout.md).
+Esta revisión conserva la celebración y la aprobación previa descrita abajo;
+la nueva distribución fue aprobada visualmente por el usuario el 6 de noviembre de 2026, con los límites técnicos documentados.
+
+Ampliación posterior: [interfaz en línea](pasapalabra-online.md). La aprobación
+visual del usuario registrada a continuación corresponde al pulido local;
+la ampliación en línea cuenta con revisión técnica propia y aprobación visual posterior del usuario, registrada en su documentación (6 de noviembre de 2026).
+
 ## Presentación aprobada por el usuario (5 de noviembre de 2026)
 
 La última respuesta resuelta se presenta en una tarjeta con jugador, casilla,

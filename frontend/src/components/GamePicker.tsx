@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -32,7 +33,7 @@ function GameIllustration({ mode }: { mode: GameMode }) {
   </svg>;
 }
 
-function TopicPicker({ mode, onBack }: { mode: GameMode; onBack: () => void }) {
+export function TopicPicker({ mode, onBack, online = false }: { mode: GameMode; onBack: () => void; online?: boolean }) {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,7 +64,7 @@ function TopicPicker({ mode, onBack }: { mode: GameMode; onBack: () => void }) {
         : error ? <div className="rounded-2xl border border-red-200 bg-white p-6"><p role="alert" className="notice-error">{error}</p><button onClick={() => { setError(""); setLoading(true); setAttempt((value) => value + 1); }} className="button-secondary mt-4">Reintentar</button></div>
         : topics.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8"><h3 className="font-bold text-blue-950">Todavía no hay temáticas para {name}</h3><p className="mt-2 text-slate-600">Puedes volver y elegir el otro juego.</p></div>
         : <div className="mx-auto flex max-w-[920px] flex-wrap justify-center gap-4">{topics.map((topic) => (
-          <Link key={topic.id} prefetch={false} href={`/game?topicId=${topic.id}&mode=${mode}`} aria-label={`Elegir temática ${topic.name} para ${name}`} className="group flex w-full min-w-0 max-w-[280px] flex-col rounded-2xl border border-sky-200 bg-white p-4 text-left shadow-sm transition motion-reduce:transition-none motion-reduce:transform-none hover:-translate-y-1 hover:border-sky-600 hover:shadow-lg focus-visible:border-sky-700 sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)]">
+          <Link key={topic.id} prefetch={false} href={`/game?topicId=${topic.id}&mode=${mode}${online ? "&play=ONLINE" : ""}`} aria-label={`Elegir temática ${topic.name} para ${name}`} className="group flex w-full min-w-0 max-w-[280px] flex-col rounded-2xl border border-sky-200 bg-white p-4 text-left shadow-sm transition motion-reduce:transition-none motion-reduce:transform-none hover:-translate-y-1 hover:border-sky-600 hover:shadow-lg focus-visible:border-sky-700 sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)]">
             <span className="flex h-36 items-center justify-center rounded-xl bg-sky-50 p-4"><Image src={topicIllustration(topic.name)} alt="" width={160} height={160} className="h-full w-full object-contain" /></span>
             <span className="mt-4 break-words text-lg font-bold text-blue-950">{topic.name}</span>
             {topic.description && topic.description.trim().toLowerCase() !== "string" && <span className="mt-2 break-words text-sm leading-5 text-slate-600">{topic.description}</span>}
@@ -75,6 +76,7 @@ function TopicPicker({ mode, onBack }: { mode: GameMode; onBack: () => void }) {
 }
 
 export default function GamePicker() {
+  const router = useRouter();
   const [mode, setMode] = useState<GameMode | null>(null);
   const lastMode = useRef<GameMode | null>(null);
   if (mode) return <TopicPicker key={mode} mode={mode} onBack={() => setMode(null)} />;
@@ -86,7 +88,7 @@ export default function GamePicker() {
       <p className="mb-6 mt-2 text-sm leading-6 text-slate-600">Elige un juego y una temática.</p>
       <div className="grid gap-5 sm:grid-cols-2">
         {modes.map((item) => (
-          <button key={item.id} ref={(node) => { if (node && lastMode.current === item.id) { node.focus(); lastMode.current = null; } }} onClick={() => { lastMode.current = item.id; setMode(item.id); }} className="group flex min-w-0 flex-col rounded-2xl border border-sky-200 bg-white p-5 text-left shadow-sm transition motion-reduce:transition-none motion-reduce:transform-none hover:-translate-y-1 hover:border-sky-600 hover:shadow-lg focus-visible:border-sky-700 sm:p-6">
+          <button key={item.id} ref={(node) => { if (node && lastMode.current === item.id) { node.focus(); lastMode.current = null; } }} onClick={() => { if (item.id === "PASAPALABRA") { router.push("/pasapalabra"); return; } lastMode.current = item.id; setMode(item.id); }} className="group flex min-w-0 flex-col rounded-2xl border border-sky-200 bg-white p-5 text-left shadow-sm transition motion-reduce:transition-none motion-reduce:transform-none hover:-translate-y-1 hover:border-sky-600 hover:shadow-lg focus-visible:border-sky-700 sm:p-6">
             <GameIllustration mode={item.id} /><span className="mt-5 text-2xl font-black text-blue-950">{item.name}</span><span className="mt-2 text-sm leading-6 text-slate-600">{item.description}</span><span className="mt-5 font-bold text-sky-800 group-hover:underline">Elegir juego <span aria-hidden="true">→</span></span>
           </button>
         ))}

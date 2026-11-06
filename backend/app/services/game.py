@@ -232,4 +232,12 @@ def get_game_history_detail(db: Session, current_user: User, session_id: int):
     ))
     if session is None:
         raise HTTPException(404, "La sesión no existe.")
+    if session.shared_match_id is not None:
+        from app.services.pasapalabra import read_state
+        shared = read_state(db, current_user, session.shared_match_id)
+        session.shared_summary = {key: shared[key] for key in (
+            "id", "play_mode", "self_position", "status", "outcome", "winner_position")}
+        session.shared_summary["participants"] = [
+            {key: participant[key] for key in ("position", "name", "correct", "wrong", "pending")}
+            for participant in shared["participants"]]
     return session

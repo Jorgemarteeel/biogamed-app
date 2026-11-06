@@ -37,7 +37,7 @@ export default function GameSummaryCard({ game, topicName, compact = false }: { 
       {summary.total !== null && game.shared_match_id == null && <div className="mt-3" role="img" aria-label={`${summary.correct} ${correctLabel} de ${summary.total} ${questionLabel}, ${summary.errors} ${errorLabel}`}>
         <div className="h-1.5 overflow-hidden rounded-full bg-red-200"><div className="h-full rounded-full bg-emerald-600" style={{ width: `${(summary.correct! / summary.total) * 100}%` }} /></div>
       </div>}
-      <Link href={`/partidas/${game.id}`} className="text-link mt-3 inline-flex min-h-11 items-center text-sm">Revisar respuestas</Link>{game.shared_match_id != null && <Link className="text-link ml-4 inline-flex min-h-11 items-center text-sm" href={`/pasapalabra/${game.shared_match_id}`}>{game.match_status === "RUNNING" ? "Reanudar partida local" : "Ver enfrentamiento"}</Link>}
+      <Link href={`/partidas/${game.id}`} className="text-link mt-3 inline-flex min-h-11 items-center text-sm">Revisar respuestas</Link>{game.shared_match_id != null && <Link className="text-link ml-4 inline-flex min-h-11 items-center text-sm" href={`/pasapalabra/${game.shared_match_id}`}>{game.match_status === "RUNNING" ? game.format_key === "pasapalabra-online-v1" ? "Reanudar partida en línea" : "Reanudar partida local" : "Ver enfrentamiento"}</Link>}
     </> : <p className="mt-4 text-sm font-bold text-slate-600">Sin finalizar · Sin puntuación disponible</p>}
   </article>;
 }

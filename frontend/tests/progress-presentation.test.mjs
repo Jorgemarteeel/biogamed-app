@@ -42,6 +42,13 @@ try {
 }
 
 const counts = { started: 3, completed: 2, unfinished: 1 };
+
+test("local and online marks remain visibly distinct in cards and evolution groups", () => {
+  const marks = ["local", "online"].map(format => mark({game_mode:"PASAPALABRA",format_key:`pasapalabra-${format}-v1`,total_questions:20}));
+  const html = renderToStaticMarkup(React.createElement(ProgressContent,{progress:progress(marks)}));
+  assert.match(html,/Pasapalabra local/);
+  assert.match(html,/Pasapalabra en línea/);
+});
 const progress = (marks) => ({ ...counts, by_mode: {
   TRIVIAL: counts, PASAPALABRA: { started: 0, completed: 0, unfinished: 0 },
 }, best_marks: marks });

@@ -7,7 +7,7 @@ import type { PersonalBestMark } from "@/services/api";
 function groupLabel(mark: PersonalBestMark) {
   const topic = mark.topic_name ?? `Temática ${mark.topic_id}`;
   const category = mark.category_name ?? `Categoría ${mark.category_id}`;
-  return `${mark.game_mode === "TRIVIAL" ? "Trivial" : "Pasapalabra"} · ${topic}${topic === category ? "" : ` · Categoría ${category}`} · Nivel ${mark.difficulty} · ${mark.total_questions} ${mark.total_questions === 1 ? "pregunta" : "preguntas"}`;
+  return `${mark.game_mode === "TRIVIAL" ? "Trivial" : mark.format_key === "pasapalabra-online-v1" ? "Pasapalabra en línea" : mark.format_key === "pasapalabra-local-v1" ? "Pasapalabra local" : "Pasapalabra"} · ${topic}${topic === category ? "" : ` · Categoría ${category}`} · Nivel ${mark.difficulty} · ${mark.total_questions} ${mark.total_questions === 1 ? "pregunta" : "preguntas"}`;
 }
 
 function dateLabel(value: string) {
@@ -29,7 +29,7 @@ export default function EvolutionSection({ marks }: { marks: PersonalBestMark[] 
     <h2 id="evolution-heading" className="text-xl font-bold text-blue-950">Evolución de resultados</h2>
     <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Se comparan partidas similares. Las puntuaciones pueden variar por las preguntas y la repetición; una subida no demuestra por sí sola una mejora del aprendizaje.</p>
     {marks.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 text-slate-600">Todavía no hay resultados comparables para mostrar.</p> : <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      {marks.length > 1 && <div className="mb-4"><label htmlFor="evolution-group" className="block font-semibold text-blue-950">Grupo de partidas</label><select id="evolution-group" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-700" value={selected} onChange={(event) => setSelected(Number(event.target.value))}>{marks.map((item, index) => <option key={`${item.game_mode}-${item.topic_id}-${item.category_id}-${item.difficulty}-${item.total_questions}`} value={index}>{groupLabel(item)}</option>)}</select></div>}
+      {marks.length > 1 && <div className="mb-4"><label htmlFor="evolution-group" className="block font-semibold text-blue-950">Grupo de partidas</label><select id="evolution-group" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-700" value={selected} onChange={(event) => setSelected(Number(event.target.value))}>{marks.map((item, index) => <option key={`${item.game_mode}-${item.topic_id}-${item.category_id}-${item.difficulty}-${item.total_questions}-${item.format_key ?? "legacy"}`} value={index}>{groupLabel(item)}</option>)}</select></div>}
       <h3 className="font-bold leading-7 text-blue-950">{groupLabel(mark)}</h3>
       {mark.category_name_source === "current" && <p className="mt-1 text-sm text-slate-600">El nombre de categoría corresponde al catálogo actual.</p>}
       {mark.category_name_source === null && <p className="mt-1 text-sm text-slate-600">El nombre de categoría no está disponible.</p>}

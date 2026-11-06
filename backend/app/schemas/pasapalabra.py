@@ -96,7 +96,8 @@ class ActiveQuestion(BaseModel):
 class MatchState(BaseModel):
     id: int
     version: int
-    play_mode: Literal["LOCAL"]
+    play_mode: Literal["LOCAL", "ONLINE"]
+    self_position: int = 1
     rules_version: str
     status: str
     server_now: datetime
@@ -113,3 +114,53 @@ class MatchState(BaseModel):
 class CommandResponse(BaseModel):
     operation: dict
     state: MatchState
+
+
+class RoomCreate(Selection):
+    operation_id: UUID
+
+
+class RoomJoin(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    operation_id: UUID
+    code: str = Field(min_length=1, max_length=12)
+
+
+class RoomAction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    operation_id: UUID
+    expected_version: int = Field(ge=1, strict=True)
+
+
+class RoomConfiguration(BaseModel):
+    topic: str
+    category: str
+    difficulty: int | None
+    difficulty_unknown: bool
+    questions_per_player: Literal[20]
+    time_per_player_ms: Literal[600000]
+
+
+class RoomParticipant(BaseModel):
+    position: int
+    name: str
+    ready: bool
+
+
+class RoomState(BaseModel):
+    id: int
+    version: int
+    status: Literal["WAITING", "STARTED", "CANCELLED", "EXPIRED"]
+    self_position: int
+    configuration: RoomConfiguration
+    selection: Selection
+    code: str | None
+    expires_at: datetime
+    server_now: datetime
+    match_id: int | None
+    participants: list[RoomParticipant]
+
+
+class RoomLeft(BaseModel):
+    id: int
+    status: Literal["LEFT"]

@@ -29,7 +29,9 @@ export default function Login({ sessionExpired = false }: { sessionExpired?: boo
       setPassword("");
       setSuccess("Sesión iniciada correctamente.");
       setTimeout(() => {
-        router.push("/dashboard");
+        let destination = "/dashboard";
+          try { const saved = sessionStorage.getItem("pasapalabra-return"); sessionStorage.removeItem("pasapalabra-return"); if (saved && /^\/pasapalabra(?:\/rooms)?(?:\/[1-9]\d*)?$/.test(saved)) destination = saved; } catch { /* use dashboard when storage is unavailable */ }
+          router.push(destination);
       }, 1000);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
@@ -49,7 +51,7 @@ export default function Login({ sessionExpired = false }: { sessionExpired?: boo
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-busy={isLoading} className="space-y-5">
+    <form method="post" onSubmit={handleSubmit} aria-busy={isLoading} className="space-y-5">
       {showSessionNotice && (
         <p role="status" className="notice-warning">
           Tu sesión ha caducado o ya no es válida. Vuelve a iniciar sesión.

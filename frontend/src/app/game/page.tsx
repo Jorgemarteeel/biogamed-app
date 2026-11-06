@@ -4,7 +4,7 @@ import GameStart from "@/components/GameStart";
 export default async function GamePage({
   searchParams,
 }: {
-  searchParams: Promise<{ topicId?: string | string[]; mode?: string | string[] }>;
+  searchParams: Promise<{ topicId?: string | string[]; mode?: string | string[]; play?: string | string[] }>;
 }) {
   const params = await searchParams;
   const id = typeof params.topicId === "string" && /^[1-9]\d*$/.test(params.topicId)
@@ -15,6 +15,6 @@ export default async function GamePage({
     ? params.mode
     : null;
 
-  if (mode === "PASAPALABRA" && topicId !== null) return <PasapalabraPrepare key={topicId} topicId={topicId}/>;
+  if (mode === "PASAPALABRA" && topicId !== null) return <PasapalabraPrepare key={`${topicId}-${params.play}`} topicId={topicId} online={params.play === "ONLINE"}/>;
   return <GameStart key={`${topicId}-${mode}`} topicId={topicId} mode={mode} />;
 }

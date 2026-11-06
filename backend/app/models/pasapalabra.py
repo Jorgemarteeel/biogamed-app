@@ -81,3 +81,38 @@ class MatchCommand(Base):
     operation_id: Mapped[str] = mapped_column(String(36), nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     result: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
+class PasapalabraRoom(Base):
+    __tablename__ = "pasapalabra_rooms"
+    __table_args__ = (CheckConstraint("guest_id IS NULL OR guest_id <> owner_id", name="ck_room_distinct_accounts"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    guest_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
+    code: Mapped[str] = mapped_column(String(12), unique=True, nullable=False)
+    selection: Mapped[dict] = mapped_column(JSON, nullable=False)
+    configuration: Mapped[dict] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="WAITING")
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    owner_ready: Mapped[bool] = mapped_column(default=False, nullable=False)
+    guest_ready: Mapped[bool] = mapped_column(default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    match_id: Mapped[int | None] = mapped_column(ForeignKey("pasapalabra_matches.id"), unique=True)
+
+
+class RoomOperation(Base):
+    __tablename__ = "pasapalabra_room_operations"
+    __table_args__ = (UniqueConstraint("user_id", "operation_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    operation_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    room_id: Mapped[int] = mapped_column(ForeignKey("pasapalabra_rooms.id"), nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
+class RoomJoinLimit(Base):
+    __tablename__ = "pasapalabra_join_limits"
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

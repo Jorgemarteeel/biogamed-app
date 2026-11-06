@@ -161,6 +161,9 @@ api.interceptors.response.use(
       // A delayed rejection of an old token must not clear a newer login.
       // Removing the token also makes simultaneous 401s redirect only once.
       if (token && error.config?.headers.Authorization === `Bearer ${token}`) {
+        if (window.location.pathname?.startsWith("/pasapalabra")) {
+          try { window.sessionStorage.setItem("pasapalabra-return", window.location.pathname); } catch { /* storage may be disabled */ }
+        }
         window.localStorage.removeItem("token");
         window.location.replace("/login?session=expired");
       }
@@ -394,6 +397,7 @@ export interface AnswerHistory {
 }
 
 export interface GameHistoryDetail extends GameHistorySummary {
+  shared_summary?: { id: number; play_mode: string; self_position: number; status: string; outcome: string | null; winner_position: number | null; participants: { position: number; name: string; correct: number; wrong: number; pending: number }[] } | null;
   continuation_error_code?: typeof LEGACY_SESSION_NO_SNAPSHOT | null;
   question_content_source?: "session_start" | "legacy";
   answer_logs: AnswerHistory[];
