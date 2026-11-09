@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models import AnswerLog, Category, GameSession, Question, Topic, User
 from app.utils.answers import is_accepted_answer
 from app.services.game_questions import selectable_questions
+from app.services.content_selection import resolve
 from app.services.game_progress import get_personal_best_marks
 from app.schemas.game import (
     AnswerCorrection, GameAvailabilityResponse, GameResultResponse, GameSessionStartResponse,
@@ -24,9 +25,22 @@ def _session_questions(session: GameSession) -> list[StoredQuestion]:
         raise HTTPException(409, "La copia de preguntas de esta partida no es válida.") from None
     ids = [q.id for q in snapshot.questions]
     if (ids != session.question_ids or len(set(ids)) != len(ids)
-            or any(q.topic_id != session.topic_id or q.question_type != session.game_mode
+            or any((session.topic_id is not None and q.topic_id != session.topic_id) or q.question_type != session.game_mode
                    for q in snapshot.questions)):
         raise HTTPException(409, "La copia de preguntas de esta partida no es válida.")
+    if session.topic_id is None:
+        context = session.content_context or {}
+        academic = context.get("academic") or {}
+        saved = context.get("questions", [])
+        if (not isinstance(academic, dict) or not all(type(academic.get(k)) is int and academic[k] > 0
+                for k in ("subject_id", "block_id", "category_id"))
+                or not isinstance(saved, list) or not all(isinstance(q, dict) for q in saved)):
+            raise HTTPException(409, "La clasificación guardada no es válida.")
+        classifications = {q.get("question_id"): q for q in saved}
+        if len(saved) != len(ids) or set(classifications) != set(ids) or any(classifications.get(q.id, {}).get("topic_id") != q.topic_id
+                or any(classifications.get(q.id, {}).get(k) != academic.get(k) for k in ("subject_id", "block_id", "category_id"))
+                for q in snapshot.questions):
+            raise HTTPException(409, "La clasificación guardada no es válida.")
     return snapshot.questions
 
 
@@ -34,7 +48,7 @@ def _classification(question: Question) -> dict:
     category = question.category
     block = category.block if category else None
     subject = block.subject if block else None
-    return {"question_id": question.id, "category_id": question.category_id,
+    return {"question_id": question.id, "topic_id": question.topic_id, "category_id": question.category_id,
             "category_name": category.name if category else None,
             "difficulty": question.difficulty,
             "block_id": block.id if block else None, "block_name": block.name if block else None,
@@ -42,15 +56,14 @@ def _classification(question: Question) -> dict:
 
 
 def start_game_session(
-    db: Session, current_user: User, topic_id: int, game_mode: str = "TRIVIAL",
+    db: Session, current_user: User, topic_id: int | None, game_mode: str = "TRIVIAL",
     category_id: int | None = None, difficulty: int | None = None,
-    difficulty_unknown: bool = False,
+    difficulty_unknown: bool = False, subject_id: int | None = None, block_id: int | None = None,
 ) -> GameSessionStartResponse:
     statement = selectable_questions(topic_id, game_mode, category_id, difficulty,
-                                     difficulty_unknown)
-    topic = db.get(Topic, topic_id)
-    if topic is None:
-        raise HTTPException(404, "La temática no existe.")
+                                     difficulty_unknown, subject_id, block_id, db)
+    academic = resolve(db, topic_id, category_id, subject_id, block_id)
+    topic = db.get(Topic, topic_id) if topic_id is not None else None
     questions = list(db.scalars(statement.order_by(func.random()).limit(10)))
     if not questions:
         raise HTTPException(409, "No hay preguntas disponibles para esta combinación de filtros.")
@@ -58,7 +71,8 @@ def start_game_session(
     # Project explicitly into the public schema; the storage schema includes solutions.
     public_questions = [QuestionForGame.model_validate(q.model_dump()) for q in snapshot.questions]
     content_context = {
-        "topic_name": topic.name,
+        "topic_name": topic.name if topic else None,
+        **({"academic": academic} if academic else {}),
         "selection": {
             "category_id": category_id,
             "category_name": questions[0].category.name if category_id is not None else None,
@@ -86,13 +100,12 @@ def start_game_session(
     return result
 
 
-def get_game_availability(db: Session, topic_id: int, game_mode: str = "TRIVIAL",
+def get_game_availability(db: Session, topic_id: int | None, game_mode: str = "TRIVIAL",
                           category_id: int | None = None, difficulty: int | None = None,
-                          difficulty_unknown: bool = False) -> GameAvailabilityResponse:
+                          difficulty_unknown: bool = False, subject_id: int | None = None,
+                          block_id: int | None = None) -> GameAvailabilityResponse:
     statement = selectable_questions(topic_id, game_mode, category_id, difficulty,
-                                     difficulty_unknown)
-    if db.get(Topic, topic_id) is None:
-        raise HTTPException(404, "La temática no existe.")
+                                     difficulty_unknown, subject_id, block_id, db)
     counts = db.execute(
         statement.with_only_columns(
             Question.category_id, Category.name, Question.difficulty,
@@ -102,6 +115,7 @@ def get_game_availability(db: Session, topic_id: int, game_mode: str = "TRIVIAL"
         .order_by(Question.category_id, Question.difficulty)
     ).all()
     return GameAvailabilityResponse(
+        academic=resolve(db, topic_id, category_id, subject_id, block_id),
         topic_id=topic_id, game_mode=game_mode,
         total_questions=sum(row[3] for row in counts),
         combinations=[{"category_id": row[0], "category_name": row[1],
@@ -136,7 +150,7 @@ def submit_game_session(
         logs = []
         for answer in answers:
             question = questions.get(answer.question_id)
-            if (question is None or question.topic_id != session.topic_id
+            if (question is None or (session.topic_id is not None and question.topic_id != session.topic_id)
                     or question.question_type != session.game_mode):
                 raise HTTPException(409, "Una pregunta de la sesión ya no está disponible.")
             if session.game_mode == "TRIVIAL":

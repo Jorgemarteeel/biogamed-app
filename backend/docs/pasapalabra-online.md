@@ -1,5 +1,7 @@
 # Pasapalabra en línea: salas privadas
 
+Ampliación backend del 6 de noviembre de 2026: [selección académica por categoría](academic-selection.md), sin Topic único. Los contratos por temática se conservan.
+
 Implementación sobre el motor de [Pasapalabra local](pasapalabra-local.md), sin
 otro motor, WebSockets, colas ni servicio de presencia. Dos cuentas distintas,
 20 preguntas y 600 000 ms individuales; sorteado el primer turno. Acierto

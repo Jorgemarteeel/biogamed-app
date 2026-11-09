@@ -16,7 +16,7 @@ class GameSession(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id"), nullable=False)
+    topic_id: Mapped[int | None] = mapped_column(ForeignKey("topics.id"), nullable=True)
     score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

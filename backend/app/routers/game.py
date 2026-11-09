@@ -6,6 +6,7 @@ from app.dependencies import get_current_user
 from app.models import User
 from app.schemas.game import GameAvailabilityResponse, GameHistoryDetail, GameHistorySummary, GameProgressResponse, GameResultResponse, GameSessionStartResponse, GameSubmit
 from app.schemas.question import QuestionType
+from app.schemas.pasapalabra import Selection
 from app.services import game as game_service
 
 
@@ -71,3 +72,21 @@ def submit_game(
     current_user: User = Depends(get_current_user),
 ) -> GameResultResponse:
     return game_service.submit_game_session(db, current_user, session_id, submission.answers)
+
+
+@router.post("/academic/preparations", response_model=GameAvailabilityResponse)
+def academic_prepare(request: Selection, mode: QuestionType = Query(default="TRIVIAL"),
+                     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if request.subject_id is None:
+        from fastapi import HTTPException
+        raise HTTPException(422, "Esta ruta requiere selección académica")
+    return game_service.get_game_availability(db, game_mode=mode, **request.model_dump())
+
+
+@router.post("/academic/start", response_model=GameSessionStartResponse, status_code=201)
+def academic_start(request: Selection, db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
+    if request.subject_id is None:
+        from fastapi import HTTPException
+        raise HTTPException(422, "Esta ruta requiere selección académica")
+    return game_service.start_game_session(db, current_user, **request.model_dump())

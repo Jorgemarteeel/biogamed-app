@@ -1,5 +1,7 @@
 # Pasapalabra: motor compartido y API local
 
+Ampliación backend del 6 de noviembre de 2026: [selección académica por categoría](academic-selection.md), sin Topic único. Los contratos por temática se conservan.
+
 Ampliación del 5 de noviembre de 2026: [salas privadas en línea](pasapalabra-online.md),
 reutilizando este motor. Las verificaciones originales siguientes conservan su
 fecha y alcance local.

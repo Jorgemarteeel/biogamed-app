@@ -10,6 +10,7 @@ from app.models import User, Topic, Category
 from app.models.pasapalabra import PasapalabraRoom as Room, RoomOperation, RoomJoinLimit
 from app.schemas.pasapalabra import Selection, LocalStart
 from app.services import pasapalabra as engine
+from app.services.content_selection import resolve, selection_dump
 
 
 def lock_actor(db, actor):
@@ -67,20 +68,21 @@ def read(db, actor, room_id):
 
 def create(db, actor, request):
     lock_actor(db, actor)
-    selection = request.model_dump(exclude={"operation_id"})
+    selection = selection_dump(request, exclude={"operation_id"})
     payload = {"kind": "create", **selection}
     previous = receipt(db, actor, request.operation_id, payload)
     if previous:
         return read(db, actor, previous.room_id)
     engine.prepare(db, Selection(**selection))
-    topic = db.get(Topic, request.topic_id)
+    academic = resolve(db, request.topic_id, request.category_id, request.subject_id, request.block_id)
+    topic = db.get(Topic, request.topic_id) if request.topic_id is not None else None
     category = db.get(Category, request.category_id) if request.category_id else None
     now = engine.server_now(db)
     # 60 random bits, 12 unambiguous uppercase hex/base32 characters.
     code = ''.join(secrets.choice('ABCDEFGHJKLMNPQRSTUVWXYZ23456789') for _ in range(12))
     room = Room(owner_id=actor.id, code=code, selection=selection, created_at=now,
                 expires_at=now + timedelta(minutes=30),
-                configuration={"topic": topic.name, "category": category.name if category else "Todas, incluidas sin categoría",
+                configuration={"academic": academic, "topic": topic.name if topic else None, "category": category.name if category else "Todas, incluidas sin categoría",
                                "difficulty": request.difficulty, "difficulty_unknown": request.difficulty_unknown,
                                "questions_per_player": 20, "time_per_player_ms": 600000})
     db.add(room)
@@ -187,7 +189,7 @@ def action(db, actor, room_id, kind, request):
         start_request = LocalStart(**room.selection, guest_name=guest.name,
                                    operation_id=uuid5(NAMESPACE_URL, f"biogamed:room:{room.id}"))
         try:
-            room.match_id = engine.start_shared(db, owner, start_request, online_guest=guest, auto_commit=False, start_before=room.expires_at)
+            room.match_id = engine.start_shared(db, owner, start_request, online_guest=guest, auto_commit=False, start_before=room.expires_at, academic_context=room.configuration.get("academic"))
         except HTTPException as exc:
             if isinstance(exc.detail, dict) and exc.detail.get("code") == "ROOM_EXPIRED":
                 room.status = "EXPIRED"

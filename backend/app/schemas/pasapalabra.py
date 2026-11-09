@@ -3,11 +3,14 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from app.schemas.content_selection import AcademicContext
 
 
 class Selection(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    topic_id: int = Field(gt=0, strict=True)
+    topic_id: int | None = Field(default=None, gt=0, strict=True)
+    subject_id: int | None = Field(default=None, gt=0, strict=True)
+    block_id: int | None = Field(default=None, gt=0, strict=True)
     category_id: int | None = Field(default=None, gt=0, strict=True)
     difficulty: int | None = Field(default=None, ge=1, le=4, strict=True)
     difficulty_unknown: bool = False
@@ -16,6 +19,11 @@ class Selection(BaseModel):
     def exclusive_difficulty(self):
         if self.difficulty is not None and self.difficulty_unknown:
             raise ValueError("difficulty y difficulty_unknown son excluyentes")
+        academic = self.subject_id is not None or self.block_id is not None
+        if academic and (self.subject_id is None or self.block_id is None or self.category_id is None or self.topic_id is not None):
+            raise ValueError("La selección académica requiere asignatura, bloque y categoría sin temática")
+        if not academic and self.topic_id is None:
+            raise ValueError("Falta la selección de contenido")
         return self
 
 
@@ -94,6 +102,7 @@ class ActiveQuestion(BaseModel):
 
 
 class MatchState(BaseModel):
+    academic: AcademicContext | None = None
     id: int
     version: int
     play_mode: Literal["LOCAL", "ONLINE"]
@@ -133,7 +142,8 @@ class RoomAction(BaseModel):
 
 
 class RoomConfiguration(BaseModel):
-    topic: str
+    academic: AcademicContext | None = None
+    topic: str | None
     category: str
     difficulty: int | None
     difficulty_unknown: bool

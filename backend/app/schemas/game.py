@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_serializer
+from app.schemas.content_selection import AcademicContext
 from app.schemas.question import QuestionType
 
 
@@ -16,7 +17,15 @@ class QuestionForGame(BaseModel):
 
 
 class QuestionClassification(BaseModel):
+    @model_serializer(mode="wrap")
+    def preserve_legacy_shape(self, handler):
+        value = handler(self)
+        if value.get("topic_id") is None:
+            value.pop("topic_id", None)
+        return value
+
     question_id: int
+    topic_id: int | None = None
     category_id: int | None
     category_name: str | None
     difficulty: int | None
@@ -34,7 +43,15 @@ class SelectionContext(BaseModel):
 
 
 class ContentContext(BaseModel):
+    @model_serializer(mode="wrap")
+    def preserve_legacy_shape(self, handler):
+        value = handler(self)
+        if value.get("academic") is None:
+            value.pop("academic", None)
+        return value
+
     topic_name: str | None = None
+    academic: AcademicContext | None = None
     selection: SelectionContext
     questions: list[QuestionClassification]
 
@@ -47,7 +64,8 @@ class AvailableCombination(BaseModel):
 
 
 class GameAvailabilityResponse(BaseModel):
-    topic_id: int
+    academic: AcademicContext | None = None
+    topic_id: int | None
     game_mode: QuestionType
     total_questions: int
     combinations: list[AvailableCombination]
@@ -55,7 +73,7 @@ class GameAvailabilityResponse(BaseModel):
 
 class GameSessionStartResponse(BaseModel):
     session_id: int
-    topic_id: int
+    topic_id: int | None
     questions: list[QuestionForGame]
     content_context: ContentContext | None = None
 
@@ -108,7 +126,7 @@ class GameHistorySummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    topic_id: int
+    topic_id: int | None
     game_mode: QuestionType
     score: int
     is_completed: bool
@@ -167,9 +185,10 @@ class ComparableResult(BaseModel):
 
 
 class PersonalBestMark(BaseModel):
+    academic: AcademicContext | None = None
     game_mode: QuestionType
     format_key: str | None = None
-    topic_id: int
+    topic_id: int | None
     topic_name: str | None
     topic_name_source: str | None = None
     category_id: int

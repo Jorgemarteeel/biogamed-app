@@ -24,6 +24,12 @@ def _classification(session):
     if (not isinstance(context, dict) or not isinstance(context.get("questions"), list)
             or not isinstance(context.get("selection"), dict)):
         return None
+    academic = context.get("academic")
+    if session.topic_id is None:
+        if not isinstance(academic, dict) or not all(_positive_id(academic.get(k)) for k in ("subject_id", "block_id", "category_id")):
+            return None
+        if not all(isinstance(q, dict) for q in context["questions"]) or any(any(q.get(k) != academic[k] for k in ("subject_id", "block_id", "category_id")) for q in context["questions"]):
+            return None
     selection = context["selection"]
     if not {"category_id", "category_name", "difficulty", "difficulty_unknown"} <= selection.keys():
         return None
@@ -133,7 +139,8 @@ def get_personal_best_marks(db: Session, current_user: User):
             continue
         category_id, difficulty, historical_name = classification
         key = (session.game_mode, session.topic_id, category_id,
-               difficulty, len(session.question_ids), session.format_key or "legacy")
+               difficulty, len(session.question_ids), session.format_key or "legacy",
+               tuple((session.content_context.get("academic") or {}).get(k) for k in ("subject_id", "block_id")))
         groups[key].append((session, historical_name))
     if not groups:
         return []
@@ -144,7 +151,7 @@ def get_personal_best_marks(db: Session, current_user: User):
     categories = dict(db.execute(select(Category.id, Category.name).where(
         Category.id.in_(category_ids))).all())
     marks = []
-    for (mode, topic_id, category_id, difficulty, total, format_key), candidates in sorted(groups.items()):
+    for (mode, topic_id, category_id, difficulty, total, format_key, scope), candidates in sorted(groups.items(), key=lambda pair: str(pair[0])):
         ordered = sorted(candidates, key=lambda item: (item[0].created_at, item[0].id))
         best_score = max(session.score for session, _ in candidates)
         tied = [(session, name) for session, name in candidates if session.score == best_score]
@@ -153,6 +160,7 @@ def get_personal_best_marks(db: Session, current_user: User):
         historical_topic = (winner.content_context or {}).get("topic_name")
         topic_name = historical_topic if historical_topic is not None else topics.get(topic_id)
         marks.append({
+            "academic": (winner.content_context or {}).get("academic"),
             "game_mode": mode, "topic_id": topic_id,
             "format_key": None if format_key == "legacy" else format_key,
             "topic_name": topic_name,

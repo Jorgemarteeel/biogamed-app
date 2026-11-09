@@ -14,8 +14,14 @@ def playable_question_filter(mode: str):
     return and_(Question.is_active.is_(True), Question.question_type == mode, *fields)
 
 
-def selectable_questions(topic_id: int, mode: str, category_id: int | None = None,
-                         difficulty: int | None = None, difficulty_unknown: bool = False):
+def selectable_questions(topic_id: int | None, mode: str, category_id: int | None = None,
+                         difficulty: int | None = None, difficulty_unknown: bool = False,
+                         subject_id: int | None = None, block_id: int | None = None, db=None):
+    from app.services.content_selection import resolve
+    if db is not None:
+        resolve(db, topic_id, category_id, subject_id, block_id)
+    elif topic_id is None or subject_id is not None or block_id is not None:
+        raise HTTPException(422, "La selección académica requiere validación de jerarquía")
     if mode not in {"TRIVIAL", "PASAPALABRA"}:
         raise HTTPException(422, "El modo debe ser TRIVIAL o PASAPALABRA.")
     if category_id is not None and (type(category_id) is not int or category_id < 1):
@@ -24,9 +30,9 @@ def selectable_questions(topic_id: int, mode: str, category_id: int | None = Non
         raise HTTPException(422, "difficulty debe ser un entero entre 1 y 4.")
     if difficulty_unknown and difficulty is not None:
         raise HTTPException(422, "No se puede indicar difficulty junto con difficulty_unknown.")
-    statement = select(Question).where(
-        Question.topic_id == topic_id, playable_question_filter(mode),
-    )
+    statement = select(Question).where(playable_question_filter(mode))
+    if topic_id is not None:
+        statement = statement.where(Question.topic_id == topic_id)
     if category_id is not None:
         statement = statement.where(Question.category_id == category_id)
     if difficulty is not None:
