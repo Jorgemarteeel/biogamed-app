@@ -1,0 +1,10 @@
+.filters { min-width: 0; }
+.dialog { width: min(24rem,calc(100vw - 20px)); margin: auto; max-width: calc(100vw - 20px); max-height: calc(100dvh - 20px); overflow: auto; padding: 14px; border: 1px solid #cbd5e1; border-radius: 16px; background: white; color: #172554; font: inherit; }
+.dialog::backdrop { background: #0f172a66; }
+.dialog :global(.rdp-root) { --rdp-accent-color: #1e3a8a; --rdp-accent-background-color: #e0f2fe; --rdp-day-height: 40px; --rdp-day-width: 40px; --rdp-day_button-height: 38px; --rdp-day_button-width: 38px; margin-top: 12px; font: inherit; }
+.dialog :global(.rdp-selected) { background: #1e3a8a; color: white; border-radius: 12px; }
+.dialog :global(.rdp-selected) :global(.rdp-day_button)::after { content: '✓'; font-size: .6rem; }
+.dialog :global(.rdp-today) :global(.rdp-day_button) { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.dialog button:focus-visible, .dialog select:focus-visible, .filters input:focus-visible { outline: 3px solid #c2410c; outline-offset: 2px; }
+.dialog :global(.rdp-dropdown) { min-height: 40px; }
+@media(max-width:360px){ .dialog { padding: 8px; } .dialog :global(.rdp-root) { --rdp-day-width: 36px; --rdp-day_button-width: 34px; } }

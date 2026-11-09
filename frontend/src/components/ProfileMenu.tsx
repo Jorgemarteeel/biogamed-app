@@ -40,7 +40,7 @@ export default function ProfileMenu({ name, role }: { name?: string | null; role
     {open && <nav id="profile-navigation" aria-label="Navegación personal" className="absolute left-0 z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 text-blue-950 shadow-xl sm:left-auto sm:right-0">
       <Link href="/historial" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Mi historial</Link>
       <Link href="/progreso" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Mi progreso</Link>
-      {canManage && <div className="mt-2 border-t border-slate-200 pt-2"><Link href="/gestion/asignaturas" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 font-semibold hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Gestión de contenidos</Link></div>}
+      {canManage && <div className="mt-2 border-t border-slate-200 pt-2"><Link href="/gestion/asignaturas" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 font-semibold hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Gestión de contenidos</Link><Link href="/seguimiento" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 font-semibold hover:bg-sky-50">Participación y resultados</Link></div>}
     </nav>}
   </div>;
 }
