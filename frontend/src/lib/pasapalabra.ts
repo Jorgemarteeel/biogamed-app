@@ -23,6 +23,7 @@ export interface Player {
     }[];
 }
 export interface Match {
+    academic?: import("@/services/api").AcademicContext | null;
     play_mode?: "LOCAL" | "ONLINE";
     self_position?: number;
     id: number;
@@ -59,7 +60,7 @@ export async function sendOperation(id: number, operation: Operation): Promise<M
 export function remaining(s: Match, p: Player, elapsed: number) { return s.active_participant === p.position && s.turn_deadline_at ? Math.max(0, Date.parse(s.turn_deadline_at) - Date.parse(s.server_now) - elapsed) : p.remaining_ms; }
 
 export function resolvedInOrder(s: Match) {
-    return s.participants.filter(p => s.play_mode !== "ONLINE" || p.position === s.self_position).flatMap(p => p.resolved.map(r => ({ ...r, name: p.name, position: p.position })))
+    return s.participants.filter(p => s.play_mode !== "ONLINE" || p.position === s.self_position).flatMap(p => (p.resolved??[]).map(r => ({ ...r, name: p.name, position: p.position })))
         .sort((a, b) => b.resolution_order - a.resolution_order);
 }
 export function startsCelebration(previous: Match | null, next: Match) {

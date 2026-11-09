@@ -351,3 +351,14 @@ test("specific legacy conflict is preserved without trying completed-result reco
     assert.deepEqual(calls, ["/game/submit/17"]);
   } finally { api.defaults.adapter = originalAdapter; }
 });
+
+
+test("expired academic auth retains hierarchy, filters and pagination", async () => {
+  browser();
+  const saved = new Map();
+  global.window.location.pathname = "/practicar";
+  global.window.location.search = "?subject=1&block=2&categoriesPage=2";
+  global.window.sessionStorage = { setItem: (key,value) => saved.set(key,value) };
+  await assert.rejects(api.get("/practice/subjects", {adapter:rejectWith(401)}));
+  assert.equal(saved.get("pasapalabra-return"), "/practicar?subject=1&block=2&categoriesPage=2");
+});

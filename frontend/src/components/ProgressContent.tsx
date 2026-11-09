@@ -29,7 +29,7 @@ export default function ProgressContent({ progress }: { progress: GameProgress }
       <h2 id="marks-heading" className="text-xl font-bold text-blue-950">Mis mejores marcas</h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Se comparan partidas de la misma modalidad, temática, categoría, nivel y cantidad de preguntas. Cada marca usa el nombre de temática conservado en su partida; si no consta, se indica el catálogo actual.</p>
       {progress.best_marks.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 text-slate-600">Todavía no hay partidas con clasificación suficiente para calcular tus mejores marcas.</p>
-        : <ul className="mt-5 grid gap-4 md:grid-cols-2">{progress.best_marks.map((mark) => <li key={`${mark.game_mode}-${mark.topic_id}-${mark.category_id}-${mark.difficulty}-${mark.total_questions}-${mark.format_key ?? "legacy"}`}><BestMarkCard mark={mark} /></li>)}</ul>}
+        : <ul className="mt-5 grid gap-4 md:grid-cols-2">{progress.best_marks.map((mark) => <li key={`${mark.game_mode}-${mark.topic_id}-${mark.category_id}-${mark.difficulty}-${mark.total_questions}-${mark.format_key ?? "legacy"}-${mark.academic?.subject_id ?? "legacy"}-${mark.academic?.block_id ?? "legacy"}`}><BestMarkCard mark={mark} /></li>)}</ul>}
     </section>
     <EvolutionSection marks={progress.best_marks} />
   </>;

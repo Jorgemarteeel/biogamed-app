@@ -148,3 +148,23 @@ alturas: todos los campos quedaron dentro de su tarjeta; a 1366×768, el campo
 de solución terminó en y=753,3, antes del borde y=756, manteniendo página 1366×768.
 Las partidas continúan consumiendo tiempo según el motor; no se han pausado.
 La demo sigue disponible y permite crear otra desde sus preparaciones habituales.
+
+## Resultado final y panel sin asignaturas — 9 de noviembre de 2026
+
+Resultado con dos tarjetas iguales centradas y próximas, apiladas en móvil. Reutiliza Rosco con variante final; se neutralizan las columnas 1/3 de la partida activa y las alturas máximas de resultado. Las cifras con símbolos/etiquetas diferencian aciertos, fallos y pendientes; remaining_ms se presenta como «Tiempo restante». Encabezado compacto; ganador/empate/abandono y celebración conservan sus reglas.
+
+FinalAnswers usa únicamente resolved autorizado ya cargado. Lista por jugador/número con enunciado histórico, respuesta y solución cuando existen; campos ausentes indicados sin reconstruir banco. Filtros jugador/estado y diez elementos iniciales con Mostrar más. No deduplica registros. Online filtra también por self_position y no ofrece filtro del rival. Pendientes no se convierten en respuestas. Corrections y sus controles de partida activa se mantienen; resultado no los reutiliza ni anida desplegables.
+
+Panel vacío informa «Todavía no hay asignaturas disponibles. Puedes practicar con los bancos de preguntas existentes» y enlaza principalmente a /dashboard?banks=1#legacy-banks. El enlace nativo recarga esa ruta para que el estado inicial abra realmente los bancos. Subtítulo adaptado por catálogo consultado; página posterior vacía no implica catálogo global vacío. Sin cambios de clasificación, permisos ni datos.
+
+Verificación: 45 pruebas relacionadas aprobadas (presentación, partida activa y catálogo), incluidas normal/empate/abandono, celebración, privacidad online, ausencia de datos antiguos, registros repetidos, filtros y límite inicial. Las 19 de catálogo se volvieron a comprobar tras reforzar la prueba de comportamiento del estado vacío; no sumarlas como casos nuevos. Tipos/lint correctos; compilación independiente aprobada. No motores, migraciones ni escrituras de aplicación nuevas. No se crearon partidas de prueba.
+
+Navegador integrado específico: resultado online existente /pasapalabra/24 (normal) y /26 (abandono sin respuestas), cuenta demo existente. Filtro falladas y Mostrar más comprobados sin consultas nuevas al banco. Escritorio solicitado 1366x768 (herramienta reporta 1366x769 CSSpx), CSSzoom1/visualViewport.scale1: anchuras iguales de 410px, roscos iguales; cero contenedores con overflow:auto efectivo en resultado. Móvil390x844: tarjetas apiladas de igual anchura, página/clientWidth376 por scrollbar, sin overflow horizontal. Respuestas extensas usan scroll de página. Diámetro final común 200px. No se presenta como inspección visual de la cuenta habitual ni de su partida1.
+
+Límites: panel vacío verificado con pruebas de componentes; la demo tiene asignaturas y no se alteró para vaciarla. Partida activa cubierta por regresiones existentes, sin crear actividad para una inspección visual adicional. Empate/datos incompletos cubiertos por pruebas. Persisten límites de lector de pantalla, teclado virtual físico y zoom nativo200%. La aprobación visual corresponde al usuario.
+
+Demo: http://localhost:13004/pasapalabra/24 y /26 con la cuenta demo existente. El acceso habitual /dashboard refleja el estado vacío real con código montado; esta tarea no inicia sesión ni añade actividad allí. Todo pendiente en main, sin staging/commit/push.
+
+## Aprobación posterior — 9 de noviembre de 2026
+
+El usuario confirmó visualmente el resultado y el acceso único del panel y autorizó su inclusión en commits locales junto al recorrido académico. Estado final del panel vacío: botón nativo de apertura/cierre con aria-expanded/aria-controls; selector conservado en DOM para no perder selección; título no interactivo y sin enlace duplicado. Sustituye la solución de recarga por enlace descrita arriba. Se conservan los límites técnicos documentados y la distinción entre revisión autónoma y aprobación del usuario.

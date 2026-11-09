@@ -1,5 +1,6 @@
 "use client";
 
+import {academicLabel} from "@/lib/academic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -83,7 +84,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
           <p className="text-xs font-bold uppercase tracking-widest text-sky-800">{game.completion_reason === "ABANDONMENT" ? "Finalizada por abandono" : game.is_completed ? "Partida completada" : game.shared_match_id != null ? "En curso" : "Sin finalizar"}</p>
           <h2 className="mt-3 text-2xl font-black text-blue-950">{mode}</h2>
           <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
-            <div><dt className="font-semibold text-slate-600">{game.content_context?.topic_name ? "Temática al iniciar" : "Temática del catálogo actual (nombre original no registrado)"}</dt><dd className="mt-1 break-words text-blue-950">{game.content_context?.topic_name ?? topicName ?? `Temática ${game.topic_id}`}</dd></div>
+            <div><dt className="font-semibold text-slate-600">{game.content_context?.academic ? "Contenido académico al iniciar" : game.content_context?.topic_name ? "Temática al iniciar" : "Temática del catálogo actual (nombre original no registrado)"}</dt><dd className="mt-1 break-words text-blue-950">{academicLabel(game.content_context?.academic) ?? game.content_context?.topic_name ?? topicName ?? (game.topic_id === null ? "Contenido no disponible" : `Temática ${game.topic_id}`)}</dd></div>
             <div><dt className="font-semibold text-slate-600">Fecha de inicio</dt><dd className="mt-1 text-blue-950">{dateLabel}</dd></div>
             <div><dt className="font-semibold text-slate-600">Puntuación</dt><dd className="mt-1 text-blue-950">{game.shared_match_id != null ? `${game.score} aciertos · ${game.wrong_count} fallos · ${game.pending_count} pendientes` : game.is_completed ? `${game.score} de ${game.question_ids.length} aciertos` : "No disponible: partida sin finalizar"}</dd></div>
           </dl>

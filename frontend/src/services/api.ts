@@ -1,3 +1,4 @@
+export interface AcademicContext { subject_id: number; subject_name: string; block_id: number; block_name: string; category_id: number; category_name: string }
 import axios from "axios";
 
 export interface LoginResponse {
@@ -161,8 +162,8 @@ api.interceptors.response.use(
       // A delayed rejection of an old token must not clear a newer login.
       // Removing the token also makes simultaneous 401s redirect only once.
       if (token && error.config?.headers.Authorization === `Bearer ${token}`) {
-        if (window.location.pathname?.startsWith("/pasapalabra")) {
-          try { window.sessionStorage.setItem("pasapalabra-return", window.location.pathname); } catch { /* storage may be disabled */ }
+        if (window.location.pathname?.startsWith("/pasapalabra") || window.location.pathname === "/practicar") {
+          try { window.sessionStorage.setItem("pasapalabra-return", window.location.pathname + (window.location.pathname === "/practicar" ? window.location.search ?? "" : "")); } catch { /* storage may be disabled */ }
         }
         window.localStorage.removeItem("token");
         window.location.replace("/login?session=expired");
@@ -196,12 +197,13 @@ export interface GameQuestion {
 
 export interface GameSessionStart {
   session_id: number;
-  topic_id: number;
+  topic_id: number | null;
   questions: GameQuestion[];
   content_context: GameContentContext | null;
 }
 
 export interface GameContentContext {
+  academic?: AcademicContext | null;
   topic_name?: string | null;
   selection: {
     category_id: number | null;
@@ -222,7 +224,7 @@ export interface GameContentContext {
 }
 
 export interface GameAvailability {
-  topic_id: number;
+  topic_id: number | null;
   game_mode: GameMode;
   total_questions: number;
   combinations: { category_id: number | null; category_name: string | null; difficulty: number | null; count: number }[];
@@ -365,7 +367,7 @@ export async function linkCategory(subjectId: number, blockId: number, categoryI
 
 export interface GameHistorySummary {
   id: number;
-  topic_id: number;
+  topic_id: number | null;
   game_mode: GameMode;
   score: number;
   is_completed: boolean;
@@ -417,9 +419,10 @@ export interface ActivityCounts {
 }
 
 export interface PersonalBestMark {
+  academic?: AcademicContext | null;
   format_key?: string | null;
   game_mode: GameMode;
-  topic_id: number;
+  topic_id: number | null;
   topic_name: string | null;
   topic_name_source?: "historical" | "current" | null;
   category_id: number;

@@ -1,5 +1,6 @@
 "use client";
 
+import {academicLabel} from "@/lib/academic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
@@ -30,7 +31,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   const allAnswered = session.questions.every((item) => answers[item.id] !== undefined);
   const isLast = questionIndex === session.questions.length - 1;
   const labels = describeContentContext(session.content_context);
-  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">Temática: {session.content_context?.topic_name ?? topicName} · Categoría: {labels?.category ?? "Categoría no disponible"} · Dificultad: {labels?.difficulty ?? "Dificultad no disponible"}</p>;
+  const gameContext = <p className="mt-3 text-sm leading-6 text-slate-600">{session.content_context?.academic ? "Contenido académico" : "Temática"}: {academicLabel(session.content_context?.academic) ?? session.content_context?.topic_name ?? topicName} · Categoría: {labels?.category ?? "Categoría no disponible"} · Dificultad: {labels?.difficulty ?? "Dificultad no disponible"}</p>;
 
   useEffect(() => {
     mounted.current = true;

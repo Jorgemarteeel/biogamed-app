@@ -1,3 +1,4 @@
+import {academicLabel} from "@/lib/academic";
 import Image from "next/image";
 import Link from "next/link";
 import { describeContentContext } from "@/lib/game-review";
@@ -6,7 +7,7 @@ import { topicIllustration } from "@/lib/topic-presentation";
 import type { GameHistorySummary } from "@/services/api";
 
 export default function GameSummaryCard({ game, topicName, compact = false }: { game: GameHistorySummary; topicName: string; compact?: boolean }) {
-  topicName = game.content_context?.topic_name ?? topicName;
+  topicName = academicLabel(game.content_context?.academic) ?? game.content_context?.topic_name ?? (game.topic_id === null ? "Contenido académico" : topicName);
   const context = describeContentContext(game.content_context);
   const summary = gameSummary(game);
   const date = new Date(game.created_at);
@@ -22,7 +23,7 @@ export default function GameSummaryCard({ game, topicName, compact = false }: { 
       <div className="min-w-0 flex-1">
         <h2 className="break-words text-lg font-bold leading-6 text-blue-950">{topicName}</h2>
         <p className="mt-1 text-sm leading-5 text-slate-600">{game.game_mode === "TRIVIAL" ? "Trivial" : "Pasapalabra"} · {dateLabel}</p>
-        {!game.content_context?.topic_name && <p className="mt-1 text-xs text-slate-600">Temática del catálogo actual; nombre original no registrado</p>}
+        {!game.content_context?.academic && !game.content_context?.topic_name && <p className="mt-1 text-xs text-slate-600">Temática del catálogo actual; nombre original no registrado</p>}
         {context?.difficulty && <p className="mt-1 text-sm leading-5 text-slate-600">{context.difficulty}</p>}
         {category && <p className="mt-1 break-words text-sm leading-5 text-slate-600">Categoría: {category}</p>}
         {!context && <p className="mt-1 text-sm leading-5 text-slate-600">Clasificación histórica no disponible</p>}

@@ -1,3 +1,4 @@
+import "./helpers/academic-aliases.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -150,4 +151,12 @@ test("best mark identifies the topic label from its winning session or current c
   }) }));
   assert.match(legacy, /Tema actual/);
   assert.match(legacy, /nombre original no registrado/);
+});
+
+
+test("academic marks use the saved hierarchy without inventing a single topic", () => {
+  const academic={subject_id:10,subject_name:"Asignatura guardada",block_id:20,block_name:"Bloque guardado",category_id:30,category_name:"Categoría guardada"};
+  const html=render([mark({topic_id:null,topic_name:null,topic_name_source:null,category_id:30,category_name:"Categoría guardada",academic})]);
+  assert.match(html,/Asignatura guardada → Bloque guardado → Categoría guardada/);
+  assert.doesNotMatch(html,/Temática null|nombre original no registrado/);
 });

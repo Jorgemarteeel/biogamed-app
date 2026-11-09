@@ -8,10 +8,12 @@ import { Frame, PasapalabraLoginLink } from "@/components/Pasapalabra";
 import { TopicPicker } from "@/components/GamePicker";
 import { saveJoinDraft, readJoinDraft, clearJoinDraft } from "@/lib/pasapalabra-join";
 import layout from "./PasapalabraLayout.module.css";
+import AcademicContext from "@/components/AcademicContext";
+import PasapalabraModePicker from "@/components/PasapalabraModePicker";
 interface Room {
   id: number; version: number; status: string; self_position: number;
   code: string | null; expires_at: string; server_now: string; match_id: number | null;
-  configuration: { topic: string; category: string; difficulty: number | null; difficulty_unknown: boolean };
+  configuration: { academic?: import("@/services/api").AcademicContext | null; topic: string | null; category: string; difficulty: number | null; difficulty_unknown: boolean };
   participants: { position: number; name: string; ready: boolean }[];
 }
 export function roomErrorMessage(error: unknown) {
@@ -37,21 +39,11 @@ export function roomErrorMessage(error: unknown) {
   return labels[data?.detail?.code] ?? (status === 404 ? "Esta sala no está disponible para tu cuenta." : "No se pudo realizar la operación. Revisa la sala.");
 }
 const failure = roomErrorMessage;
-function ModeIllustration({online}:{online:boolean}) {
-  return <svg viewBox="0 0 240 104" aria-hidden="true" className="mx-auto h-20 w-full max-w-56" fill="none">
-    <rect x="4" y="4" width="232" height="96" rx="22" fill={online?'#e0f2fe':'#ccfbf1'}/>
-    {[72,168].map((x,i)=><g key={x} stroke={i?'#c2410c':'#1e3a8a'} strokeWidth="3" strokeLinecap="round">
-      <circle cx={x} cy="26" r="10" fill="white"/><path d={`M${x-17} 53c0-17 34-17 34 0`} fill="white"/>
-      <circle cx={x+13} cy="32" r="7" fill={i&&!online?'white':'#1e3a8a'} stroke={i&&!online?'#c2410c':'#1e3a8a'}/>
-      {i&&!online?<path d={`M${x+10} 32h6m-3-3v6`} strokeWidth="2"/>:<path d={`m${x+10} 32 2 2 4-4`} stroke="white" strokeWidth="2"/>}
-    </g>)}
-    {online?<><path d="M100 73h40" stroke="#0369a1" strokeWidth="3" strokeDasharray="4 4"/><circle cx="120" cy="73" r="5" fill="#0d9488"/>{[48,144].map(x=><g key={x}><rect x={x} y="58" width="48" height="33" rx="5" fill="white" stroke="#1e3a8a" strokeWidth="3"/><path d={`M${x+17} 84h14`} stroke="#0369a1" strokeWidth="2"/></g>)}</>:<><path d="M72 55v17h20m76-17v17h-20" stroke="#0d9488" strokeWidth="3"/><rect x="86" y="57" width="68" height="36" rx="5" fill="white" stroke="#1e3a8a" strokeWidth="3"/><path d="M108 85h24" stroke="#0369a1" strokeWidth="2"/></>}
-  </svg>;
-}
-export function PasapalabraEntry() {
+
+export function PasapalabraEntry({compact=false}:{compact?:boolean} = {}) {
   const router = useRouter();
-  const [choice, setChoice] = useState<"LOCAL"|"ONLINE"|null>(null);
-  const [action, setAction] = useState<"CREATE"|"JOIN"|null>(null);
+  const [choice, setChoice] = useState<"LOCAL"|"ONLINE"|null>(compact?"ONLINE":null);
+  const [action, setAction] = useState<"CREATE"|"JOIN"|null>(compact?"JOIN":null);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,16 +52,17 @@ export function PasapalabraEntry() {
   const lock = useRef(false);
   const codeField = useRef<HTMLInputElement>(null);
   const pending = useRef<{operation_id:string;code:string}|null>(null);
-  useEffect(()=>{let live=true;void Promise.resolve().then(()=>{const saved=readJoinDraft();if(live&&saved){setCode(saved);setChoice('ONLINE');setAction('JOIN');setRestored(true);}});return()=>{live=false;};},[]);
+  useEffect(()=>{let live=true;void Promise.resolve().then(()=>{const saved=readJoinDraft();if(live&&new URLSearchParams(window.location?.search ?? "").get('join')==='1'){setChoice('ONLINE');setAction('JOIN');}if(live&&saved){setCode(saved);setChoice('ONLINE');setAction('JOIN');setRestored(true);}});return()=>{live=false;};},[]);
   useEffect(()=>{if(action==='JOIN')codeField.current?.focus();},[action]);
   async function join() {
     if(lock.current||!code.trim())return;
     lock.current=true;setBusy(true);setError("");
+    if(compact){try{sessionStorage.setItem("pasapalabra-return","/dashboard?join=1");}catch{}}
     saveJoinDraft(code); // Before the request: a 401 interceptor may navigate immediately.
     pending.current??={operation_id:crypto.randomUUID(),code:code.trim().toUpperCase()};
     try {
       const {data}=await api.post<Room>('/pasapalabra/rooms/join',pending.current,{timeout:10000});
-      clearJoinDraft();pending.current=null;router.push(`/pasapalabra/rooms/${data.id}`);
+      clearJoinDraft();if(compact){try{sessionStorage.removeItem("pasapalabra-return");}catch{}}pending.current=null;router.push(`/pasapalabra/rooms/${data.id}`);
     } catch(e) {
       setError(failure(e));
       if(process.env.NODE_ENV==='development'&&isAxiosError(e)){
@@ -82,19 +75,10 @@ export function PasapalabraEntry() {
       else setUncertain(true);
     } finally {lock.current=false;setBusy(false);}
   }
-  return <Frame title="Pasapalabra"><div className="mx-auto max-w-3xl space-y-5">
-    <p className="text-sm text-slate-600">20 preguntas por jugador · 10 minutos individuales</p>
-    <div className="grid grid-cols-2 gap-3 sm:gap-5" aria-label="Modalidad de Pasapalabra">
-      {(['LOCAL','ONLINE'] as const).map(mode=><button key={mode} type="button" disabled={busy||uncertain}
-        aria-label={mode==='LOCAL'?'En este dispositivo · Tú y un invitado':'En línea · Con un amigo · Dos cuentas'}
-        aria-pressed={choice===mode} onClick={()=>{setChoice(mode);setAction(null);setError("");}}
-        className={`relative min-w-0 rounded-2xl border-2 p-3 text-center focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 sm:p-5 ${choice===mode?'border-sky-700 bg-sky-50 shadow-sm':'border-slate-200 bg-white hover:border-sky-500'}`}>
-        <ModeIllustration online={mode==='ONLINE'}/><span className="mt-2 block text-base font-black text-blue-950 sm:text-lg">{mode==='LOCAL'?'En este dispositivo':'En línea'}</span>
-        <span className="mt-1 block text-sm text-slate-600">{mode==='LOCAL'?'Tú y un invitado':'Con un amigo · Dos cuentas'}</span>
-        {choice===mode&&<span className="mt-2 block text-xs font-bold text-sky-800">✓ Seleccionado</span>}
-      </button>)}
-    </div>
-    {choice==='ONLINE'&&<div className="flex flex-wrap gap-3" aria-label="Acciones en línea">
+  const content=<div className="mx-auto max-w-3xl space-y-5">
+    {!compact&&<p className="text-sm text-slate-600">20 preguntas por jugador · 10 minutos individuales</p>}
+    {!compact&&<PasapalabraModePicker selected={choice??undefined} disabled={busy||uncertain} onSelect={mode=>{setChoice(mode);setAction(null);setError("");}}/>}
+    {!compact&&choice==='ONLINE'&&<div className="flex flex-wrap gap-3" aria-label="Acciones en línea">
       <button className={action==='CREATE'?'button-primary':'button-secondary'} aria-pressed={action==='CREATE'} disabled={busy||uncertain} onClick={()=>{setAction('CREATE');setError("");}}>Crear sala</button>
       <button className={action==='JOIN'?'button-primary':'button-secondary'} aria-pressed={action==='JOIN'} disabled={busy||uncertain} onClick={()=>{setAction('JOIN');setError("");}}>Unirme con código</button>
     </div>}
@@ -112,9 +96,10 @@ export function PasapalabraEntry() {
           value={code} disabled={busy||uncertain} onChange={e=>{setCode(e.target.value);saveJoinDraft(e.target.value);setRestored(false);}}/>
         <button className="button-primary mt-4" disabled={busy||!code.trim()}>{busy?'Uniéndome…':uncertain?'Reintentar la misma unión':'Unirme'}</button>
       </form>
-      {error&&<div role="alert" className="notice-warning">{error} {error.includes('sesión')&&<><p className="my-2">Conservamos el código para volver aquí después de identificarte. La unión necesitará tu confirmación.</p><PasapalabraLoginLink/></>}</div>}
+      {error&&<div role="alert" className="notice-warning">{error} {error.includes('sesión')&&<><p className="my-2">Conservamos el código para volver aquí después de identificarte. La unión necesitará tu confirmación.</p>{compact?<Link href="/login" className="text-link" onClick={()=>{try{sessionStorage.setItem("pasapalabra-return","/dashboard?join=1");}catch{}}}>Iniciar sesión</Link>:<PasapalabraLoginLink/>}</>}</div>}
     </section>}
-  </div></Frame>;
+  </div>;
+  return compact?content:<Frame title="Pasapalabra">{content}</Frame>;
 }
 export function PasapalabraRoom({ id }: {
     id: number;
@@ -192,7 +177,7 @@ export function PasapalabraRoom({ id }: {
           <div className={layout.lobbyInfo}>
             {room.code&&<div className={layout.inviteBox}><div className="min-w-0"><p className="text-sm font-semibold text-sky-900">Código de invitación</p><p className="font-mono font-black text-blue-950" aria-label="Código de invitación">{room.code}</p></div>
               <button className="button-secondary" onClick={async()=>{try{await navigator.clipboard.writeText(room.code!);setCopied(true);}catch{setError('No se pudo copiar. Selecciona el código y cópialo manualmente.');}}}>Copiar código</button>{copied&&<p role="status" className="w-full text-sm font-bold text-sky-800">Código copiado</p>}</div>}
-            <div className={layout.lobbyConfig}><h3>Reto elegido</h3><p tabIndex={0}>{room.configuration.topic}</p><p tabIndex={0}>{room.configuration.category} · {room.configuration.difficulty_unknown?'Sin clasificar':room.configuration.difficulty?`Nivel ${room.configuration.difficulty}`:'Dificultad sin filtrar'}</p><p>20 preguntas por jugador · 10 minutos individuales</p></div>
+            <div className={layout.lobbyConfig}><h3>Reto elegido</h3><AcademicContext value={room.configuration.academic}/><p tabIndex={0}>{room.configuration.topic}</p><p tabIndex={0}>{room.configuration.category} · {room.configuration.difficulty_unknown?'Sin clasificar':room.configuration.difficulty?`Nivel ${room.configuration.difficulty}`:'Dificultad sin filtrar'}</p><p>20 preguntas por jugador · 10 minutos individuales</p></div>
             <p className={layout.lobbyExpiry}>Caduca el {new Intl.DateTimeFormat('es-ES',{dateStyle:'short',timeStyle:'short',timeZone:'Atlantic/Canary'}).format(new Date(room.expires_at))} (hora canaria).</p>
           </div>
           <section aria-label="Jugadores de la sala"><h3 className="font-black text-blue-950" aria-live="polite">Jugadores · {room.participants.length}/2</h3>

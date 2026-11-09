@@ -7,8 +7,9 @@ import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import api, { type GameAvailability } from "@/services/api";
 import { getMatch, sendOperation, newer, questionKey, remaining, startsCelebration, type Match, type Player, type Operation } from "@/lib/pasapalabra";
-import { StateLegend, Corrections, ResultHero } from "@/components/PasapalabraPresentation";
+import { StateLegend, Corrections, FinalAnswers, ResultHero } from "@/components/PasapalabraPresentation";
 import layout from "./PasapalabraLayout.module.css";
+import AcademicContext from "@/components/AcademicContext";
 function message(e: unknown) { const status = isAxiosError(e) ? e.response?.status : 0; return status === 404 || status === 403 ? "Esta partida no está disponible para tu cuenta." : status === 401 ? "Tu sesión ha caducado. Inicia sesión para recuperar la partida." : status === 409 ? "La partida ha cambiado. Consulta el estado antes de continuar." : "No se pudo confirmar la operación. Comprueba tu conexión y reintenta. El reloj sigue corriendo."; }
 export function PasapalabraLoginLink() {
     return <Link href="/login" className="text-link" onClick={() => {
@@ -16,7 +17,9 @@ export function PasapalabraLoginLink() {
         catch { /* login remains available when storage is disabled */ }
     }}>Iniciar sesión</Link>;
 }
-export function Frame({ children, title = "Pasapalabra local", playing = false }: {
+export function Frame({ children, title = "Pasapalabra local", playing = false, academic, backControl }: {
+    backControl?: React.ReactNode;
+    academic?: import("@/services/api").AcademicContext | null;
     playing?: boolean;
     title?: string;
     children: React.ReactNode;
@@ -30,8 +33,8 @@ export function Frame({ children, title = "Pasapalabra local", playing = false }
     </header>
     <main className={layout.main}>
     <div className={layout.titleRow}>
-    <Link className="text-link" href="/dashboard">← Volver al panel</Link>
-    <h1>{title}</h1></div><div className={layout.content}>{children}</div></main>
+    {backControl??<Link className="text-link" href="/dashboard">← Volver al panel</Link>}
+    {academic&&<div className="hidden min-w-0 flex-1 lg:block"><AcademicContext value={academic} compact/></div>}<h1>{title}</h1></div>{academic&&<div className="lg:hidden"><AcademicContext value={academic}/></div>}<div className={layout.content}>{children}</div></main>
     </div>;
 }
 export function PasapalabraPrepare({ topicId, online = false }: {
@@ -132,8 +135,8 @@ function Rosco({ p, s, elapsed, secondary = false }: {
     return <section className={`${layout.roscoCard} ${active?layout.activeRosco:''} ${secondary?layout.roscoSecondary:''}`} aria-label={`Rosco de ${p.name}`} data-rosco-position={p.position}>
       <h2 className={layout.playerName} tabIndex={0}>{p.name}</h2>
       <p className={layout.playerTurn}>{p.status==='FINISHED'?(p.finish_reason==='TIMEOUT'?'Tiempo agotado':p.finish_reason==='RESOLVED'?'Preguntas resueltas':'Finalizado'):active?(s.play_mode==='ONLINE'&&p.position!==s.self_position?'Turno del rival':'Tu turno'):'En espera'}</p>
-      <p className={layout.clock} aria-label="Tiempo restante">{Math.floor(sec/60)}:{String(sec%60).padStart(2,'0')}</p>
-      <p className={layout.counts}><span>✓ {p.correct} aciertos</span><span>× {p.wrong} fallos</span><span>{p.pending} pendientes</span></p>
+      {secondary&&<p className="text-sm text-slate-600">{s.play_mode==='ONLINE'?(p.position===s.self_position?'Tu resultado personal':'Rival · resumen público'):p.registered?'Anfitrión · tu resultado personal':'Invitado · sin progreso propio'}</p>}{secondary&&<span className="text-sm font-semibold text-slate-600">Tiempo restante</span>}<p className={layout.clock} aria-label="Tiempo restante">{Math.floor(sec/60)}:{String(sec%60).padStart(2,'0')}</p>
+      {secondary?<dl className={layout.finalCounts}>{[['✓','Aciertos',p.correct],['×','Fallos',p.wrong],['·','Pendientes',p.pending]].map(([symbol,label,value])=><div key={label}><dt>{symbol} {label}</dt><dd>{value??'—'}</dd></div>)}</dl>:<p className={layout.counts}><span>✓ {p.correct} aciertos</span><span>× {p.wrong} fallos</span><span>{p.pending} pendientes</span></p>}
       <ol className="sr-only">{p.slots.map(slot=><li key={slot.number}>{slot.number}: {labels[slot.state]}{active&&s.active_question?.number===slot.number?', actual':''}</li>)}</ol>
       <div className={layout.roscoCanvas}><svg viewBox="0 0 400 400" role="img" aria-label={`20 posiciones numeradas de ${p.name}`}>
         <circle cx="200" cy="200" r="155" fill="none" stroke="#e2e8f0" strokeWidth="4"/>{p.slots.map((q,i)=>{
@@ -262,11 +265,11 @@ export function PasapalabraGame({ id }: {
     }
     const s = state;
     const q = s?.active_question;
-    return <Frame playing={s?.status==='RUNNING'} title={s?.play_mode==='ONLINE'?'Pasapalabra en línea':s?'Pasapalabra local':'Pasapalabra'}>
+    return <Frame academic={s?.academic} playing={s?.status==='RUNNING'} title={s?.play_mode==='ONLINE'?'Pasapalabra en línea':s?'Pasapalabra local':'Pasapalabra'}>
       {connectionError&&<p role="alert" className="notice-warning mb-2">{connectionError} {connectionError.includes('sesión')&&<PasapalabraLoginLink/>}</p>}
       {error&&<p role="alert" className="notice-error mb-2">{error} <PasapalabraLoginLink/></p>}
       {!s?<p role="status">{error||connectionError?'No se pudo cargar la partida. Revisa el aviso anterior o vuelve al panel.':'Cargando partida…'}</p>:<>
-        {s.status==='FINISHED'&&<ResultHero match={s} celebrate={celebrate}/>}
+        {s.status==='FINISHED'&&<ResultHero match={s} celebrate={celebrate}><div className={layout.finalRoscos}>{s.participants.map(p=><Rosco key={p.position} p={p} s={s} elapsed={elapsed} secondary/>)}</div></ResultHero>}
         {s.status!=='FINISHED'&&<div className={layout.gameStage} data-game-stage>
           <div className={layout.board} data-game-board>
             <div className={layout.players}><Rosco p={s.participants[0]} s={s} elapsed={elapsed}/><Rosco p={s.participants[1]} s={s} elapsed={elapsed}/></div>
@@ -289,8 +292,7 @@ export function PasapalabraGame({ id }: {
           </div>
           <Corrections match={s} compact/>
         </div>}
-        {s.status==='FINISHED'&&<><details className={layout.secondary}><summary>Ver los roscos finales</summary><div className={layout.secondaryBody} tabIndex={0} role="region" aria-label="Roscos finales"><div className={layout.finalRoscos}>{s.participants.map(p=><Rosco key={p.position} p={p} s={s} elapsed={elapsed} secondary/>)}</div></div></details>
-          <details className={layout.secondary}><summary>Revisar respuestas resueltas</summary><div className={layout.secondaryBody} tabIndex={0} role="region" aria-label="Respuestas finales"><Corrections match={s}/></div></details></>}
+        {s.status==='FINISHED'&&<FinalAnswers match={s}/>}
         {abandon!==null&&<dialog ref={abandonDialog} className={layout.dialog} aria-label="Confirmar abandono" onClose={()=>{setAbandon(null);abandonTrigger.current?.focus();}}>
           <label>Jugador que abandona<select className="form-input" value={abandon} disabled={s.play_mode==='ONLINE'} onChange={e=>setAbandon(Number(e.target.value))}>{s.participants.map(p=><option key={p.position} value={p.position}>{p.name}</option>)}</select></label>
           <p>{s.participants.find(p=>p.position===abandon)?.name} abandona. Su rival gana por abandono.</p><div className={layout.actions}><button className="button-primary" disabled={busy} onClick={()=>act('abandon',abandon)}>Confirmar abandono</button><button className="button-secondary" data-cancel-abandon onClick={()=>abandonDialog.current?.close()}>Cancelar</button></div>

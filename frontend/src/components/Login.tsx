@@ -1,5 +1,6 @@
 "use client";
 
+import {academicReturn} from "@/lib/academic";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
@@ -30,7 +31,7 @@ export default function Login({ sessionExpired = false }: { sessionExpired?: boo
       setSuccess("Sesión iniciada correctamente.");
       setTimeout(() => {
         let destination = "/dashboard";
-          try { const saved = sessionStorage.getItem("pasapalabra-return"); sessionStorage.removeItem("pasapalabra-return"); if (saved && /^\/pasapalabra(?:\/rooms)?(?:\/[1-9]\d*)?$/.test(saved)) destination = saved; } catch { /* use dashboard when storage is unavailable */ }
+          try { const saved = sessionStorage.getItem("pasapalabra-return"); sessionStorage.removeItem("pasapalabra-return"); if (saved && (/^\/pasapalabra(?:\/rooms)?(?:\/[1-9]\d*)?$/.test(saved) || academicReturn(saved) || saved === "/dashboard?join=1")) destination = saved; } catch { /* use dashboard when storage is unavailable */ }
           router.push(destination);
       }, 1000);
     } catch (err: unknown) {
