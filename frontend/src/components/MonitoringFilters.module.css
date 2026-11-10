@@ -1,4 +1,18 @@
-.filters { min-width: 0; }
+.filters { min-width: 0; border: 1px solid #cbd5e1; border-radius: 16px; padding: 16px; background: white; }
+.fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)) minmax(10rem,.8fr) auto; align-items: end; gap: 12px; }
+.dateControl { display: flex; align-items: center; border: 1px solid #94a3b8; border-radius: 10px; background: white; min-width: 0; }
+.dateInput { min-width: 0; width: 100%; min-height: 44px; padding: 8px 10px; border-radius: 10px; font: inherit; background: transparent; }
+.calendarButton, .clearButton { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; min-height: 44px; border-radius: 8px; color: #1e3a8a; cursor: pointer; }
+.clearButton { font-size: 1.5rem; }
+.calendarButton:hover, .clearButton:hover { background: #e0f2fe; }
+.quickRanges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.quickButton { min-height: 36px; padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 9px; color: #1e3a8a; font-size: .875rem; cursor: pointer; }
+.quickButton:hover { background: #f0f9ff; }
+.quickButton[aria-pressed=true] { border-color: #c2410c; background: #fff7ed; font-weight: 700; }
+.quickButton[aria-pressed=true]::before { content: '✓ '; }
+.filters button:focus-visible, .filters select:focus-visible { outline: 3px solid #c2410c; outline-offset: 2px; }
+@media(max-width:850px) { .fields { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:540px) { .fields { grid-template-columns: minmax(0,1fr); } .fields > button { width: 100%; } .filters { padding: 12px; } }
 .dialog { width: min(24rem,calc(100vw - 20px)); margin: auto; max-width: calc(100vw - 20px); max-height: calc(100dvh - 20px); overflow: auto; padding: 14px; border: 1px solid #cbd5e1; border-radius: 16px; background: white; color: #172554; font: inherit; }
 .dialog::backdrop { background: #0f172a66; }
 .dialog :global(.rdp-root) { --rdp-accent-color: #1e3a8a; --rdp-accent-background-color: #e0f2fe; --rdp-day-height: 40px; --rdp-day-width: 40px; --rdp-day_button-height: 38px; --rdp-day_button-width: 38px; margin-top: 12px; font: inherit; }

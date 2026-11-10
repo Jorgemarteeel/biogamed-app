@@ -54,3 +54,54 @@ def activity(start:date|None=None,end:date|None=None,game:str=Query("ALL",patter
         else:row['registered']=1;row['guests']=0
     rows.sort(key=lambda x:(str(x['started']),x['key']),reverse=True)
     return dict(scope="platform",timezone="Atlantic/Canary",unique_registered=len(users),started=len(rows),normal=sum(r['status']=="NORMAL" for r in rows),abandoned=sum(r['status']=="ABANDONMENT" for r in rows),open=sum(r['status']=="OPEN" for r in rows),unknown=sum(r['status']=="UNKNOWN" for r in rows),groups=list(groups.values()),total=len(rows),items=rows[skip:skip+limit])
+
+
+EXPORT_LIMIT = 10000
+FORMAT_LABELS = {
+    "TRIVIAL-legacy": "Trivial · individual",
+    "PASAPALABRA-legacy": "Pasapalabra · sesión individual",
+    "pasapalabra-local-v1": "Pasapalabra · local (cuenta e invitado)",
+    "pasapalabra-online-v1": "Pasapalabra · en línea (dos cuentas)",
+}
+STATUS_LABELS = {"NORMAL": "Finalizada", "ABANDONMENT": "Abandono", "OPEN": "Abierta registrada", "UNKNOWN": "Estado sin determinar"}
+
+
+def csv_cell(value):
+    if value is None:
+        return ""
+    text = str(value)
+    if text.lstrip().startswith(("=", "+", "-", "@")) or text.startswith(("\t", "\r", "\n")):
+        return "'" + text
+    return text
+
+
+def activity_csv(rows):
+    import csv
+    import io
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, delimiter=";", lineterminator="\r\n")
+    writer.writerow(["Referencia", "Fecha de inicio (Atlantic/Canary, ISO 8601 con desfase)", "Formato", "Estado", "Participantes registrados", "Invitados"])
+    for row in rows:
+        moment = row["started"]
+        if moment is not None:
+            if moment.tzinfo is None:
+                moment = moment.replace(tzinfo=timezone.utc)  # stored naive datetimes are UTC
+            moment = moment.astimezone(ZoneInfo("Atlantic/Canary")).isoformat()
+        code = row["format"]
+        label = FORMAT_LABELS.get(f"{row['game']}-legacy" if code == "legacy" else code, "Formato no identificado")
+        writer.writerow([csv_cell(v) for v in [row["key"], moment, label, STATUS_LABELS.get(row["status"], row["status"]), row["registered"], row["guests"]]])
+    return output.getvalue().encode("utf-8-sig")
+
+
+@router.get("/activity.csv")
+def export_activity(start:date|None=None,end:date|None=None,game:str=Query("ALL",pattern="^(ALL|TRIVIAL|PASAPALABRA)$"),db:Session=Depends(get_db),staff:User=Depends(require_content_staff)):
+    from fastapi.responses import Response
+    # Exactly the same read-only query, filter rules, deduplication and rows as the screen.
+    report = activity(start=start, end=end, game=game, skip=0, limit=EXPORT_LIMIT, db=db, staff=staff)
+    if report["total"] > EXPORT_LIMIT:
+        raise HTTPException(422, f"La exportación supera {EXPORT_LIMIT} registros. Acota las fechas y vuelve a consultar.")
+    return Response(activity_csv(report["items"]), media_type="text/csv; charset=utf-8", headers={
+        "Content-Disposition": 'attachment; filename="biogamed-seguimiento.csv"',
+        "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+        "X-Export-Count": str(report["total"]),
+    })

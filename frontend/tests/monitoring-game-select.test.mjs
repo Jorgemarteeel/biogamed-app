@@ -1,0 +1,6 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';import Module from 'node:module';import path from 'node:path';import ts from 'typescript';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';import {fileURLToPath} from 'node:url';
+const filename=fileURLToPath(new URL('../src/components/MonitoringGameSelect.tsx',import.meta.url)),m=new Module(filename);m.filename=filename;m.paths=Module._nodeModulePaths(path.dirname(filename));const original=Module._load;
+Module._load=function(r,p,main){return r.endsWith('.css')?{}:original.call(this,r,p,main);};try{m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,filename);}finally{Module._load=original;}
+test('real Radix select renders labelled combobox with stored value, not an action menu',()=>{for(const value of ['ALL','TRIVIAL','PASAPALABRA']){const html=renderToStaticMarkup(React.createElement(m.exports.default,{value,onValueChange(){}}));assert.match(html,/role="combobox"/);assert.match(html,/aria-expanded="false"/);assert.match(html,/<label[^>]*for="[^"]+"[^>]*>Juego/);assert.match(html,new RegExp({ALL:'Todos',TRIVIAL:'Trivial',PASAPALABRA:'Pasapalabra'}[value]));assert.doesNotMatch(html,/role="menu"|type="radio"/);}});

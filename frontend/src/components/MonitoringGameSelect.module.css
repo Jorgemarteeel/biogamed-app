@@ -1,0 +1,17 @@
+.field { min-width: 0; }
+.label { display: block; margin-bottom: 4px; font-weight: 600; }
+.trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; width: 100%; padding: 9px 12px; border: 1px solid #94a3b8; border-radius: 10px; background: white; color: #172554; box-shadow: 0 1px 2px #0f172a0a; text-align: left; cursor: pointer; }
+.value { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+.icon { display: flex; flex-shrink: 0; color: #1e3a8a; }
+.trigger:hover { border-color: #1e3a8a; }
+.trigger:focus-visible { outline: 3px solid #c2410c; outline-offset: 2px; }
+.content { z-index: 60; width: var(--radix-select-trigger-width); max-width: calc(100vw - 24px); max-height: min(18rem,var(--radix-select-content-available-height)); background: white; color: #172554; border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: 0 8px 24px #0f172a26; }
+.viewport { padding: 5px; }
+.item { position: relative; display: flex; align-items: center; min-height: 44px; padding: 10px 12px 10px 34px; border-radius: 7px; cursor: pointer; outline: none; }
+.optionText { display: block; overflow-wrap: anywhere; white-space: normal; line-height: 1.4; }
+.item[data-state=checked] { background: #e0f2fe; font-weight: 600; }
+.item:hover { background: #f0f9ff; }
+.item[data-highlighted] { background: #f0f9ff; }
+.item:focus-visible { background: #fff7ed; box-shadow: inset 0 0 0 2px #c2410c; }
+.indicator { position: absolute; left: 10px; display: flex; align-items: center; color: #1e3a8a; }
+.scrollButton { display: flex; justify-content: center; min-height: 26px; color: #1e3a8a; background: #f8fafc; }

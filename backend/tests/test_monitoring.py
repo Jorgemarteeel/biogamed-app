@@ -17,8 +17,10 @@ def test_permissions_counts_privacy_and_pagination(client,db):
     teacher=User(name="Staff",email="staff@test.invalid",hashed_password="unused",role=UserRole.TEACHER)
     student=User(name="Student",email="student@test.invalid",hashed_password="unused",role=UserRole.STUDENT)
     db.add_all([teacher,student]);db.commit()
+    assert client.get('/monitoring/activity.csv').status_code==401
     assert client.get('/monitoring/activity').status_code==401
     app.dependency_overrides[get_current_user]=lambda:student
+    assert client.get('/monitoring/activity.csv').status_code==403
     assert client.get('/monitoring/activity').status_code==403
     app.dependency_overrides[get_current_user]=lambda:teacher
     now=datetime(2026,7,1,12,tzinfo=timezone.utc)
@@ -33,6 +35,13 @@ def test_permissions_counts_privacy_and_pagination(client,db):
     assert len(r['items'])==1 and r['total']==2
     assert sum(g['sessions'] for g in r['groups'])==3  # two online participants + individual
     assert sum(x['registered'] for x in client.get('/monitoring/activity?limit=100').json()['items'])==3
+    csv_result=client.get('/monitoring/activity.csv?start=2026-07-01&end=2026-07-01')
+    import csv,io
+    exported=list(csv.reader(io.StringIO(csv_result.content.decode('utf-8-sig')),delimiter=';'))
+    assert csv_result.status_code==200 and len(exported)==3
+    assert len({row[0] for row in exported[1:]})==2
+    assert csv_result.headers['cache-control']=='no-store'
+    assert client.get('/monitoring/activity.csv?game=TRIVIAL').headers['x-export-count']=='1'
     assert r['groups'][0]['sessions']==2 and r['groups'][0]['pending']==40
     assert 'email' not in str(r) and 'password' not in str(r) and 'snapshot' not in str(r)
     assert client.get('/monitoring/activity?game=TRIVIAL').json()['started']==1
@@ -72,3 +81,34 @@ def test_date_boundaries_and_incomplete_completed_session(client,db,topic):
     assert r['groups'][0]['unknown_sessions']==2
     assert r['groups'][0]['correct']==0 and r['groups'][0]['wrong']==0
     app.dependency_overrides.pop(get_current_user,None)
+
+
+def test_csv_pagination_empty_and_limit(client,db,monkeypatch):
+    import csv,io
+    from app.routers import monitoring
+    u=User(name="Export",email="export@test.invalid",hashed_password="unused",role=UserRole.ADMIN)
+    db.add(u);db.flush()
+    for i in range(25):
+        db.add(GameSession(user_id=u.id,topic_id=None,game_mode="TRIVIAL",question_ids=[],is_completed=False,created_at=datetime(2026,7,1,12,tzinfo=timezone.utc)))
+    db.commit();app.dependency_overrides[get_current_user]=lambda:u
+    response=client.get('/monitoring/activity.csv')
+    rows=list(csv.reader(io.StringIO(response.content.decode('utf-8-sig')),delimiter=';'))
+    assert len(rows)==26 and response.content.startswith(b'\xef\xbb\xbf')
+    assert all(row[3]=='Estado sin determinar' for row in rows[1:])
+    assert all('+01:00' in row[1] for row in rows[1:])
+    assert len(client.get('/monitoring/activity?limit=20').json()['items'])==20
+    assert client.get('/monitoring/activity.csv?start=2027-01-01').headers['x-export-count']=='0'
+    for query in ['start=2026-07-02&end=2026-07-01','game=OTHER','start=no-date']:
+        assert client.get('/monitoring/activity.csv?'+query).status_code==422
+    monkeypatch.setattr(monitoring,'EXPORT_LIMIT',24)
+    limited=client.get('/monitoring/activity.csv');assert limited.status_code==422 and 'Acota' in limited.json()['detail']
+
+
+def test_csv_escaping_and_missing_values():
+    import csv,io
+    from app.routers.monitoring import activity_csv,csv_cell
+    row=dict(key='=HYPERLINK("x");\nÁ',started=None,game='TRIVIAL',format='legacy',status='@unknown;"\n',registered=None,guests=0)
+    result=list(csv.reader(io.StringIO(activity_csv([row]).decode('utf-8-sig')),delimiter=';'))[1]
+    assert result==["'"+row['key'],'','Trivial · individual',"'"+row['status'],'','0']
+    for text in [' =1','+1','-1','@SUM(1)','\t=1','\rtest','\ntest']:
+        assert csv_cell(text).startswith("'")
