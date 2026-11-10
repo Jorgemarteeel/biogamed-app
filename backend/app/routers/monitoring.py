@@ -105,3 +105,44 @@ def export_activity(start:date|None=None,end:date|None=None,game:str=Query("ALL"
         "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
         "X-Export-Count": str(report["total"]),
     })
+
+
+@router.get("/difficulties")
+def difficulties(start:date|None=None,end:date|None=None,game:str=Query("ALL",pattern="^(ALL|TRIVIAL|PASAPALABRA)$"),minimum:int=Query(5,ge=1,le=100000),skip:int=Query(0,ge=0),limit:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),staff:User=Depends(require_content_staff)):
+    from sqlalchemy import and_, or_, case, cast, Text
+    from sqlalchemy.dialects.postgresql import JSONB
+    if end == date.max: raise HTTPException(422,"Fecha final fuera de rango")
+    lo,hi=bounds(start,end)
+    # Restrict to registered sessions; a shared session must match its registered participant.
+    moment=func.coalesce(PasapalabraMatch.created_at,GameSession.created_at)
+    stmt=select(AnswerLog.id.label('answer_id'),AnswerLog.game_session_id,AnswerLog.question_id,GameSession.user_id,GameSession.game_mode,
+        func.coalesce(GameSession.format_key,GameSession.game_mode+'-legacy').label('format'),
+        AnswerLog.question_text,AnswerLog.question_type,AnswerLog.options,AnswerLog.letter,AnswerLog.correct_option_index,AnswerLog.exact_word,AnswerLog.accepted_answers,AnswerLog.selected_index,AnswerLog.text_answer,AnswerLog.is_correct,
+        func.row_number().over(partition_by=(AnswerLog.game_session_id,AnswerLog.question_id),order_by=(AnswerLog.answered_at.desc(),AnswerLog.id.desc())).label('rank')
+    ).join(GameSession,GameSession.id==AnswerLog.game_session_id).outerjoin(PasapalabraMatch,PasapalabraMatch.id==GameSession.shared_match_id).outerjoin(MatchParticipant,MatchParticipant.session_id==GameSession.id).where(or_(GameSession.shared_match_id.is_(None),and_(MatchParticipant.user_id==GameSession.user_id,MatchParticipant.match_id==GameSession.shared_match_id)))
+    if lo: stmt=stmt.where(moment>=lo)
+    if hi: stmt=stmt.where(moment<hi)
+    if game!='ALL': stmt=stmt.where(GameSession.game_mode==game)
+    ranked=stmt.subquery()
+    r=ranked.c
+    postgres=db.bind.dialect.name=='postgresql'
+    def json_key(col): return cast(cast(col,JSONB),Text) if postgres else cast(col,Text)
+    length=func.jsonb_array_length(cast(r.options,JSONB)) if postgres else func.json_array_length(r.options)
+    # CASE prevents applying array length to incomplete historical JSON values.
+    array_type=func.jsonb_typeof(cast(r.options,JSONB)) if postgres else func.json_type(r.options)
+    size=case((array_type=='array',length),else_=0)
+    valid=and_(r.rank==1,r.is_correct.is_not(None),r.question_type==r.game_mode,func.length(func.trim(r.question_text))>0,
+        or_(and_(r.game_mode=='TRIVIAL',size>0,r.selected_index>=0,r.selected_index<size,r.correct_option_index>=0,r.correct_option_index<size,r.is_correct==(r.selected_index==r.correct_option_index)),
+            and_(r.game_mode=='PASAPALABRA',r.text_answer.is_not(None),func.length(func.trim(r.exact_word))>0)))
+    total=db.scalar(select(func.count()).select_from(ranked).where(r.rank==1)) or 0
+    evaluated=db.scalar(select(func.count()).select_from(ranked).where(valid)) or 0
+    keys=[r.question_id,r.game_mode,r.format,r.question_text,r.question_type,json_key(r.options),r.letter,r.correct_option_index,r.exact_word,json_key(r.accepted_answers)]
+    grouped=select(r.question_id,r.game_mode,r.format,r.question_text,func.min(r.answer_id).label('copy_id'),func.count().label('evaluated'),func.count(func.distinct(r.user_id)).label('accounts'),func.sum(r.is_correct.cast(Integer)).label('correct'),func.sum(case((r.is_correct.is_(False),1),else_=0)).label('wrong')).where(valid).group_by(*keys).subquery()
+    g=grouped.c
+    eligible=select(grouped).where(g.evaluated>=minimum).subquery()
+    e=eligible.c
+    count=db.scalar(select(func.count()).select_from(eligible)) or 0
+    items=[]
+    for row in db.execute(select(eligible).order_by((e.wrong*1.0/e.evaluated).desc(),e.evaluated.desc(),e.question_id,e.format,e.copy_id).offset(skip).limit(limit)).mappings():
+        items.append(dict(question_id=row['question_id'],version_reference=f"Q{row['question_id']}/C{row['copy_id']}",game=row['game_mode'],format=row['format'],format_label=FORMAT_LABELS.get(row['format'],'Formato no identificado'),text=row['question_text'],evaluated=row['evaluated'],accounts=row['accounts'],correct=row['correct'],wrong=row['wrong'],error_percent=100*row['wrong']/row['evaluated']))
+    return dict(scope='platform',timezone='Atlantic/Canary',evaluated=evaluated,excluded_records=total-evaluated,total=count,items=items)

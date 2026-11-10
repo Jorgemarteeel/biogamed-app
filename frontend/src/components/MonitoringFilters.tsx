@@ -1,4 +1,5 @@
 "use client";
+import type {ReactNode} from 'react';
 import {useEffect,useId,useRef,useState} from 'react';
 import {DayPicker} from 'react-day-picker';
 import {es} from 'react-day-picker/locale';
@@ -16,12 +17,13 @@ function DateField({label,value,onChange}:{label:string;value:string;onChange:(v
  {open&&<DayPicker mode="single" locale={es} weekStartsOn={1} captionLayout="dropdown" navLayout="after" autoFocus selected={selected??undefined} defaultMonth={selected??today} today={today} startMonth={new Date(Math.min(1900,selected?.getFullYear()??1900),0)} endMonth={new Date(Math.max(today.getFullYear()+10,selected?.getFullYear()??0),11)} onSelect={d=>{if(d){onChange(dateText(d));close();}}}/>}<p className="text-xs text-slate-600">✓ Fecha seleccionada · Hoy subrayado. Flechas para recorrer los días; Escape para cerrar.</p>
  </dialog></div>;
 }
-export default function MonitoringFilters({query,onApply,onDirtyChange}:{query:string;onApply:(query:string)=>void;onDirtyChange?:(dirty:boolean)=>void}){
+export default function MonitoringFilters({query,onApply,onDirtyChange,children,additionalError,pendingExtra=false}:{query:string;onApply:(query:string)=>void;onDirtyChange?:(dirty:boolean)=>void;children?:ReactNode;additionalError?:string;pendingExtra?:boolean}){
  const original=new URLSearchParams(query),[start,setStart]=useState(fromISO(original.get('start')||'')),[end,setEnd]=useState(fromISO(original.get('end')||'')),[game,setGame]=useState(original.get('game')||'ALL');
- const error=rangeError(start,end);const changed=start!==fromISO(original.get('start')||'')||end!==fromISO(original.get('end')||'')||game!==(original.get('game')||'ALL');const errorId=useId();
+ const error=rangeError(start,end)||additionalError;const changed=pendingExtra||start!==fromISO(original.get('start')||'')||end!==fromISO(original.get('end')||'')||game!==(original.get('game')||'ALL');const errorId=useId();
  useEffect(()=>{onDirtyChange?.(changed);},[changed,onDirtyChange]);
  return <form aria-label="Filtros de seguimiento" className={styles.filters} onSubmit={e=>{e.preventDefault();if(error)return;const p=new URLSearchParams();if(start)p.set('start',dateISO(start));if(end)p.set('end',dateISO(end));p.set('game',game);onApply(p.toString());}} aria-describedby={error?errorId:undefined}>
  <div className={styles.fields}><DateField label="Desde" value={start} onChange={setStart}/><DateField label="Hasta" value={end} onChange={setEnd}/><MonitoringGameSelect value={game} onValueChange={setGame}/><button className="button-primary" disabled={!!error}>Consultar</button></div>
+ {children}
  {error&&<p id={errorId} role="alert" className="mt-2 text-sm font-semibold text-red-800">{error}</p>}
  <div className={styles.quickRanges} role="group" aria-label="Intervalos de las fechas editadas">{[['Hoy',1],['Últimos 7 días',7],['Últimos 30 días',30],['Todo el periodo',null]].map(([text,days])=><button className={styles.quickButton} aria-pressed={(()=>{const range=quickRange(days as number|null);return start===range.start&&end===range.end;})()} key={text} type="button" onClick={()=>{const range=quickRange(days as number|null);setStart(range.start);setEnd(range.end);}}>{text}</button>)}</div>
  <p className="mt-2 text-xs text-slate-600">El intervalo marcado corresponde a las fechas editadas; pulsa Consultar para aplicarlas.</p>
