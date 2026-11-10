@@ -107,8 +107,7 @@ def export_activity(start:date|None=None,end:date|None=None,game:str=Query("ALL"
     })
 
 
-@router.get("/difficulties")
-def difficulties(start:date|None=None,end:date|None=None,game:str=Query("ALL",pattern="^(ALL|TRIVIAL|PASAPALABRA)$"),minimum:int=Query(5,ge=1,le=100000),skip:int=Query(0,ge=0),limit:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),staff:User=Depends(require_content_staff)):
+def _difficulties_report(start,end,game,minimum,skip,limit,db,maximum=None):
     from sqlalchemy import and_, or_, case, cast, Text
     from sqlalchemy.dialects.postgresql import JSONB
     if end == date.max: raise HTTPException(422,"Fecha final fuera de rango")
@@ -142,7 +141,40 @@ def difficulties(start:date|None=None,end:date|None=None,game:str=Query("ALL",pa
     eligible=select(grouped).where(g.evaluated>=minimum).subquery()
     e=eligible.c
     count=db.scalar(select(func.count()).select_from(eligible)) or 0
+    if maximum is not None and count>maximum:
+        raise HTTPException(422, f'La exportación supera {maximum} agrupaciones. Acota las fechas o aumenta el mínimo y vuelve a consultar.')
     items=[]
     for row in db.execute(select(eligible).order_by((e.wrong*1.0/e.evaluated).desc(),e.evaluated.desc(),e.question_id,e.format,e.copy_id).offset(skip).limit(limit)).mappings():
         items.append(dict(question_id=row['question_id'],version_reference=f"Q{row['question_id']}/C{row['copy_id']}",game=row['game_mode'],format=row['format'],format_label=FORMAT_LABELS.get(row['format'],'Formato no identificado'),text=row['question_text'],evaluated=row['evaluated'],accounts=row['accounts'],correct=row['correct'],wrong=row['wrong'],error_percent=100*row['wrong']/row['evaluated']))
     return dict(scope='platform',timezone='Atlantic/Canary',evaluated=evaluated,excluded_records=total-evaluated,total=count,items=items)
+
+
+@router.get("/difficulties")
+def difficulties(start:date|None=None,end:date|None=None,game:str=Query("ALL",pattern="^(ALL|TRIVIAL|PASAPALABRA)$"),minimum:int=Query(5,ge=1,le=100000),skip:int=Query(0,ge=0),limit:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),staff:User=Depends(require_content_staff)):
+    return _difficulties_report(start,end,game,minimum,skip,limit,db)
+
+
+DIFFICULTIES_EXPORT_LIMIT = 10000
+
+
+def difficulties_csv(rows):
+    import csv
+    import io
+    from decimal import Decimal
+    output=io.StringIO(newline="")
+    writer=csv.writer(output,delimiter=";",lineterminator="\r\n")
+    writer.writerow(["Referencia de pregunta/contenido histórico","Enunciado histórico","Juego / formato","Respuestas evaluadas","Cuentas distintas","Aciertos","Fallos","Error (%)"])
+    for row in rows:
+        percentage=format(Decimal(str(row['error_percent'])),'f').replace('.',',')
+        writer.writerow([csv_cell(row['version_reference']),csv_cell(row['text']),csv_cell(row['format_label']),row['evaluated'],row['accounts'],row['correct'],row['wrong'],percentage])
+    return output.getvalue().encode('utf-8-sig')
+
+
+@router.get("/difficulties.csv")
+def export_difficulties(start:date|None=None,end:date|None=None,game:str=Query("ALL",pattern="^(ALL|TRIVIAL|PASAPALABRA)$"),minimum:int=Query(5,ge=1,le=100000),db:Session=Depends(get_db),staff:User=Depends(require_content_staff)):
+    from fastapi.responses import Response
+    report=_difficulties_report(start,end,game,minimum,0,DIFFICULTIES_EXPORT_LIMIT,db,maximum=DIFFICULTIES_EXPORT_LIMIT)
+    return Response(difficulties_csv(report['items']),media_type='text/csv; charset=utf-8',headers={
+        'Content-Disposition':'attachment; filename="biogamed-dificultades.csv"',
+        'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Export-Count':str(report['total']),
+    })
