@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    model_config = ConfigDict(extra="forbid")
     password: str = Field(min_length=8, max_length=255)
 
 

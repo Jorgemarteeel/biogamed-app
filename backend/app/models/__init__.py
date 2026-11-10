@@ -16,3 +16,5 @@ __all__ = [
     "Category", "Question", "GameSession",
     "AnswerLog", "PasapalabraMatch", "MatchParticipant", "MatchQuestion", "MatchCommand", "PasapalabraRoom", "RoomOperation", "RoomJoinLimit",
 ]
+
+from app.models.role_change import RoleChange

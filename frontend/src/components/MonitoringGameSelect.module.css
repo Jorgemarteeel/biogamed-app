@@ -1,4 +1,4 @@
-.field { min-width: 0; }
+.field { position: relative; min-width: 0; }
 .label { display: block; margin-bottom: 4px; font-weight: 600; }
 .trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; width: 100%; padding: 9px 12px; border: 1px solid #94a3b8; border-radius: 10px; background: white; color: #172554; box-shadow: 0 1px 2px #0f172a0a; text-align: left; cursor: pointer; }
 .value { min-width: 0; overflow-wrap: anywhere; white-space: normal; }

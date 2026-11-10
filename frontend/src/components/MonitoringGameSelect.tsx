@@ -8,18 +8,18 @@ const games = [
  {value:'TRIVIAL',label:'Trivial'},
  {value:'PASAPALABRA',label:'Pasapalabra'},
 ];
-export default function MonitoringGameSelect({value,onValueChange}:{value:string;onValueChange:(value:string)=>void}){
- const id=useId();
- return <div className={styles.field}><label htmlFor={id} className={styles.label}>Juego</label>
- <Select.Root value={value} onValueChange={onValueChange} name="game">
+export default function MonitoringGameSelect({value,onValueChange,label='Juego',options=games,name='game',id:providedId,hideLabel=false,disabled=false}:{value:string;onValueChange:(value:string)=>void;label?:string;options?:{value:string;label:string}[];name?:string;id?:string;hideLabel?:boolean;disabled?:boolean}){
+ const generatedId=useId(),id=providedId??generatedId;
+ return <div className={styles.field}><label htmlFor={id} className={hideLabel?'sr-only':styles.label}>{label}</label>
+ <Select.Root value={value} onValueChange={onValueChange} name={name} disabled={disabled}>
   <Select.Trigger id={id} className={styles.trigger}>
-   <span className={styles.value}><Select.Value>{games.find(game=>game.value===value)?.label}</Select.Value></span>
+   <span className={styles.value}><Select.Value>{options.find(game=>game.value===value)?.label}</Select.Value></span>
    <Select.Icon className={styles.icon}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></Select.Icon>
   </Select.Trigger>
   <Select.Portal><Select.Content position="popper" align="start" sideOffset={5} collisionPadding={12} className={styles.content}>
    <Select.ScrollUpButton className={styles.scrollButton} aria-label="Desplazar opciones hacia arriba">⌃</Select.ScrollUpButton>
    <Select.Viewport className={styles.viewport}>
-    {games.map(game=><Select.Item key={game.value} value={game.value} textValue={game.label} className={styles.item}>
+    {options.map(game=><Select.Item key={game.value} value={game.value} textValue={game.label} className={styles.item}>
      <Select.ItemIndicator className={styles.indicator}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></Select.ItemIndicator>
      <Select.ItemText><span className={styles.optionText}>{game.label}</span></Select.ItemText>
     </Select.Item>)}

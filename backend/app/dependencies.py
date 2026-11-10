@@ -49,3 +49,9 @@ def require_content_staff(current_user: User = Depends(get_current_user)) -> Use
             detail="No tienes permisos para gestionar contenidos.",
         )
     return current_user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(403, "Acceso exclusivo para administradores.")
+    return current_user
