@@ -131,7 +131,7 @@ test("state filter resets page; retired questions remain editable and retain sta
     assert.equal(editor.props.question.is_active, false); assert.equal(editor.props.questionState, "retired");
     editor.props.onClose(true); h.render(); await h.flush();
     assert.deepEqual(h.reads[1], h.reads[0]);
-    h.find(n => n.props?.id === "question-state").props.onChange({ target: { value: "active" } });
+    h.find(n => n.props?.id === "question-state").props.onValueChange("active");
     h.find(n => n.type === "form").props.onSubmit({ preventDefault() {} });
     assert.match(h.routes[0], /state=active/); assert.doesNotMatch(h.routes[0], /page=/);
   } finally { h.cleanup(); }
@@ -154,4 +154,32 @@ test("page restores state, mode, difficulty and page from the URL and rejects in
   assert.equal(result.props.invalidFilters, false);
   const invalid = await Page({ params, searchParams: Promise.resolve({ state: "deleted" }) });
   assert.equal(invalid.props.invalidFilters, true);
+});
+
+
+test("shared selectors keep all options and only apply pending filters on submit", async () => {
+  const h = harness({ filter: "all" });
+  try {
+    h.render(); await h.flush();
+    const mode = () => h.find(n => n.props?.id === "question-mode");
+    const level = () => h.find(n => n.props?.id === "question-level");
+    const state = () => h.find(n => n.props?.id === "question-state");
+    assert.deepEqual(mode().props.options.map(o => o.value), ["ALL", "TRIVIAL", "PASAPALABRA"]);
+    assert.deepEqual(level().props.options.map(o => o.value), ["ALL", "1", "2", "3", "4", "unknown"]);
+    assert.equal(level().props.options[0].label, "Todas las dificultades");
+    assert.deepEqual(state().props.options.map(o => o.value), ["all", "active", "retired"]);
+    mode().props.onValueChange("PASAPALABRA"); level().props.onValueChange("unknown"); state().props.onValueChange("retired");
+    assert.equal(h.routes.length, 0); assert.equal(h.reads.length, 1);
+    h.find(n => n.type === "form").props.onSubmit({ preventDefault() {} });
+    let url = new URL(h.routes.pop(), "http://localhost");
+    assert.equal(url.searchParams.get("mode"), "PASAPALABRA");
+    assert.equal(url.searchParams.get("level"), "unknown"); assert.equal(url.searchParams.get("state"), "retired");
+    assert.equal(url.searchParams.get("page"), null);
+    mode().props.onValueChange("ALL"); level().props.onValueChange("ALL"); state().props.onValueChange("all");
+    assert.equal(h.routes.length, 0);
+    h.find(n => n.type === "form").props.onSubmit({ preventDefault() {} });
+    url = new URL(h.routes[0], "http://localhost");
+    assert.equal(url.searchParams.get("mode"), null); assert.equal(url.searchParams.get("level"), null);
+    assert.equal(url.searchParams.get("state"), "all");
+  } finally { h.cleanup(); }
 });

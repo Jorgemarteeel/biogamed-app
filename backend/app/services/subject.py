@@ -113,3 +113,17 @@ def create_subject(db: Session, subject: SubjectCreate) -> Subject:
         raise
     db.refresh(db_subject)
     return db_subject
+
+
+def edit_metadata(db: Session, entity: Subject | ContentBlock | Category,
+                  payload: SubjectCreate):
+    """Update only mutable labels; never rewrite relationships or historical copies."""
+    entity.name = payload.name
+    entity.description = payload.description
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(entity)
+    return entity

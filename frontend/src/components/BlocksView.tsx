@@ -7,9 +7,10 @@ import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import EditContentFields from "@/components/EditContentFields";
 import CreateContentPanel from "@/components/CreateContentPanel";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleBlocksPage } from "@/lib/subjects";
-import { createContentBlock, getContentBlocks, getCurrentUser, getSubject,
+import { editContentBlock, createContentBlock, getContentBlocks, getCurrentUser, getSubject,
   type ContentBlock, type Subject } from "@/services/api";
 
 type ViewState = "loading" | "ready" | "error" | "forbidden" | "missing";
@@ -124,7 +125,7 @@ export default function BlocksView({ subjectId, page }: { subjectId: number; pag
         <section aria-labelledby="blocks-heading" className="mt-8">
           <h2 id="blocks-heading" className="text-xl font-bold text-blue-950">Bloques temáticos</h2>
           {blocks.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">{created ? "El listado se cargó antes de crear el bloque. Puedes actualizarlo para consultar su ubicación." : page === 1 ? "Todavía no hay bloques en esta asignatura." : "No hay bloques en esta página."}</p>
-            : <ol className="mt-4 grid gap-4 sm:grid-cols-2">{blocks.map((block) => <li key={block.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{block.name}</h3>{block.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{block.description}</p>}<Link href={`/gestion/asignaturas/${subjectId}/bloques/${block.id}`} className="text-link mt-3 inline-flex min-h-11 items-center">Ver categorías →</Link></li>)}</ol>}
+            : <ol className="mt-4 grid items-start gap-4 sm:grid-cols-2">{blocks.map((block) => <li key={block.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{block.name}</h3>{block.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{block.description}</p>}<EditContentFields navigation={<Link href={`/gestion/asignaturas/${subjectId}/bloques/${block.id}`} className="text-link inline-flex min-h-11 items-center">Ver categorías →</Link>} item={block} save={(payload) => editContentBlock(subjectId, block.id, payload)} onSaved={(saved) => setBlocks((current) => current.map((entry) => entry.id === saved.id ? saved : entry))} onForbidden={() => setState("forbidden")} /></li>)}</ol>}
           <nav aria-label="Páginas de bloques" className="mt-6 flex flex-wrap items-center justify-between gap-4">
             {page > 1 ? <Link href={page === 2 ? `/gestion/asignaturas/${subjectId}` : `/gestion/asignaturas/${subjectId}?page=${page - 1}`} className="button-secondary">Anterior</Link> : <span />}
             <span className="text-sm font-semibold text-slate-600">Página {page}</span>

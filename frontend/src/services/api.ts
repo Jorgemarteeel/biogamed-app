@@ -466,3 +466,16 @@ export async function getGameHistoryDetail(sessionId: number): Promise<GameHisto
 }
 
 export default api;
+
+
+export async function editSubject(id: number, payload: SubjectCreate): Promise<Subject> {
+  return (await api.patch<Subject>(`/subjects/${id}`, payload)).data;
+}
+
+export async function editContentBlock(subjectId: number, id: number, payload: SubjectCreate): Promise<ContentBlock> {
+  return (await api.patch<ContentBlock>(`/subjects/${subjectId}/blocks/${id}`, payload)).data;
+}
+
+export async function editCategory(subjectId: number, blockId: number, id: number, payload: SubjectCreate): Promise<Category> {
+  return (await api.patch<Category>(`/subjects/${subjectId}/blocks/${blockId}/categories/${id}`, payload)).data;
+}

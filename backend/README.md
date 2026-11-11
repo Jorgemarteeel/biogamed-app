@@ -9,6 +9,98 @@ Contratos, reglas, migración, permisos, historial y comprobaciones:
 [Pasapalabra local](docs/pasapalabra-local.md). Esta sección describe el flujo
 nuevo; las referencias posteriores al envío completo describen el flujo heredado.
 
+## Edición de la jerarquía académica
+
+Entrega del 11 de noviembre de 2026. En `/gestion/asignaturas`, los listados
+respectivos de asignaturas, bloques y categorías ofrecen **Editar**, con nombre
+y descripción precargados, **Guardar** y **Cancelar**. Conservan la página y las
+relaciones existentes; el resultado del guardado actualiza la tarjeta. Cancelar
+no envía peticiones. El foco pasa al nombre y vuelve a Editar al cerrar. Los
+campos se conservan ante errores y el envío duplicado se bloquea mientras hay
+una petición en curso. Si se pierde la respuesta de red, el mensaje no afirma
+que el servidor haya rechazado el guardado: permite reintentar o comprobar el
+listado. La pérdida de permisos cierra el acceso a la gestión.
+
+Contratos autenticados exclusivos para el rol vigente `teacher` o `admin`:
+
+- `PATCH /subjects/{subject_id}`.
+- `PATCH /subjects/{subject_id}/blocks/{block_id}`.
+- `PATCH /subjects/{subject_id}/blocks/{block_id}/categories/{category_id}`.
+
+Reciben el formulario completo `{"name":"Nombre","description":null}` y
+reutilizan los esquemas de creación: nombre obligatorio, recortado en extremos,
+de 1 a 255 caracteres; descripción opcional, texto o null. Omitir descripción
+la deja en null. Los campos adicionales se rechazan. Devuelven la entidad con
+su ID (200); 401 sin autenticación, 403 para estudiantes, 404 si no existe o no
+pertenece a la jerarquía indicada y 422 para cuerpos inválidos. No hay regla de
+unicidad de nombres en los contratos ni modelos actuales: los duplicados siguen
+permitidos y los identificadores distinguen entidades. No se introduce una
+restricción nueva ni una migración. El PUT existente de vinculación de categoría
+sin bloque conserva su contrato independiente.
+
+Solo se escriben `name` y `description`. No se alteran IDs, padres, preguntas,
+estados, sesiones, respuestas ni copias/contextos históricos. No se reconstruyen
+copias ausentes. Los nuevos juegos capturan los nombres vigentes; las partidas
+ya guardadas conservan sus etiquetas históricas. Esta entrega no incorpora
+traslados, eliminación, retirada de jerarquías ni importación.
+
+Verificación: 27 casos backend relacionados aprobados (edición, permisos,
+jerarquía, validación, duplicados permitidos y regresiones de creación/vinculación).
+Incluyen copias reales de Trivial y Pasapalabra y una sesión antigua sin copia,
+en SQLite en memoria mediante el override de pruebas. Se ejecutaron inicialmente
+26 casos; tras ampliar exclusivamente el archivo nuevo se aprobaron sus cuatro
+casos, manteniendo vigentes los otros 23. Frontend: 16 pruebas relacionadas,
+`npx tsc --noEmit`, lint y compilación aprobados. Aviso existente del TestClient
+sobre la futura sustitución de httpx, sin fallo de pruebas; sin cambios de dependencias.
+
+Revisión real con el navegador integrado en 1366×768 y 390×844: formulario,
+guardado de nombre y descripción de las tres entidades ficticias, persistencia
+tras recarga de asignatura y categoría, cancelación, espacios como nombre vacío,
+foco al abrir/cerrar y navegación por teclado. Sin desbordamiento horizontal
+observado. No es una auditoría completa con lectores de pantalla ni de todos
+los tamaños/zoom. La demo se arrancó conservando sus contenedores y volumen;
+conexión verificada a `db/biogamed_demo`, clúster `7703905352215838755`, revisión
+`c42d51e63f74`; sin migraciones. Se restauraron y verificaron los nombres y
+descripciones originales de asignatura 1, bloque 1 y categoría 1. No se tocó la
+base habitual ni se cambiaron roles.
+
+Revisión del usuario: entrar con una cuenta docente o administradora de demo
+en <http://localhost:13004/gestion/asignaturas>, abrir Editar en una tarjeta y
+seguir Ver bloques / Ver categorías para los otros niveles. Los registros
+`DEMO · …` son ficticios; no es necesario editar la organización provisional
+ni el contenido auténtico para revisar la interfaz. Presentación y ajustes visuales aprobados expresamente por el usuario el
+11 de noviembre de 2026. Se autoriza el commit local de esta entrega; sin push.
+
+### Ajuste visual posterior de gestión (11 de noviembre de 2026)
+
+Las cuadrículas de asignaturas, bloques y categorías alinean las tarjetas por
+arriba: abrir el editor no estira las vecinas. La zona inferior compartida reúne
+la navegación principal y Editar, permite envolver las acciones en móvil y
+mantiene el formulario dentro de la tarjeta. La explicación docente distingue
+categoría académica y temática de juego sin mostrar terminología de implementación.
+
+Los tres filtros del listado de preguntas reutilizan `MonitoringGameSelect`
+(Radix Select), sin nuevas dependencias. Conservan las opciones y valores de
+API/URL; el valor visual `ALL` se convierte al valor vacío previo para modalidad
+y dificultad. Solo Aplicar filtros navega/aplica la selección. Todas las
+dificultades aclara que incluye preguntas sin dificultad asignada. No cambia
+ningún contrato, permiso ni dato.
+
+Verificación proporcional: 20 pruebas frontend relacionadas aprobadas (edición,
+creación/edición de preguntas, retirada, filtros explícitos/URL y select
+compartido), tipos y lint. Se reutilizan las pruebas backend vigentes: no hay
+cambios de backend en este ajuste. Navegador integrado a 1366×768 y 390×844:
+editor junto a tarjetas cerradas, cancelación con devolución de foco, acciones
+móviles, opciones completas, selección por teclado, Escape y aplicación de
+los tres filtros en URL. En categorías, la tarjeta vecina se mantuvo en unos
+178 px mientras la editada pasó de unos 178 a 494 px; bloques y asignaturas
+también conservaron alturas independientes. Sin desbordamiento horizontal
+observado en los tamaños revisados. Sin auditoría completa de lectores de
+pantalla, zoom o todos los dispositivos. Demo sincronizada; revisión solo de
+lectura y cancelación, sin guardar contenidos, cambiar roles ni escribir en
+bases de datos. Los commits anteriores y el trabajo pendiente se conservan,
+sin staging, commit ni push.
+
 ## Retirada y reactivación de preguntas
 
 `Question.is_active` conserva el contenido y controla su elegibilidad para

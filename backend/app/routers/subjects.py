@@ -164,3 +164,30 @@ def link_category(
     current_user: User = Depends(require_content_staff),
 ) -> Category:
     return subject_service.link_category(db, subject_id, block_id, category_id)
+
+
+@router.patch("/{subject_id}", response_model=SubjectResponse)
+def edit_subject(
+    payload: SubjectCreate, subject_id: int = Path(ge=1),
+    db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
+) -> Subject:
+    return subject_service.edit_metadata(db, subject_service.get_subject(db, subject_id), payload)
+
+
+@router.patch("/{subject_id}/blocks/{block_id}", response_model=ContentBlockResponse)
+def edit_block(
+    payload: ContentBlockCreate, subject_id: int = Path(ge=1), block_id: int = Path(ge=1),
+    db: Session = Depends(get_db), current_user: User = Depends(require_content_staff),
+) -> ContentBlock:
+    return subject_service.edit_metadata(db, subject_service.get_block(db, subject_id, block_id), payload)
+
+
+@router.patch("/{subject_id}/blocks/{block_id}/categories/{category_id}", response_model=CategoryResponse)
+def edit_category(
+    payload: CategoryCreate, subject_id: int = Path(ge=1), block_id: int = Path(ge=1),
+    category_id: int = Path(ge=1), db: Session = Depends(get_db),
+    current_user: User = Depends(require_content_staff),
+) -> Category:
+    return subject_service.edit_metadata(
+        db, subject_service.get_category(db, subject_id, block_id, category_id), payload,
+    )

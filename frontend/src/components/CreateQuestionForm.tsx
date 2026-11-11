@@ -74,13 +74,13 @@ export default function QuestionForm({ subjectId, blockId, categoryId, mode, lev
     || (questionState !== "all" && (questionState === "active") !== created.is_active)
     || (level === "unknown" ? created.difficulty !== null : level && Number(level) !== created.difficulty));
   const content = <>
-    <p className="mb-4 text-sm text-slate-600">La pregunta se guardará en esta categoría. Elige por separado su temática de juego. No se deduce de la categoría.</p>
+    <p className="mb-4 text-sm text-slate-600">La categoría organiza el contenido académico; la temática agrupa las preguntas para jugar.</p>
     {topicState === "loading" && <p role="status">Cargando temáticas…</p>}
     {topicState === "error" && <div><p role="alert">No se pudieron cargar las temáticas.</p><button type="button" className="button-secondary" onClick={() => { setTopicState("loading"); setAttempt((n) => n + 1); }}>Reintentar temáticas</button></div>}
     {topicState === "ready" && topics.length === 0 && <p role="status">No hay temáticas de juego disponibles.</p>}
     <form onSubmit={submit} className="space-y-4" aria-label={question ? "Editar pregunta" : "Crear pregunta"}>
       <fieldset disabled={disabled || busy || !!created || cancelPending} className="min-w-0 space-y-4">
-        <div><label className="form-label" htmlFor="create-topic">Temática de juego (Topic)</label><select id="create-topic" className="form-input" required value={topic} onChange={(e) => setTopic(e.target.value)}><option value="">Selecciona una temática</option>{topics.map((t) => <option key={t.id} value={t.id}>{t.name} · ID {t.id}</option>)}</select></div>
+        <div><label className="form-label" htmlFor="create-topic">Temática de juego</label><select id="create-topic" className="form-input" required value={topic} onChange={(e) => setTopic(e.target.value)}><option value="">Selecciona una temática</option>{topics.map((t) => <option key={t.id} value={t.id}>{t.name} · ID {t.id}</option>)}</select></div>
         <div className="grid gap-4 sm:grid-cols-2"><div><label className="form-label" htmlFor="create-mode">Modalidad{question ? " (se conserva)" : " de la nueva pregunta"}</label><select id="create-mode" className="form-input" disabled={!!question} value={kind} onChange={(e) => setKind(e.target.value as GameMode)}><option value="TRIVIAL">Trivial</option><option value="PASAPALABRA">Pasapalabra</option></select></div>
           <div><label className="form-label" htmlFor="create-difficulty">Dificultad opcional</label><select id="create-difficulty" className="form-input" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}><option value="">Sin clasificar</option>{[1, 2, 3, 4].map((n) => <option key={n} value={n}>Nivel {n}</option>)}</select></div></div>
         <div><label className="form-label" htmlFor="create-text">Enunciado</label><textarea id="create-text" className="form-input" required value={text} onChange={(e) => setText(e.target.value)} /></div>

@@ -7,9 +7,10 @@ import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import EditContentFields from "@/components/EditContentFields";
 import CreateContentPanel from "@/components/CreateContentPanel";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleSubjectsPage } from "@/lib/subjects";
-import { createSubject, getCurrentUser, getSubjects, type Subject } from "@/services/api";
+import { editSubject, createSubject, getCurrentUser, getSubjects, type Subject } from "@/services/api";
 
 type ViewState = "loading" | "ready" | "error" | "forbidden";
 
@@ -123,7 +124,7 @@ export default function SubjectsView({ page }: { page: number }) {
       <ContentBreadcrumbs />
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
       <h1 className="mt-2 text-3xl font-black text-blue-950">Asignaturas</h1>
-      <p className="mt-2 max-w-2xl text-slate-600">Consulta y crea asignaturas para organizar el contenido académico.</p>
+      <p className="mt-2 max-w-2xl text-slate-600">Consulta, crea y edita asignaturas para organizar el contenido académico.</p>
 
       {state === "loading" && <p role="status" className="mt-6 rounded-2xl bg-white p-6">Cargando asignaturas…</p>}
       {state === "forbidden" && <p role="alert" className="notice-warning mt-6">Acceso no permitido. La gestión de contenidos está disponible para profesores y administradores.</p>}
@@ -132,7 +133,7 @@ export default function SubjectsView({ page }: { page: number }) {
         <section aria-labelledby="subject-list-heading" className="mt-8">
           <h2 id="subject-list-heading" className="text-xl font-bold text-blue-950">Asignaturas registradas</h2>
           {subjects.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">{created ? "El listado se cargó antes de crear la asignatura. Puedes actualizarlo para consultar su ubicación." : page === 1 ? "Todavía no hay asignaturas registradas." : "No hay asignaturas en esta página."}</p>
-            : <ol className="mt-4 grid gap-4 sm:grid-cols-2">{subjects.map((subject) => <li key={subject.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{subject.name}</h3>{subject.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{subject.description}</p>}<Link href={`/gestion/asignaturas/${subject.id}`} className="text-link mt-3 inline-flex min-h-11 items-center">Ver bloques →</Link></li>)}</ol>}
+            : <ol className="mt-4 grid items-start gap-4 sm:grid-cols-2">{subjects.map((subject) => <li key={subject.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{subject.name}</h3>{subject.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{subject.description}</p>}<EditContentFields navigation={<Link href={`/gestion/asignaturas/${subject.id}`} className="text-link inline-flex min-h-11 items-center">Ver bloques →</Link>} item={subject} save={(payload) => editSubject(subject.id, payload)} onSaved={(saved) => setSubjects((current) => current.map((entry) => entry.id === saved.id ? saved : entry))} onForbidden={() => setState("forbidden")} /></li>)}</ol>}
           <nav aria-label="Páginas de asignaturas" className="mt-6 flex flex-wrap items-center justify-between gap-4">
             {page > 1 ? <Link href={page === 2 ? "/gestion/asignaturas" : `/gestion/asignaturas?page=${page - 1}`} className="button-secondary">Anterior</Link> : <span />}
             <span className="text-sm font-semibold text-slate-600">Página {page}</span>

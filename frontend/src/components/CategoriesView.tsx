@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import EditContentFields from "@/components/EditContentFields";
 import CreateContentPanel from "@/components/CreateContentPanel";
 import LinkCategory from "@/components/LinkCategory";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE, visibleCategoriesPage } from "@/lib/subjects";
-import { createCategory, getCategories, getContentBlock, getCurrentUser,
+import { editCategory, createCategory, getCategories, getContentBlock, getCurrentUser,
   type Category, type ContentBlockDetail } from "@/services/api";
 
 type ViewState = "loading" | "ready" | "error" | "forbidden" | "missing";
@@ -128,7 +129,7 @@ export default function CategoriesView({ subjectId, blockId, page }: {
         <section aria-labelledby="categories-heading" className="mt-8">
           <h2 id="categories-heading" className="text-xl font-bold text-blue-950">Categorías del bloque</h2>
           {categories.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">{created ? "El listado se cargó antes de crear la categoría. Puedes actualizarlo para consultar su ubicación." : page === 1 ? "Todavía no hay categorías en este bloque." : "No hay categorías en esta página."}</p>
-            : <ol className="mt-4 grid gap-4 sm:grid-cols-2">{categories.map((category) => <li key={category.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{category.name}</h3>{category.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{category.description}</p>}<Link href={`${base}/categorias/${category.id}`} className="text-link mt-3 inline-flex min-h-11 items-center">Ver preguntas →</Link></li>)}</ol>}
+            : <ol className="mt-4 grid items-start gap-4 sm:grid-cols-2">{categories.map((category) => <li key={category.id} className="min-w-0 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm"><h3 className="break-words text-lg font-bold text-blue-950">{category.name}</h3>{category.description && <p className="mt-2 break-words text-sm leading-6 text-slate-600">{category.description}</p>}<EditContentFields navigation={<Link href={`${base}/categorias/${category.id}`} className="text-link inline-flex min-h-11 items-center">Ver preguntas →</Link>} item={category} save={(payload) => editCategory(subjectId, blockId, category.id, payload)} onSaved={(saved) => setCategories((current) => current.map((entry) => entry.id === saved.id ? saved : entry))} onForbidden={() => setState("forbidden")} /></li>)}</ol>}
           <nav aria-label="Páginas de categorías" className="mt-6 flex flex-wrap items-center justify-between gap-4">
             {page > 1 ? <Link href={page === 2 ? base : `${base}?page=${page - 1}`} className="button-secondary">Anterior</Link> : <span />}
             <span className="text-sm font-semibold text-slate-600">Página {page}</span>

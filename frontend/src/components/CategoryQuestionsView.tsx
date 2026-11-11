@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
+import MonitoringGameSelect from "@/components/MonitoringGameSelect";
 import CreateQuestionForm from "@/components/CreateQuestionForm";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE } from "@/lib/subjects";
 import { getCategoryDetail, getCategoryQuestions, getCurrentUser, setCategoryQuestionState,
@@ -158,12 +159,19 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
       {state === "invalid" && <div className="mt-6"><p role="alert" className="notice-warning">Los filtros de la URL no son válidos.</p><Link href={base} className="text-link mt-3 inline-flex min-h-11 items-center">Ver todas las preguntas</Link></div>}
       {state === "error" && <div className="mt-6"><p role="alert" className="notice-error">No se pudieron consultar las preguntas. Comprueba la conexión e inténtalo de nuevo.</p><button type="button" className="button-secondary mt-4" onClick={retry}>Reintentar</button></div>}
       {state === "ready" && !editing && <>
-        <p className="mt-4 text-sm text-slate-600">La categoría organiza contenidos académicos. La temática de juego que aparece en cada pregunta pertenece a la agrupación heredada Topic.</p>
-        <form onSubmit={applyFilters} className="mt-7 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Filtrar preguntas">
-          <div className="min-w-44 flex-1"><label htmlFor="question-mode" className="form-label">Modalidad</label><select id="question-mode" value={selectedMode} onChange={(event) => setSelectedMode(event.target.value as GameMode | "")} className="form-input"><option value="">Ambas modalidades</option><option value="TRIVIAL">Trivial</option><option value="PASAPALABRA">Pasapalabra</option></select></div>
-          <div className="min-w-44 flex-1"><label htmlFor="question-level" className="form-label">Dificultad</label><select id="question-level" value={selectedLevel} onChange={(event) => setSelectedLevel(event.target.value)} className="form-input"><option value="">Sin filtrar (incluye sin clasificar)</option>{[1, 2, 3, 4].map((value) => <option key={value} value={value}>Nivel {value}</option>)}<option value="unknown">Solo sin clasificar</option></select></div>
-          <div className="min-w-44 flex-1"><label htmlFor="question-state" className="form-label">Estado</label><select id="question-state" value={selectedState} onChange={(event) => setSelectedState(event.target.value as QuestionStateFilter)} className="form-input"><option value="all">Todas</option><option value="active">Activas</option><option value="retired">Retiradas</option></select></div>
-          <button type="submit" disabled={changingId !== null} className="button-secondary">Aplicar filtros</button>
+        <p className="mt-4 text-sm text-slate-600">La categoría organiza el contenido académico; la temática agrupa las preguntas para jugar.</p>
+        <form onSubmit={applyFilters} className="mt-7 grid items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto]" aria-label="Filtrar preguntas">
+          <MonitoringGameSelect id="question-mode" name="mode" label="Modalidad" value={selectedMode || "ALL"}
+            onValueChange={(value) => setSelectedMode(value === "ALL" ? "" : value as GameMode)}
+            options={[{value: "ALL", label: "Ambas modalidades"}, {value: "TRIVIAL", label: "Trivial"}, {value: "PASAPALABRA", label: "Pasapalabra"}]} />
+          <div className="min-w-0"><MonitoringGameSelect id="question-level" name="level" label="Dificultad" value={selectedLevel || "ALL"}
+            onValueChange={(value) => setSelectedLevel(value === "ALL" ? "" : value)}
+            options={[{value: "ALL", label: "Todas las dificultades"}, ...[1, 2, 3, 4].map((value) => ({value: String(value), label: `Nivel ${value}`})), {value: "unknown", label: "Solo sin clasificar"}]} />
+            {selectedLevel === "" && <p className="mt-2 text-xs leading-5 text-slate-600">Incluye preguntas sin dificultad asignada.</p>}</div>
+          <MonitoringGameSelect id="question-state" name="state" label="Estado" value={selectedState}
+            onValueChange={(value) => setSelectedState(value as QuestionStateFilter)}
+            options={[{value: "all", label: "Todas"}, {value: "active", label: "Activas"}, {value: "retired", label: "Retiradas"}]} />
+          <button type="submit" disabled={changingId !== null} className="button-secondary lg:mt-7">Aplicar filtros</button>
         </form>
         <section aria-labelledby="question-list-heading" className="mt-8">
           <h2 id="question-list-heading" tabIndex={-1} className="text-xl font-bold text-blue-950">Preguntas</h2>
@@ -181,7 +189,7 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
                 <div className="mt-3 flex flex-wrap gap-3"><button type="button" className="button-primary" disabled={changingId !== null} onClick={() => void changeState(question, false)}>Confirmar retirada</button>
                 <button id="cancel-retirement" type="button" className="button-secondary" disabled={changingId !== null} onClick={cancelRetirement}>Cancelar</button></div>
               </div>}
-              <p className="mt-2 break-words text-sm text-slate-600">Temática de juego (Topic): {question.topic.name} · ID {question.topic_id}</p>
+              <p className="mt-2 break-words text-sm text-slate-600">Temática de juego: {question.topic.name} · ID {question.topic_id}</p>
               {question.question_type === "TRIVIAL" ? <div className="mt-4"><p className="font-semibold text-blue-950">Opciones</p>{question.options ? <ol className="mt-2 space-y-1 list-inside list-[upper-alpha]">{question.options.map((option, index) => <li key={index} className="break-words">{option}{index === question.correct_option_index && <strong className="ml-2 text-green-800">Correcta</strong>}</li>)}</ol> : <p className="text-sm text-slate-600">No constan opciones.</p>}{question.options && question.correct_option_index === null && <p className="mt-2 text-sm text-slate-600">No consta la opción correcta.</p>}</div>
                 : <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2"><div><dt className="font-semibold">Letra</dt><dd>{question.letter ?? "No consta"}</dd></div><div><dt className="font-semibold">Solución</dt><dd className="break-words">{question.exact_word ?? "No consta"}</dd></div><div className="sm:col-span-2"><dt className="font-semibold">Respuestas alternativas</dt><dd className="break-words">{question.accepted_answers === null ? "No constan datos" : question.accepted_answers.length ? question.accepted_answers.join(", ") : "Ninguna registrada"}</dd></div></dl>}
             </li>)}</ol>}
