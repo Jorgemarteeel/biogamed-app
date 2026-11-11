@@ -5,9 +5,9 @@ import { isAxiosError } from "axios";
 import CreateContentPanel from "@/components/CreateContentPanel";
 import { createCategoryQuestion, editCategoryQuestion, getQuestionTopics, type CategoryQuestion, type GameMode, type QuestionStateFilter, type Topic } from "@/services/api";
 
-export default function QuestionForm({ subjectId, blockId, categoryId, mode, level, onRefresh, question, onClose, questionState = "all", disabled = false }: {
+export default function QuestionForm({ subjectId, blockId, categoryId, mode, level, onRefresh, question, onClose, questionState = "all", disabled = false, inline = false }: {
   subjectId: number; blockId: number; categoryId: number; mode: GameMode | ""; level: string;
-  questionState?: QuestionStateFilter; disabled?: boolean;
+  questionState?: QuestionStateFilter; disabled?: boolean; inline?: boolean;
   onRefresh: () => void; question?: CategoryQuestion; onClose?: (saved: boolean, uncertain?: boolean) => void;
 }) {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -105,5 +105,5 @@ export default function QuestionForm({ subjectId, blockId, categoryId, mode, lev
     </form>
   </>;
   return question ? <section aria-label={`Editar pregunta ${question.id}`} className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7"><h2 className="mb-4 text-xl font-bold text-blue-950">Editar pregunta · ID {question.id}</h2>{content}</section>
-    : <CreateContentPanel id="create-question" label="Crear pregunta" busy={busy}>{content}</CreateContentPanel>;
+    : inline ? content : <CreateContentPanel id="create-question" label="Crear pregunta" busy={busy}>{content}</CreateContentPanel>;
 }

@@ -18,3 +18,5 @@ __all__ = [
 ]
 
 from app.models.role_change import RoleChange
+
+from app.models.question_import import QuestionImport

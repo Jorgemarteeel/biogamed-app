@@ -8,6 +8,8 @@ import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
 import ContentBreadcrumbs from "@/components/ContentBreadcrumbs";
 import MonitoringGameSelect from "@/components/MonitoringGameSelect";
+import ImportRecovery from "@/components/ImportRecovery";
+import QuestionImportForm from "@/components/QuestionImportForm";
 import CreateQuestionForm from "@/components/CreateQuestionForm";
 import { canManageSubjects, SUBJECTS_PAGE_SIZE } from "@/lib/subjects";
 import { getCategoryDetail, getCategoryQuestions, getCurrentUser, setCategoryQuestionState,
@@ -32,6 +34,7 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
   const [changingId, setChangingId] = useState<number | null>(null);
   const [actionError, setActionError] = useState("");
   const sendingState = useRef(false);
+  const [contentAction, setContentAction] = useState<"create" | "import" | null>(null);
   const [editing, setEditing] = useState<CategoryQuestion | null>(null);
   const [notice, setNotice] = useState("");
   const adjustPage = useRef(false);
@@ -149,10 +152,21 @@ export default function CategoryQuestionsView({ subjectId, blockId, categoryId, 
       {actionError && <p role="alert" className="notice-error mt-4">{actionError}<button type="button" disabled={changingId !== null} className="button-secondary ml-3" onClick={retry}>Actualizar listado</button></p>}
       {adjusted && !notice && <p role="status" className="notice-success mt-4">Estado actualizado. La pregunta deja de coincidir con el filtro actual; se muestra la primera página disponible con los mismos filtros.</p>}
       {notice && <p role="status" className="notice-success mt-4">{notice}</p>}
-      {category && (state === "ready" || state === "error") && <CreateQuestionForm
-        key={`${subjectId}-${blockId}-${categoryId}-${editing?.id ?? "new"}`} subjectId={subjectId} blockId={blockId}
-        categoryId={categoryId} questionState={questionState} disabled={changingId !== null || pendingRetirement !== null} mode={mode} level={level} question={editing ?? undefined} onClose={closeEditor}
-        onRefresh={() => setAttempt((value) => value + 1)} />}
+      {state === "ready" && <ImportRecovery key={`${subjectId}-${blockId}-${categoryId}`} subjectId={subjectId} blockId={blockId} categoryId={categoryId} refresh={attempt} />}
+      {category && (state === "ready" || state === "error") && <>
+        {!editing && <div className="mt-5 flex flex-wrap gap-3" role="group" aria-label="Añadir preguntas">
+          <button type="button" className={contentAction === "create" ? "button-primary" : "button-secondary"} aria-expanded={contentAction === "create"} aria-controls="manual-question-panel" onClick={() => setContentAction(v => v === "create" ? null : "create")}>Crear pregunta</button>
+          <button type="button" className={contentAction === "import" ? "button-primary" : "button-secondary"} aria-expanded={contentAction === "import"} aria-controls="csv-question-panel" onClick={() => setContentAction(v => v === "import" ? null : "import")}>Importar preguntas</button>
+        </div>}
+        <div id="manual-question-panel" hidden={!editing && contentAction !== "create"} className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+          <CreateQuestionForm inline key={`${subjectId}-${blockId}-${categoryId}-${editing?.id ?? "new"}`} subjectId={subjectId} blockId={blockId}
+            categoryId={categoryId} questionState={questionState} disabled={changingId !== null || pendingRetirement !== null} mode={mode} level={level} question={editing ?? undefined} onClose={closeEditor}
+            onRefresh={() => setAttempt((value) => value + 1)} />
+        </div>
+        <div id="csv-question-panel" hidden={!!editing || contentAction !== "import"} className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+          <QuestionImportForm active={!editing && contentAction === "import"} categoryName={category.name} key={`${subjectId}-${blockId}-${categoryId}`} subjectId={subjectId} blockId={blockId} categoryId={categoryId} onImported={() => setAttempt(v => v + 1)} />
+        </div>
+      </>}
       {state === "loading" && <p role="status" className="mt-6 rounded-2xl bg-white p-6">Cargando preguntas…</p>}
       {state === "forbidden" && <p role="alert" className="notice-warning mt-6">Acceso no permitido. La consulta de preguntas está disponible para profesores y administradores.</p>}
       {state === "missing" && <p role="alert" className="notice-warning mt-6">La asignatura, el bloque o la categoría no existe en esta ruta.</p>}

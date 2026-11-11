@@ -89,7 +89,7 @@ test("retirement requires confirmation, cancels by button or Escape, blocks dupl
     assert.match(JSON.stringify(h.find(n => n.props?.id === "retirement-warning")), /partidas nuevas.*historial/);
     h.button("Cancelar").props.onClick(); assert.equal(h.calls.length, 0); assert.ok(h.focus.includes("state-81"));
     h.button("Retirar").props.onClick();
-    h.find(n => n.props?.role === "group").props.onKeyDown({ key: "Escape" });
+    h.find(n => n.props?.["aria-labelledby"] === "retirement-warning").props.onKeyDown({ key: "Escape" });
     assert.equal(h.calls.length, 0);
     h.button("Retirar").props.onClick();
     const confirm = h.button("Confirmar retirada");

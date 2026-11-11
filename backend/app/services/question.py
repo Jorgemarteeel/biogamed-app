@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Question, Topic
+from app.models import Category, Question, Topic
 from app.services.subject import get_category
 from app.schemas.question import QuestionCreate
 
@@ -38,12 +38,19 @@ def _question_values(question: QuestionCreate) -> dict:
         else question.exact_word.strip())}
 
 
+def lock_question_destination(db: Session, category_id: int) -> None:
+    db.scalar(select(Category).where(Category.id == category_id).with_for_update())
+
+
+def build_question(question: QuestionCreate, category_id: int | None = None) -> Question:
+    return Question(**_question_values(question), category_id=category_id)
+
+
 def create_question(db: Session, question: QuestionCreate, *, category_id: int | None = None) -> Question:
     _require_topic(db, question.topic_id)
-    db_question = Question(
-        **_question_values(question),
-        category_id=category_id,
-    )
+    if category_id is not None:
+        lock_question_destination(db, category_id)
+    db_question = build_question(question, category_id)
     db.add(db_question)
     try:
         db.commit()
@@ -63,6 +70,7 @@ def create_category_question(db: Session, subject_id: int, block_id: int,
 def edit_category_question(db: Session, subject_id: int, block_id: int, category_id: int,
                            question_id: int, payload: QuestionCreate) -> Question:
     get_category(db, subject_id, block_id, category_id)
+    lock_question_destination(db, category_id)
     question = db.scalar(select(Question).where(
         Question.id == question_id, Question.category_id == category_id,
     ).with_for_update())

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 # Importamos nuestro nuevo router
 from app.routers import auth, game, questions, subjects, topics
-from app.routers import pasapalabra, practice, monitoring, users
+from app.routers import pasapalabra, practice, monitoring, users, question_import
 
 # Las tablas se gestionan mediante `alembic upgrade head`.
 
@@ -39,6 +39,7 @@ app.include_router(pasapalabra.router)
 app.include_router(practice.router)
 app.include_router(monitoring.router)
 app.include_router(users.router)
+app.include_router(question_import.router)
 
 @app.get("/")
 def read_root():

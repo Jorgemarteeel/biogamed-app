@@ -738,3 +738,9 @@ fecha de inicio e ID. No se limita ni trunca: el contrato entrega el historial
 comparable completo. Si el volumen llegara a hacer excesiva la respuesta, se
 necesitaría paginar los puntos por grupo mediante un endpoint específico,
 indicando el total y la continuación; no se perderían resultados en silencio.
+
+## Importación docente CSV
+
+Importación por categoría con validación previa, confirmación atómica y recibos
+idempotentes. Contratos, plantillas, migración exclusiva de demo, pruebas y límites:
+[Importación de preguntas](docs/question-import.md).
