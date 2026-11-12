@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: biogamed
+      POSTGRES_DB: biogamed
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U biogamed -d biogamed"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  backend:
+    build: ./backend
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      DATABASE_URL: postgresql://biogamed:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/biogamed
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      BIOGAMED_CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-14004}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-19004}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-19004}
+    command: npm run start
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-14004}:3000"
+    depends_on:
+      - backend
+volumes:
+  data:

@@ -1,3 +1,5 @@
+> Instalación nueva y primer administrador: consulta [la guía de instalación de la raíz](../README.md). Los apartados históricos siguientes registran entregas anteriores y no sustituyen esa guía.
+
 # Frontend de BioGaMed
 
 Aplicación Next.js con React, TypeScript y Tailwind CSS.
