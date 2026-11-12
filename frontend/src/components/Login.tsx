@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { loginUser } from "@/services/api";
 
-export default function Login({ sessionExpired = false }: { sessionExpired?: boolean }) {
+export default function Login({ sessionExpired = false, passwordChanged = false }: { sessionExpired?: boolean; passwordChanged?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +53,7 @@ export default function Login({ sessionExpired = false }: { sessionExpired?: boo
 
   return (
     <form method="post" onSubmit={handleSubmit} aria-busy={isLoading} className="space-y-5">
+      {passwordChanged && <p role="status" className="notice-success">Contraseña cambiada. Todas las sesiones anteriores están cerradas. Inicia sesión de nuevo.</p>}
       {showSessionNotice && (
         <p role="status" className="notice-warning">
           Tu sesión ha caducado o ya no es válida. Vuelve a iniciar sesión.

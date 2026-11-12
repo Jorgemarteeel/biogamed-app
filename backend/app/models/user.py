@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import Enum, String
+from sqlalchemy import Enum, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,6 +24,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(
         String(255), unique=True, index=True, nullable=False
     )
+    auth_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role"),

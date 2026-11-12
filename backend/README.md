@@ -744,3 +744,7 @@ indicando el total y la continuación; no se perderían resultados en silencio.
 Importación por categoría con validación previa, confirmación atómica y recibos
 idempotentes. Contratos, plantillas, migración exclusiva de demo, pruebas y límites:
 [Importación de preguntas](docs/question-import.md).
+
+## Mi cuenta
+
+Contratos, compatibilidad de hashes, revocación, migración y revisión: [Mi cuenta](docs/my-account.md).

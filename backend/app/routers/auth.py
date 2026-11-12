@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, OwnNameUpdate, OwnPasswordUpdate
 from app.services import user as user_service
 from app.utils.security import create_access_token, verify_password
 
@@ -48,6 +48,7 @@ def login(
             "sub": str(user.id),
             "email": user.email,
             "role": user.role.value,
+            "auth_version": user.auth_version,
         }
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -56,3 +57,23 @@ def login(
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_own_name(request: OwnNameUpdate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    user.name = request.name
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(user)
+    return user
+
+
+@router.post("/me/password")
+def update_own_password(request: OwnPasswordUpdate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from app.services.account import change_password
+    expected_version = user.auth_version
+    change_password(db, user.id, expected_version, request)
+    return {"message": "Contraseña cambiada. Todas las sesiones anteriores han quedado cerradas."}

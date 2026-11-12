@@ -10,3 +10,5 @@ email-validator
 python-multipart
 pytest
 httpx
+
+argon2-cffi==25.1.0

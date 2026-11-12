@@ -26,6 +26,7 @@ export default function RegistroPage() {
       setError("Introduce tu nombre y apellidos.");
       return;
     }
+    if (Array.from(password).length < 8 || Array.from(password).length > 255) { setError("La contraseña debe tener entre 8 y 255 caracteres."); return; }
     submitting.current = true;
     setIsLoading(true);
     try {
@@ -90,7 +91,7 @@ export default function RegistroPage() {
           <label htmlFor="password" className="form-label">Contraseña</label>
           <div className="relative">
             <svg className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 10V8a6 6 0 0 1 12 0v2m-13 0h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" /></svg>
-            <input id="password" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={255} required aria-describedby="password-help" className={inputClassName} placeholder="Mínimo 8 caracteres" />
+            <input id="password" name="password" type="password" autoComplete="new-password" required aria-describedby="password-help" className={inputClassName} placeholder="Mínimo 8 caracteres" />
           </div>
           <p id="password-help" className="mt-2 text-sm text-slate-600">Usa al menos 8 caracteres para proteger tu cuenta.</p>
         </div>

@@ -15,7 +15,7 @@ export default function ProfileMenu({ name, role }: { name?: string | null; role
     refresh();window.addEventListener('focus',refresh);window.addEventListener('biogamed:role-refresh',refresh);
     return ()=>{active=false;window.removeEventListener('focus',refresh);window.removeEventListener('biogamed:role-refresh',refresh);};
   }, [name, role]);
-  const label = (name ?? sessionName)?.trim() || "Mi cuenta";
+  const label = (sessionName ?? name)?.trim() || "Mi cuenta";
   const canManage = canManageSubjects(sessionRole ?? role ?? "student");
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -39,6 +39,7 @@ export default function ProfileMenu({ name, role }: { name?: string | null; role
       <span className="max-w-28 truncate sm:max-w-48" aria-hidden="true">{label}</span><span className="sr-only">{label}</span><span aria-hidden="true">⌄</span>
     </button>
     {open && <nav id="profile-navigation" aria-label="Navegación personal" className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 text-blue-950 shadow-xl">
+      <Link href="/cuenta" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Mi cuenta</Link>
       <Link href="/historial" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Mi historial</Link>
       <Link href="/progreso" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Mi progreso</Link>
       {(sessionRole ?? role)==='admin'&&<Link href="/administracion/usuarios" onClick={()=>setOpen(false)} className="block rounded-lg px-3 py-3 font-semibold hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700">Administración de usuarios</Link>}

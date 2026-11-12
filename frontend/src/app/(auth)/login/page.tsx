@@ -4,7 +4,7 @@ import Login from "@/components/Login";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session?: string | string[] }>;
+  searchParams: Promise<{ session?: string | string[]; password?: string | string[] }>;
 }) {
   const params = await searchParams;
   return (
@@ -17,7 +17,7 @@ export default async function LoginPage({
         </p>
       </div>
 
-      <Login sessionExpired={params.session === "expired"} />
+      <Login passwordChanged={params.password === "changed"} sessionExpired={params.session === "expired"} />
 
       <div className="mt-8 border-t border-slate-200 pt-7 text-center">
         <p className="text-sm text-slate-600">
