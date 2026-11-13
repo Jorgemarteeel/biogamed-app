@@ -532,3 +532,15 @@ queda dentro de la gráfica y conserva todos los puntos. En navegador aislado
 se comprobaron el menú, foco, enlaces y cuatro resultados reales en escritorio
 y móvil; quince puntos se verificaron mediante prueba de presentación, no con
 datos reales en navegador. No se probó un dispositivo táctil físico.
+
+## Cabecera compartida: redistribución a 320 px (13-11-2026)
+
+Hallazgo: el menú de perfil tenía `shrink-0`; su nombre y controles conservaban una anchura mínima que, sumada al logo, espaciados y salida, podía superar el ancho disponible. `ProfileMenu` admite ahora encogimiento con `min-width: 0`, conserva iconos y abrevia solo el nombre visual; el nombre accesible sigue completo. `Brand` conserva su tamaño. En móvil el desplegable se ancla al borde derecho de la cabecera para encajar también cuando el botón del perfil está junto a Cerrar sesión; en escritorio conserva el anclaje al botón. El foco del desplegable es azul sobre blanco. No se usa overflow-x:hidden, zoom ni reducción de áreas táctiles (perfil 44 px; salida 48 px).
+
+Archivos: `src/components/ProfileMenu.tsx`, `src/components/Brand.tsx`, `src/app/globals.css` y `tests/profile-menu.test.mjs`. No hay nuevos componentes de navegación, dependencias ni cambios de juegos o datos.
+
+Demo revisada con cuentas ficticias existentes, sin cambiar nombres, roles o contraseñas. Panel (con salida), Mi cuenta, partida Pasapalabra 31 activa, resultado 30 y Seguimiento: anchos 320, 390 y 1366 CSS px. En las 15 combinaciones, scrollWidth coincide con clientWidth; menú abierto contenido en el viewport. A 320, el panel mide 305 px de área útil y 305 px de contenido; perfil de 44 px de alto y salida de 48 px. Las tablas de Seguimiento siguen desplazables y enfocables (no ensanchan la página). Se comprobó Tab/Shift+Tab, apertura con Enter, cierre con Escape, devolución del foco y nombre accesible completo. Los nombres existentes se abrevian cuando falta espacio; la prueba automatizada añade un nombre sintético largo (más de 200 caracteres), sin persistirlo.
+
+Ocho pruebas frontend relacionadas aprobadas (perfil y cuenta), tipos y lint. No se crearon partidas ni se enviaron acciones de juego. No se probó un lector de pantalla real. **Zoom real al 200 % pendiente**: no hay capacidad de zoom en el navegador integrado y los atajos no cambiaron la escala ni innerWidth; no se sustituye esa prueba por viewport ni CSS zoom. No es una declaración de conformidad WCAG completa.
+
+El frontend habitual monta `biogamed-app/frontend` y recarga automáticamente esos archivos; por autorización expresa del usuario este ajuste visual también puede reflejarse allí al editar el repositorio. Las comprobaciones se hicieron solo en la demo. No se alteraron bases, configuración privada, backend ni servicios habituales. El usuario autoriza el commit local de esta corrección, reutilizando estas comprobaciones. El zoom real al 200 % continúa pendiente; no se ha confirmado su revisión manual. Sin push.

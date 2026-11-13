@@ -28,7 +28,7 @@ a:focus-visible, button:focus-visible {
 
 @layer components {
   .site-header {
-    @apply border-b border-white/10 bg-blue-950 text-white;
+    @apply relative border-b border-white/10 bg-blue-950 text-white;
   }
   .button-primary {
     @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-orange-700 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-60;
@@ -55,3 +55,6 @@ a:focus-visible, button:focus-visible {
     @apply rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900;
   }
 }
+
+/* Keep the header focus indicator visible on the white dropdown. */
+.site-header .profile-navigation a:focus-visible { outline-color: #0369a1; }
