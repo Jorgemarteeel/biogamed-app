@@ -8,10 +8,14 @@ from argon2 import PasswordHasher, Type
 from argon2.exceptions import VerificationError, InvalidHashError
 
 
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "dev-only-change-this-secret-key-before-production",
-)
+def require_secret_key():
+    value = os.getenv("SECRET_KEY")
+    if not value or not value.strip() or value.strip() == "dev-only-change-this-secret-key-before-production":
+        raise RuntimeError("Configure an explicit non-development SECRET_KEY before starting the backend")
+    return value
+
+
+SECRET_KEY = require_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

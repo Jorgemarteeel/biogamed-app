@@ -82,3 +82,30 @@ Límites: no se probaron juegos sin cargar contenido, ni restauración de copias
 ### Persistencia tras reinicio
 
 Se detuvieron y arrancaron exclusivamente los tres contenedores de `biogamed_clean_20261112` con stop y up -d --no-build, conservando el mismo volumen. Coinciden ID, nombre, correo y rol de la cuenta ficticia antes/después; siguen existiendo dos usuarios. Login y /auth/me devuelven 200 y la revisión sigue en e64f73085196. Frontend responde 200 (comprobación HTTP, sin repetir revisión visual). No se repitieron compilación ni pruebas. `biogamed_fresh` es el nombre ilustrativo de los comandos; no había un proyecto activo con ese nombre. Para reiniciar el ensayo existente se usa su nombre real y su directorio de copia, no se cambia el proyecto ni el volumen.
+
+## Protección mínima del arranque y autenticación
+
+El backend exige SECRET_KEY explícita, no vacía y distinta del antiguo valor de desarrollo. Se comprueba al importar seguridad tanto en la aplicación como en las herramientas que la usan; no se genera ni muestra una clave en cada arranque. La receta anterior genera una clave una sola vez en `.env` privado e ignorado por Git. En consola sin Compose hay que exportar SECRET_KEY al proceso antes de ejecutar Uvicorn. No sustituyas claves efectivas existentes para aplicar esta entrega: comprueba y configura su suministro privado. Si un entorno usa realmente la clave histórica rechazada, su siguiente arranque se bloqueará; necesita una rotación planificada y autorizada que invalidará sus tokens. No se ha realizado esa rotación.
+
+El Compose histórico queda identificado como desarrollo, con recarga y next dev. Su PostgreSQL pasa a publicar 127.0.0.1:5432, conservando la conexión interna backend→db:5432. La receta aislada sigue sin publicar la base. El cambio de publicación **no altera contenedores ya existentes**: requiere recrear únicamente el servicio db en una ventana acordada, con el mismo proyecto y volumen y previa verificación/copia. No se ha recreado ni reiniciado ningún servicio en esta entrega. No uses down -v ni cambies de volumen.
+
+Los límites se ejecutan como dependencias de las dos rutas, antes de buscar/verificar/crear el hash. Cuentan peticiones admitidas, incluidas las correctas. Política por IP de conexión y proceso:
+
+| Variable | Predeterminado |
+| --- | --- |
+| AUTH_LOGIN_LIMIT | 120 peticiones |
+| AUTH_LOGIN_WINDOW_SECONDS | 600 segundos |
+| AUTH_REGISTER_LIMIT | 60 peticiones |
+| AUTH_REGISTER_WINDOW_SECONDS | 3600 segundos |
+
+Todos los valores deben ser enteros positivos. Son ventanas fijas iniciadas por la primera petición, independientes entre login/registro y entre IP; no hay bloqueo global por correo ni cuenta. Son valores iniciales para una clase con dirección compartida, no una garantía frente a ataques distribuidos. Ajustarlos requiere reiniciar el proceso. Al agotarse un límite se responde HTTP 429 con mensaje genérico y Retry-After en segundos, redondeado hacia arriba; no se renueva la ventana al rechazar. Las validaciones existentes pueden seguir devolviendo 422 sin que se ejecute un hash.
+
+Se usa reloj monotónico y bloqueo entre hilos. El estado permanece **en memoria de cada proceso**, se pierde al reiniciar y no se comparte entre workers o réplicas. Hay un máximo de 10.000 entradas; se purgan las vencidas y se expulsa la más antigua si se llena: muchas direcciones pueden eludir límites mediante esa expulsión. No hay una protección distribuida ni sustituto de límites de tráfico en el futuro perímetro. No se añade Redis, almacenamiento de IP en base ni nuevas tablas.
+
+Los contadores usan request.client, nunca X-Forwarded-For, Forwarded o X-Real-IP directamente. Dockerfile y ambos Compose incorporan `--no-proxy-headers` a Uvicorn. En una conexión directa se usa el peer del servidor; Docker o un proxy pueden concentrar varias direcciones en un solo peer. El hosting deberá verificar la IP observada y, solo si se necesita, configurar la interpretación de cabeceras exclusivamente desde un proxy conocido y bloquear el acceso directo que permita suplantarlo. No uses confianza universal en cabeceras. Si se arranca Uvicorn fuera de estos comandos, conserva `--no-proxy-headers` hasta haber configurado expresamente esa confianza.
+
+El comando de producción local existente sigue siendo `docker compose -p biogamed_fresh -f compose.install.yml up -d --build`: migraciones seguidas de Uvicorn sin reload y frontend next start. Este comando no se ha ejecutado sobre instalaciones existentes durante esta corrección. No se añade TLS ni proxy.
+
+Verificación de esta corrección: contenedor desechable sin volumen de datos y pruebas SQLite aisladas; claves ausente/vacía/blanca/de desarrollo rechazadas, clave sintética válida, ventanas y Retry-After, separación, cabeceras falsificadas, ausencia de hash cuando hay límite y regresiones de cuenta/roles. Validación de ambos Compose con secretos sintéticos únicamente en el proceso de comprobación. No se prueban límites contra usuarios reales, ni se modifican claves efectivas. No hay frontend, migraciones ni cambios de dependencias.
+
+Resultado: 22 pruebas relacionadas aprobadas; ambos Compose válidos con variables sintéticas, red interna de base conservada y publicaciones comprobadas por configuración. Persiste únicamente el aviso previo de TestClient/httpx. Sin cambios frontend: no se repiten tipos/lint ni compilación. Las comprobaciones de publicación describen la configuración futura, no un cambio aplicado a los contenedores actuales.

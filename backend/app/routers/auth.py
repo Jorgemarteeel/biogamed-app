@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from app.utils.auth_limits import login_limit, register_limit
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
@@ -12,7 +13,7 @@ from app.utils.security import create_access_token, verify_password
 # Creamos un "mini-servidor" (Router) solo para temas de autenticación
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(register_limit)])
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Registra un nuevo usuario en la plataforma.
@@ -26,7 +27,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return user_service.create_user(db=db, user=user)
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(login_limit)])
 def login(
     credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),

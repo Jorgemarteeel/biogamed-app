@@ -1,3 +1,4 @@
+# Historical local development configuration; not a production deployment.
 version: '3.8'
 
 services:
@@ -10,19 +11,24 @@ services:
       POSTGRES_PASSWORD: adminpassword
       POSTGRES_DB: biogamed
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
     build: ./backend
     container_name: biogamed_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-proxy-headers --reload
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
     environment:
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY}
+      - AUTH_LOGIN_LIMIT=${AUTH_LOGIN_LIMIT:-120}
+      - AUTH_LOGIN_WINDOW_SECONDS=${AUTH_LOGIN_WINDOW_SECONDS:-600}
+      - AUTH_REGISTER_LIMIT=${AUTH_REGISTER_LIMIT:-60}
+      - AUTH_REGISTER_WINDOW_SECONDS=${AUTH_REGISTER_WINDOW_SECONDS:-3600}
       - DATABASE_URL=postgresql://admin:adminpassword@db:5432/biogamed
     depends_on:
       - db
