@@ -20,3 +20,5 @@ __all__ = [
 from app.models.role_change import RoleChange
 
 from app.models.question_import import QuestionImport
+
+from app.models.trivial_board import TrivialBoardMatch, TrivialBoardParticipant, TrivialBoardTurn, TrivialBoardOperation
