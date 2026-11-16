@@ -53,3 +53,29 @@ La demo conserva su configuración privada y no recibe migraciones. El repositor
 ## Aprobación del usuario
 
 El usuario revisó manualmente la demo y aprobó la Entrega A: diez preguntas por nivel en Linfocito, Macrófago, Erlenmeyer y Jeringuilla (160 en esos cuatro bancos), Bazo pendiente, mapa, tabla y descripción de efectos. Esta es una revisión del usuario, distinta de las pruebas automatizadas. Los recuentos no acreditan suficiencia para completar una partida ni resuelven las reglas pendientes.
+
+## Motor parcial de movimiento (sin integración)
+
+`app/domain/trivial_movement.py` incorpora una lógica determinista independiente de HTTP, ORM y frontend. Recibe el modelo validado del mismo JSON versionado mediante `MovementEngine(load_board())`; no importa el servicio de cobertura, autenticación ni modelos de base de datos. La carga lee únicamente ese recurso. Las funciones de transición no realizan I/O, no generan azar y no modifican el estado recibido.
+
+Estado mínimo inmutable: versión del tablero, posición (inicial 1), fase, penalización del siguiente turno propio, requisito de pregunta y regla pendiente cuando proceda. No representa participantes, una partida completa ni resultados educativos. Cada transición devuelve un nuevo estado y una tupla ordenada de eventos; la traza vive en memoria, no es un historial persistente.
+
+- `move(state, roll)`: acepta únicamente enteros 1–6 (rechaza también booleanos), desde READY. Mueve hasta `min(140, posición + tirada)` y resuelve solo la llegada; pasar por una casilla no ejecuta su efecto.
+- ADN avanza tres, limitado a 140, y resuelve de nuevo la llegada. Virus retrocede tres (mínimo 1), no resuelve ese destino, termina el turno y marca la penalización.
+- QUESTION_REQUIRED indica casilla, banco y nivel, sin escoger contenido ni procesar respuestas. Bazo conserva ese descriptor, pero queda en RULE_PENDING/BAZO_PENDING. Cerebro queda en RULE_PENDING/BRAIN_PENDING. Ninguno permite otra tirada o apertura de turno para eludir el bloqueo.
+- GOAL_REACHED se emite después del evento LANDED de Llegada, también si se llegó mediante ADN. Solo identifica la meta; no asigna ganador ni cierra una partida persistida.
+- `begin_own_turn` solo admite TURN_ENDED. Si hay penalización, la consume y conserva el turno terminado, sin tirada; la siguiente llamada corresponde a otro turno propio futuro y podrá devolver READY. Un futuro coordinador deberá invocarlo una sola vez por turno propio programado. Este módulo no define orden de participantes, identificadores de turno, idempotencia de comandos ni continuidad tras responder.
+
+Ejemplos reproducibles: posición 1 + tirada 1 → casilla 2, pregunta de Linfocito nivel 1, espera sin contestar. Posición 2 + tirada 6 → Virus en 8 → retroceso a Erlenmeyer en 5 sin pregunta, turno terminado y penalización para el próximo turno propio. Además, posición 131 + 6 → ADN en 137 → Llegada en 140.
+
+### Contraste con las fuentes y límites
+
+Fuente conservada: `raw_data/Trivial_Pursuit/Juego_tipo_Trivial_Pursuit/INMUNOQUEST.html`: posición inicial y penalización inicial (490–493), avance limitado (581–593), Virus sin recursión (756–763), ADN con resolución recursiva (765–771), Cerebro y selección de banco/nivel (773–786), niveles (801–806), consumo del siguiente turno propio (1037–1043) y comprobación de meta **después** de resolver llegada (1050–1061). El JSON de Entrega A conserva la corrección documentada de Jeringuilla; no se modifica el recurso original.
+
+No se traslada la rama genérica del prototipo como una regla de «casilla vacía»: el tablero validado solo tiene los tipos conocidos. Tampoco se adopta su interfaz ambigua de continuación de turno (1062–1067). En el tablero real, las cadenas de ADN desembocan en una pregunta o Llegada; se comprueban esas cadenas, sin inventar nuevos tableros o efectos. En particular, 9 → 12 lleva a Bazo y se bloquea, aunque el prototipo intentase cargar ese banco ausente. La suficiencia de contenido y las reglas pendientes de Entrega A siguen sin resolver. No hay política de respuestas, reto Cerebro, agotamiento, participantes, abandono ni desconexión.
+
+### Comprobaciones de esta parte
+
+52 pruebas del motor aprobadas, con un caso exhaustivo que recorre las 834 combinaciones de origen 1–139 y tirada 1–6. Cubren determinismo, inmutabilidad, entradas inválidas, fases, niveles por destino, ADN → pregunta pendiente, ADN → meta, Virus sin resolver retroceso, consumo de penalización, bloqueos Cerebro/Bazo, Jeringuilla corregida y rechazo de efectos incompatibles con la versión. Dos expectativas iniciales de pruebas se corrigieron contrastando los bancos exactos del recurso: casilla 12 Bazo y casilla 5 Erlenmeyer; no se alteró el tablero para satisfacerlas.
+
+Comando reproducible (desde `backend`, con las dependencias fijadas instaladas): `python -m pytest --noconftest -p no:cacheprovider tests/test_trivial_movement.py -q`. `--noconftest` excluye el arranque de FastAPI y las fixtures de bases; un caso comprueba que no se han importado FastAPI, SQLAlchemy ni los módulos de arranque/base. Ejecución realizada en contenedor desechable con imagen existente, sin red, sistema de archivos de solo lectura y montaje del backend de solo lectura. Sin instalar dependencias, conectar bases, arrancar/recrear servicios ni escribir datos de aplicación. Las comprobaciones previas de Entrega A se mantienen; no hay cambios de frontend que requieran repetir tipos, lint o revisión visual. Sin endpoints, migraciones ni integración en el Trivial individual.
