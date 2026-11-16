@@ -750,3 +750,7 @@ idempotentes. Contratos, plantillas, migración exclusiva de demo, pruebas y lí
 ## Mi cuenta
 
 Contratos, compatibilidad de hashes, revocación, migración y revisión: [Mi cuenta](docs/my-account.md).
+
+## Trivial: revisión del tablero y cobertura (Entrega A)
+
+[Contratos, reglas pendientes y comprobaciones](docs/trivial-board-review.md). Vista docente de solo lectura; no sustituye ni inicia el Trivial individual.

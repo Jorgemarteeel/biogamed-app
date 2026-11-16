@@ -1,0 +1,4452 @@
+{
+  "version": "trivial-original-board-v1",
+  "source_sha256": "3c4fba5819a07cbae8c55804e204669d594c1ac348ad3e8ca5826cf6d42cfdcd",
+  "width": 5898,
+  "height": 5899,
+  "cells": [
+    {
+      "id": 1,
+      "order": 1,
+      "label": "Salida",
+      "source_label": "Salida",
+      "kind": "START",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 295,
+          "y": 1478
+        },
+        {
+          "x": 505,
+          "y": 1694
+        },
+        {
+          "x": 347,
+          "y": 1851
+        },
+        {
+          "x": 46,
+          "y": 1727
+        },
+        {
+          "x": 295,
+          "y": 1484
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "order": 2,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 39,
+          "y": 1757
+        },
+        {
+          "x": 334,
+          "y": 1888
+        },
+        {
+          "x": 341,
+          "y": 2131
+        },
+        {
+          "x": 39,
+          "y": 2124
+        },
+        {
+          "x": 33,
+          "y": 1757
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "order": 3,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 39,
+          "y": 2155
+        },
+        {
+          "x": 334,
+          "y": 2155
+        },
+        {
+          "x": 334,
+          "y": 2450
+        },
+        {
+          "x": 33,
+          "y": 2443
+        },
+        {
+          "x": 33,
+          "y": 2148
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "order": 4,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 33,
+          "y": 2476
+        },
+        {
+          "x": 328,
+          "y": 2483
+        },
+        {
+          "x": 334,
+          "y": 2778
+        },
+        {
+          "x": 39,
+          "y": 2771
+        },
+        {
+          "x": 33,
+          "y": 2470
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "order": 5,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 39,
+          "y": 2806
+        },
+        {
+          "x": 334,
+          "y": 2806
+        },
+        {
+          "x": 334,
+          "y": 3107
+        },
+        {
+          "x": 39,
+          "y": 3107
+        },
+        {
+          "x": 39,
+          "y": 2806
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "order": 6,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 39,
+          "y": 3129
+        },
+        {
+          "x": 334,
+          "y": 3136
+        },
+        {
+          "x": 334,
+          "y": 3431
+        },
+        {
+          "x": 33,
+          "y": 3424
+        },
+        {
+          "x": 33,
+          "y": 3129
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "order": 7,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 39,
+          "y": 3455
+        },
+        {
+          "x": 334,
+          "y": 3461
+        },
+        {
+          "x": 334,
+          "y": 3756
+        },
+        {
+          "x": 39,
+          "y": 3750
+        },
+        {
+          "x": 33,
+          "y": 3448
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "order": 8,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 39,
+          "y": 3776
+        },
+        {
+          "x": 341,
+          "y": 3776
+        },
+        {
+          "x": 334,
+          "y": 4018
+        },
+        {
+          "x": 33,
+          "y": 4136
+        },
+        {
+          "x": 33,
+          "y": 3776
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "order": 9,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 341,
+          "y": 4038
+        },
+        {
+          "x": 505,
+          "y": 4195
+        },
+        {
+          "x": 288,
+          "y": 4418
+        },
+        {
+          "x": 46,
+          "y": 4169
+        },
+        {
+          "x": 347,
+          "y": 4038
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "order": 10,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 518,
+          "y": 4208
+        },
+        {
+          "x": 741,
+          "y": 4431
+        },
+        {
+          "x": 518,
+          "y": 4654
+        },
+        {
+          "x": 308,
+          "y": 4431
+        },
+        {
+          "x": 524,
+          "y": 4215
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "order": 11,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 754,
+          "y": 4444
+        },
+        {
+          "x": 976,
+          "y": 4667
+        },
+        {
+          "x": 741,
+          "y": 4890
+        },
+        {
+          "x": 524,
+          "y": 4661
+        },
+        {
+          "x": 754,
+          "y": 4444
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "order": 12,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 983,
+          "y": 4680
+        },
+        {
+          "x": 1206,
+          "y": 4896
+        },
+        {
+          "x": 983,
+          "y": 5113
+        },
+        {
+          "x": 767,
+          "y": 4896
+        },
+        {
+          "x": 976,
+          "y": 4680
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "order": 13,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1219,
+          "y": 4903
+        },
+        {
+          "x": 1435,
+          "y": 5126
+        },
+        {
+          "x": 1219,
+          "y": 5355
+        },
+        {
+          "x": 996,
+          "y": 5126
+        },
+        {
+          "x": 1219,
+          "y": 4910
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "order": 14,
+      "label": "Jeringuilla",
+      "source_label": "Jeriguinlla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1448,
+          "y": 5139
+        },
+        {
+          "x": 1671,
+          "y": 5362
+        },
+        {
+          "x": 1448,
+          "y": 5578
+        },
+        {
+          "x": 1225,
+          "y": 5349
+        },
+        {
+          "x": 1448,
+          "y": 5139
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "order": 15,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1684,
+          "y": 5375
+        },
+        {
+          "x": 1861,
+          "y": 5558
+        },
+        {
+          "x": 1737,
+          "y": 5873
+        },
+        {
+          "x": 1461,
+          "y": 5585
+        },
+        {
+          "x": 1678,
+          "y": 5368
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "order": 16,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1874,
+          "y": 5558
+        },
+        {
+          "x": 2130,
+          "y": 5558
+        },
+        {
+          "x": 2117,
+          "y": 5879
+        },
+        {
+          "x": 1743,
+          "y": 5873
+        },
+        {
+          "x": 1881,
+          "y": 5552
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "order": 17,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 2143,
+          "y": 5552
+        },
+        {
+          "x": 2458,
+          "y": 5558
+        },
+        {
+          "x": 2458,
+          "y": 5873
+        },
+        {
+          "x": 2143,
+          "y": 5873
+        },
+        {
+          "x": 2143,
+          "y": 5558
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "order": 18,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 2471,
+          "y": 5558
+        },
+        {
+          "x": 2785,
+          "y": 5571
+        },
+        {
+          "x": 2785,
+          "y": 5873
+        },
+        {
+          "x": 2458,
+          "y": 5873
+        },
+        {
+          "x": 2458,
+          "y": 5558
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "order": 19,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 2792,
+          "y": 5558
+        },
+        {
+          "x": 3113,
+          "y": 5565
+        },
+        {
+          "x": 3113,
+          "y": 5879
+        },
+        {
+          "x": 2785,
+          "y": 5873
+        },
+        {
+          "x": 2785,
+          "y": 5552
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "order": 20,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 5558
+        },
+        {
+          "x": 3441,
+          "y": 5558
+        },
+        {
+          "x": 3434,
+          "y": 5879
+        },
+        {
+          "x": 3113,
+          "y": 5873
+        },
+        {
+          "x": 3113,
+          "y": 5552
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "order": 21,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 3441,
+          "y": 5545
+        },
+        {
+          "x": 3762,
+          "y": 5552
+        },
+        {
+          "x": 3762,
+          "y": 5879
+        },
+        {
+          "x": 3434,
+          "y": 5873
+        },
+        {
+          "x": 3441,
+          "y": 5558
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "order": 22,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 3768,
+          "y": 5558
+        },
+        {
+          "x": 4030,
+          "y": 5558
+        },
+        {
+          "x": 4155,
+          "y": 5873
+        },
+        {
+          "x": 3755,
+          "y": 5873
+        },
+        {
+          "x": 3762,
+          "y": 5558
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "order": 23,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4037,
+          "y": 5545
+        },
+        {
+          "x": 4207,
+          "y": 5368
+        },
+        {
+          "x": 4437,
+          "y": 5604
+        },
+        {
+          "x": 4161,
+          "y": 5873
+        },
+        {
+          "x": 4030,
+          "y": 5545
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "order": 24,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4207,
+          "y": 5375
+        },
+        {
+          "x": 4437,
+          "y": 5139
+        },
+        {
+          "x": 4666,
+          "y": 5375
+        },
+        {
+          "x": 4437,
+          "y": 5604
+        },
+        {
+          "x": 4207,
+          "y": 5368
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "order": 25,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4443,
+          "y": 5139
+        },
+        {
+          "x": 4673,
+          "y": 4903
+        },
+        {
+          "x": 4895,
+          "y": 5139
+        },
+        {
+          "x": 4673,
+          "y": 5368
+        },
+        {
+          "x": 4443,
+          "y": 5139
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "order": 26,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4673,
+          "y": 4903
+        },
+        {
+          "x": 4902,
+          "y": 4680
+        },
+        {
+          "x": 5131,
+          "y": 4910
+        },
+        {
+          "x": 4902,
+          "y": 5139
+        },
+        {
+          "x": 4673,
+          "y": 4903
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "order": 27,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4902,
+          "y": 4680
+        },
+        {
+          "x": 5131,
+          "y": 4451
+        },
+        {
+          "x": 5367,
+          "y": 4680
+        },
+        {
+          "x": 5131,
+          "y": 4903
+        },
+        {
+          "x": 4908,
+          "y": 4680
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "order": 28,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5131,
+          "y": 4444
+        },
+        {
+          "x": 5367,
+          "y": 4215
+        },
+        {
+          "x": 5590,
+          "y": 4444
+        },
+        {
+          "x": 5367,
+          "y": 4674
+        },
+        {
+          "x": 5131,
+          "y": 4444
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "order": 29,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5361,
+          "y": 4221
+        },
+        {
+          "x": 5551,
+          "y": 4038
+        },
+        {
+          "x": 5865,
+          "y": 4169
+        },
+        {
+          "x": 5590,
+          "y": 4444
+        },
+        {
+          "x": 5367,
+          "y": 4215
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "order": 30,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 4025
+        },
+        {
+          "x": 5551,
+          "y": 3769
+        },
+        {
+          "x": 5878,
+          "y": 3763
+        },
+        {
+          "x": 5878,
+          "y": 4162
+        },
+        {
+          "x": 5551,
+          "y": 4025
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "order": 31,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 3763
+        },
+        {
+          "x": 5551,
+          "y": 3435
+        },
+        {
+          "x": 5878,
+          "y": 3442
+        },
+        {
+          "x": 5878,
+          "y": 3763
+        },
+        {
+          "x": 5551,
+          "y": 3763
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "order": 32,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 3435
+        },
+        {
+          "x": 5551,
+          "y": 3121
+        },
+        {
+          "x": 5878,
+          "y": 3114
+        },
+        {
+          "x": 5872,
+          "y": 3442
+        },
+        {
+          "x": 5551,
+          "y": 3435
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "order": 33,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 3114
+        },
+        {
+          "x": 5551,
+          "y": 2786
+        },
+        {
+          "x": 5872,
+          "y": 2786
+        },
+        {
+          "x": 5878,
+          "y": 3114
+        },
+        {
+          "x": 5544,
+          "y": 3114
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "order": 34,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 2786
+        },
+        {
+          "x": 5551,
+          "y": 2465
+        },
+        {
+          "x": 5872,
+          "y": 2465
+        },
+        {
+          "x": 5878,
+          "y": 2786
+        },
+        {
+          "x": 5551,
+          "y": 2786
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "order": 35,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 2461
+        },
+        {
+          "x": 5551,
+          "y": 2133
+        },
+        {
+          "x": 5878,
+          "y": 2133
+        },
+        {
+          "x": 5878,
+          "y": 2461
+        },
+        {
+          "x": 5551,
+          "y": 2461
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "order": 36,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 2140
+        },
+        {
+          "x": 5551,
+          "y": 1871
+        },
+        {
+          "x": 5872,
+          "y": 1740
+        },
+        {
+          "x": 5878,
+          "y": 2133
+        },
+        {
+          "x": 5551,
+          "y": 2140
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "order": 37,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5551,
+          "y": 1867
+        },
+        {
+          "x": 5354,
+          "y": 1677
+        },
+        {
+          "x": 5577,
+          "y": 1447
+        },
+        {
+          "x": 5878,
+          "y": 1736
+        },
+        {
+          "x": 5551,
+          "y": 1867
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "order": 38,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5341,
+          "y": 1677
+        },
+        {
+          "x": 5118,
+          "y": 1447
+        },
+        {
+          "x": 5348,
+          "y": 1211
+        },
+        {
+          "x": 5583,
+          "y": 1441
+        },
+        {
+          "x": 5354,
+          "y": 1677
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "order": 39,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 5118,
+          "y": 1441
+        },
+        {
+          "x": 4889,
+          "y": 1211
+        },
+        {
+          "x": 5118,
+          "y": 975
+        },
+        {
+          "x": 5348,
+          "y": 1211
+        },
+        {
+          "x": 5118,
+          "y": 1447
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "order": 40,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4882,
+          "y": 1216
+        },
+        {
+          "x": 4659,
+          "y": 980
+        },
+        {
+          "x": 4882,
+          "y": 757
+        },
+        {
+          "x": 5118,
+          "y": 986
+        },
+        {
+          "x": 4889,
+          "y": 1216
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "order": 41,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4653,
+          "y": 975
+        },
+        {
+          "x": 4430,
+          "y": 746
+        },
+        {
+          "x": 4659,
+          "y": 517
+        },
+        {
+          "x": 4882,
+          "y": 746
+        },
+        {
+          "x": 4646,
+          "y": 975
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "order": 42,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4424,
+          "y": 750
+        },
+        {
+          "x": 4194,
+          "y": 521
+        },
+        {
+          "x": 4424,
+          "y": 292
+        },
+        {
+          "x": 4653,
+          "y": 514
+        },
+        {
+          "x": 4424,
+          "y": 744
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "order": 43,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4188,
+          "y": 519
+        },
+        {
+          "x": 4030,
+          "y": 348
+        },
+        {
+          "x": 4161,
+          "y": 14
+        },
+        {
+          "x": 4424,
+          "y": 289
+        },
+        {
+          "x": 4188,
+          "y": 519
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "order": 44,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 4155,
+          "y": 21
+        },
+        {
+          "x": 3762,
+          "y": 21
+        },
+        {
+          "x": 3762,
+          "y": 355
+        },
+        {
+          "x": 4017,
+          "y": 348
+        },
+        {
+          "x": 4161,
+          "y": 21
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "order": 45,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 3762,
+          "y": 348
+        },
+        {
+          "x": 3441,
+          "y": 342
+        },
+        {
+          "x": 3441,
+          "y": 27
+        },
+        {
+          "x": 3762,
+          "y": 27
+        },
+        {
+          "x": 3762,
+          "y": 348
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "order": 46,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 3441,
+          "y": 23
+        },
+        {
+          "x": 3113,
+          "y": 23
+        },
+        {
+          "x": 3113,
+          "y": 357
+        },
+        {
+          "x": 3441,
+          "y": 351
+        },
+        {
+          "x": 3441,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "order": 47,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 3119,
+          "y": 23
+        },
+        {
+          "x": 2785,
+          "y": 23
+        },
+        {
+          "x": 2785,
+          "y": 344
+        },
+        {
+          "x": 3113,
+          "y": 351
+        },
+        {
+          "x": 3113,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "order": 48,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 2785,
+          "y": 348
+        },
+        {
+          "x": 2458,
+          "y": 348
+        },
+        {
+          "x": 2458,
+          "y": 27
+        },
+        {
+          "x": 2785,
+          "y": 27
+        },
+        {
+          "x": 2785,
+          "y": 348
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "order": 49,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 2464,
+          "y": 23
+        },
+        {
+          "x": 2130,
+          "y": 23
+        },
+        {
+          "x": 2136,
+          "y": 351
+        },
+        {
+          "x": 2458,
+          "y": 351
+        },
+        {
+          "x": 2464,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "order": 50,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 2143,
+          "y": 23
+        },
+        {
+          "x": 1743,
+          "y": 29
+        },
+        {
+          "x": 1881,
+          "y": 351
+        },
+        {
+          "x": 2130,
+          "y": 351
+        },
+        {
+          "x": 2136,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "order": 51,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1737,
+          "y": 23
+        },
+        {
+          "x": 1461,
+          "y": 305
+        },
+        {
+          "x": 1684,
+          "y": 534
+        },
+        {
+          "x": 1868,
+          "y": 351
+        },
+        {
+          "x": 1737,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "order": 52,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1448,
+          "y": 303
+        },
+        {
+          "x": 1225,
+          "y": 538
+        },
+        {
+          "x": 1455,
+          "y": 768
+        },
+        {
+          "x": 1684,
+          "y": 538
+        },
+        {
+          "x": 1455,
+          "y": 303
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "order": 53,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 1225,
+          "y": 549
+        },
+        {
+          "x": 996,
+          "y": 766
+        },
+        {
+          "x": 1225,
+          "y": 1002
+        },
+        {
+          "x": 1455,
+          "y": 766
+        },
+        {
+          "x": 1232,
+          "y": 543
+        }
+      ]
+    },
+    {
+      "id": 54,
+      "order": 54,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 1,
+      "vertices": [
+        {
+          "x": 996,
+          "y": 770
+        },
+        {
+          "x": 767,
+          "y": 993
+        },
+        {
+          "x": 996,
+          "y": 1229
+        },
+        {
+          "x": 1225,
+          "y": 999
+        },
+        {
+          "x": 996,
+          "y": 770
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "order": 55,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 760,
+          "y": 999
+        },
+        {
+          "x": 537,
+          "y": 1229
+        },
+        {
+          "x": 767,
+          "y": 1465
+        },
+        {
+          "x": 990,
+          "y": 1229
+        },
+        {
+          "x": 767,
+          "y": 999
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "order": 56,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 531,
+          "y": 1231
+        },
+        {
+          "x": 308,
+          "y": 1460
+        },
+        {
+          "x": 531,
+          "y": 1696
+        },
+        {
+          "x": 754,
+          "y": 1460
+        },
+        {
+          "x": 531,
+          "y": 1231
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "order": 57,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 1,
+      "vertices": [
+        {
+          "x": 537,
+          "y": 1694
+        },
+        {
+          "x": 754,
+          "y": 1917
+        },
+        {
+          "x": 983,
+          "y": 1694
+        },
+        {
+          "x": 767,
+          "y": 1465
+        },
+        {
+          "x": 531,
+          "y": 1687
+        }
+      ]
+    },
+    {
+      "id": 58,
+      "order": 58,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1003,
+          "y": 1692
+        },
+        {
+          "x": 682,
+          "y": 2006
+        },
+        {
+          "x": 1003,
+          "y": 2137
+        },
+        {
+          "x": 1212,
+          "y": 1928
+        },
+        {
+          "x": 996,
+          "y": 1692
+        }
+      ]
+    },
+    {
+      "id": 59,
+      "order": 59,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 675,
+          "y": 2011
+        },
+        {
+          "x": 682,
+          "y": 2463
+        },
+        {
+          "x": 996,
+          "y": 2463
+        },
+        {
+          "x": 1003,
+          "y": 2142
+        },
+        {
+          "x": 682,
+          "y": 2011
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "order": 60,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 675,
+          "y": 2463
+        },
+        {
+          "x": 1003,
+          "y": 2463
+        },
+        {
+          "x": 990,
+          "y": 2791
+        },
+        {
+          "x": 675,
+          "y": 2791
+        },
+        {
+          "x": 675,
+          "y": 2463
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "order": 61,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 675,
+          "y": 2797
+        },
+        {
+          "x": 675,
+          "y": 3118
+        },
+        {
+          "x": 1003,
+          "y": 3118
+        },
+        {
+          "x": 996,
+          "y": 2791
+        },
+        {
+          "x": 675,
+          "y": 2791
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "order": 62,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 675,
+          "y": 3125
+        },
+        {
+          "x": 675,
+          "y": 3439
+        },
+        {
+          "x": 996,
+          "y": 3439
+        },
+        {
+          "x": 1003,
+          "y": 3118
+        },
+        {
+          "x": 675,
+          "y": 3112
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "order": 63,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 675,
+          "y": 3450
+        },
+        {
+          "x": 996,
+          "y": 3444
+        },
+        {
+          "x": 996,
+          "y": 3758
+        },
+        {
+          "x": 675,
+          "y": 3889
+        },
+        {
+          "x": 675,
+          "y": 3444
+        }
+      ]
+    },
+    {
+      "id": 64,
+      "order": 64,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 996,
+          "y": 3767
+        },
+        {
+          "x": 1212,
+          "y": 3977
+        },
+        {
+          "x": 990,
+          "y": 4200
+        },
+        {
+          "x": 675,
+          "y": 3892
+        },
+        {
+          "x": 996,
+          "y": 3767
+        }
+      ]
+    },
+    {
+      "id": 65,
+      "order": 65,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1219,
+          "y": 3983
+        },
+        {
+          "x": 1442,
+          "y": 4213
+        },
+        {
+          "x": 1212,
+          "y": 4429
+        },
+        {
+          "x": 990,
+          "y": 4200
+        },
+        {
+          "x": 1212,
+          "y": 3983
+        }
+      ]
+    },
+    {
+      "id": 66,
+      "order": 66,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1448,
+          "y": 4213
+        },
+        {
+          "x": 1671,
+          "y": 4436
+        },
+        {
+          "x": 1442,
+          "y": 4658
+        },
+        {
+          "x": 1219,
+          "y": 4436
+        },
+        {
+          "x": 1448,
+          "y": 4213
+        }
+      ]
+    },
+    {
+      "id": 67,
+      "order": 67,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1671,
+          "y": 4442
+        },
+        {
+          "x": 1907,
+          "y": 4665
+        },
+        {
+          "x": 1671,
+          "y": 4894
+        },
+        {
+          "x": 1442,
+          "y": 4658
+        },
+        {
+          "x": 1671,
+          "y": 4442
+        }
+      ]
+    },
+    {
+      "id": 68,
+      "order": 68,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1907,
+          "y": 4671
+        },
+        {
+          "x": 2136,
+          "y": 4907
+        },
+        {
+          "x": 2005,
+          "y": 5222
+        },
+        {
+          "x": 1678,
+          "y": 4894
+        },
+        {
+          "x": 1907,
+          "y": 4671
+        }
+      ]
+    },
+    {
+      "id": 69,
+      "order": 69,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 2458,
+          "y": 4907
+        },
+        {
+          "x": 2458,
+          "y": 5229
+        },
+        {
+          "x": 2005,
+          "y": 5222
+        },
+        {
+          "x": 2143,
+          "y": 4907
+        },
+        {
+          "x": 2458,
+          "y": 4907
+        }
+      ]
+    },
+    {
+      "id": 70,
+      "order": 70,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 2464,
+          "y": 4901
+        },
+        {
+          "x": 2785,
+          "y": 4907
+        },
+        {
+          "x": 2785,
+          "y": 5222
+        },
+        {
+          "x": 2458,
+          "y": 5222
+        },
+        {
+          "x": 2458,
+          "y": 4907
+        }
+      ]
+    },
+    {
+      "id": 71,
+      "order": 71,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 2792,
+          "y": 4901
+        },
+        {
+          "x": 3113,
+          "y": 4901
+        },
+        {
+          "x": 3113,
+          "y": 5222
+        },
+        {
+          "x": 2785,
+          "y": 5222
+        },
+        {
+          "x": 2785,
+          "y": 4901
+        }
+      ]
+    },
+    {
+      "id": 72,
+      "order": 72,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 4901
+        },
+        {
+          "x": 3441,
+          "y": 4894
+        },
+        {
+          "x": 3434,
+          "y": 5222
+        },
+        {
+          "x": 3113,
+          "y": 5222
+        },
+        {
+          "x": 3113,
+          "y": 4901
+        }
+      ]
+    },
+    {
+      "id": 73,
+      "order": 73,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3441,
+          "y": 4901
+        },
+        {
+          "x": 3762,
+          "y": 4901
+        },
+        {
+          "x": 3886,
+          "y": 5222
+        },
+        {
+          "x": 3434,
+          "y": 5222
+        },
+        {
+          "x": 3441,
+          "y": 4901
+        }
+      ]
+    },
+    {
+      "id": 74,
+      "order": 74,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3762,
+          "y": 4907
+        },
+        {
+          "x": 3978,
+          "y": 4685
+        },
+        {
+          "x": 4201,
+          "y": 4907
+        },
+        {
+          "x": 3893,
+          "y": 5222
+        },
+        {
+          "x": 3768,
+          "y": 4907
+        }
+      ]
+    },
+    {
+      "id": 75,
+      "order": 75,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3978,
+          "y": 4685
+        },
+        {
+          "x": 4214,
+          "y": 4455
+        },
+        {
+          "x": 4437,
+          "y": 4678
+        },
+        {
+          "x": 4207,
+          "y": 4907
+        },
+        {
+          "x": 3984,
+          "y": 4685
+        }
+      ]
+    },
+    {
+      "id": 76,
+      "order": 76,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4214,
+          "y": 4449
+        },
+        {
+          "x": 4443,
+          "y": 4226
+        },
+        {
+          "x": 4666,
+          "y": 4449
+        },
+        {
+          "x": 4437,
+          "y": 4678
+        },
+        {
+          "x": 4214,
+          "y": 4449
+        }
+      ]
+    },
+    {
+      "id": 77,
+      "order": 77,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4450,
+          "y": 4213
+        },
+        {
+          "x": 4673,
+          "y": 3996
+        },
+        {
+          "x": 4895,
+          "y": 4219
+        },
+        {
+          "x": 4659,
+          "y": 4449
+        },
+        {
+          "x": 4450,
+          "y": 4219
+        }
+      ]
+    },
+    {
+      "id": 78,
+      "order": 78,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4673,
+          "y": 3990
+        },
+        {
+          "x": 4895,
+          "y": 3767
+        },
+        {
+          "x": 5210,
+          "y": 3898
+        },
+        {
+          "x": 4895,
+          "y": 4213
+        },
+        {
+          "x": 4679,
+          "y": 3996
+        }
+      ]
+    },
+    {
+      "id": 79,
+      "order": 79,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4895,
+          "y": 3767
+        },
+        {
+          "x": 4902,
+          "y": 3439
+        },
+        {
+          "x": 5223,
+          "y": 3439
+        },
+        {
+          "x": 5223,
+          "y": 3898
+        },
+        {
+          "x": 4895,
+          "y": 3767
+        }
+      ]
+    },
+    {
+      "id": 80,
+      "order": 80,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4902,
+          "y": 3439
+        },
+        {
+          "x": 4902,
+          "y": 3112
+        },
+        {
+          "x": 5223,
+          "y": 3125
+        },
+        {
+          "x": 5223,
+          "y": 3433
+        },
+        {
+          "x": 4895,
+          "y": 3433
+        }
+      ]
+    },
+    {
+      "id": 81,
+      "order": 81,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4902,
+          "y": 3112
+        },
+        {
+          "x": 4902,
+          "y": 2784
+        },
+        {
+          "x": 5223,
+          "y": 2791
+        },
+        {
+          "x": 5223,
+          "y": 3112
+        },
+        {
+          "x": 4902,
+          "y": 3112
+        }
+      ]
+    },
+    {
+      "id": 82,
+      "order": 82,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4902,
+          "y": 2784
+        },
+        {
+          "x": 4895,
+          "y": 2456
+        },
+        {
+          "x": 5223,
+          "y": 2456
+        },
+        {
+          "x": 5223,
+          "y": 2784
+        },
+        {
+          "x": 4902,
+          "y": 2784
+        }
+      ]
+    },
+    {
+      "id": 83,
+      "order": 83,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4895,
+          "y": 2459
+        },
+        {
+          "x": 4895,
+          "y": 2137
+        },
+        {
+          "x": 5223,
+          "y": 2006
+        },
+        {
+          "x": 5223,
+          "y": 2459
+        },
+        {
+          "x": 4895,
+          "y": 2459
+        }
+      ]
+    },
+    {
+      "id": 84,
+      "order": 84,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 5223,
+          "y": 2006
+        },
+        {
+          "x": 4882,
+          "y": 1672
+        },
+        {
+          "x": 4659,
+          "y": 1902
+        },
+        {
+          "x": 4895,
+          "y": 2137
+        },
+        {
+          "x": 5223,
+          "y": 2006
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "order": 85,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4882,
+          "y": 1672
+        },
+        {
+          "x": 4653,
+          "y": 1443
+        },
+        {
+          "x": 4430,
+          "y": 1672
+        },
+        {
+          "x": 4659,
+          "y": 1902
+        },
+        {
+          "x": 4882,
+          "y": 1672
+        }
+      ]
+    },
+    {
+      "id": 86,
+      "order": 86,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4653,
+          "y": 1443
+        },
+        {
+          "x": 4424,
+          "y": 1207
+        },
+        {
+          "x": 4201,
+          "y": 1443
+        },
+        {
+          "x": 4424,
+          "y": 1666
+        },
+        {
+          "x": 4646,
+          "y": 1443
+        }
+      ]
+    },
+    {
+      "id": 87,
+      "order": 87,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4424,
+          "y": 1209
+        },
+        {
+          "x": 4201,
+          "y": 980
+        },
+        {
+          "x": 3965,
+          "y": 1203
+        },
+        {
+          "x": 4201,
+          "y": 1438
+        },
+        {
+          "x": 4424,
+          "y": 1216
+        }
+      ]
+    },
+    {
+      "id": 88,
+      "order": 88,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 4194,
+          "y": 980
+        },
+        {
+          "x": 3886,
+          "y": 678
+        },
+        {
+          "x": 3762,
+          "y": 999
+        },
+        {
+          "x": 3965,
+          "y": 1209
+        },
+        {
+          "x": 4188,
+          "y": 980
+        }
+      ]
+    },
+    {
+      "id": 89,
+      "order": 89,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3893,
+          "y": 674
+        },
+        {
+          "x": 3441,
+          "y": 674
+        },
+        {
+          "x": 3434,
+          "y": 1002
+        },
+        {
+          "x": 3755,
+          "y": 1002
+        },
+        {
+          "x": 3886,
+          "y": 674
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "order": 90,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3434,
+          "y": 678
+        },
+        {
+          "x": 3113,
+          "y": 678
+        },
+        {
+          "x": 3106,
+          "y": 999
+        },
+        {
+          "x": 3434,
+          "y": 993
+        },
+        {
+          "x": 3434,
+          "y": 678
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "order": 91,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 670
+        },
+        {
+          "x": 2785,
+          "y": 676
+        },
+        {
+          "x": 2785,
+          "y": 997
+        },
+        {
+          "x": 3106,
+          "y": 991
+        },
+        {
+          "x": 3113,
+          "y": 670
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "order": 92,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 2779,
+          "y": 674
+        },
+        {
+          "x": 2464,
+          "y": 674
+        },
+        {
+          "x": 2464,
+          "y": 1002
+        },
+        {
+          "x": 2785,
+          "y": 995
+        },
+        {
+          "x": 2785,
+          "y": 674
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "order": 93,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 2458,
+          "y": 670
+        },
+        {
+          "x": 2012,
+          "y": 676
+        },
+        {
+          "x": 2143,
+          "y": 997
+        },
+        {
+          "x": 2458,
+          "y": 991
+        },
+        {
+          "x": 2458,
+          "y": 670
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "order": 94,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 2012,
+          "y": 676
+        },
+        {
+          "x": 1684,
+          "y": 997
+        },
+        {
+          "x": 1914,
+          "y": 1227
+        },
+        {
+          "x": 2143,
+          "y": 997
+        },
+        {
+          "x": 2012,
+          "y": 676
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "order": 95,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1684,
+          "y": 993
+        },
+        {
+          "x": 1455,
+          "y": 1229
+        },
+        {
+          "x": 1678,
+          "y": 1452
+        },
+        {
+          "x": 1907,
+          "y": 1229
+        },
+        {
+          "x": 1684,
+          "y": 993
+        }
+      ]
+    },
+    {
+      "id": 96,
+      "order": 96,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1448,
+          "y": 1229
+        },
+        {
+          "x": 1225,
+          "y": 1465
+        },
+        {
+          "x": 1448,
+          "y": 1687
+        },
+        {
+          "x": 1678,
+          "y": 1458
+        },
+        {
+          "x": 1455,
+          "y": 1229
+        }
+      ]
+    },
+    {
+      "id": 97,
+      "order": 97,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1219,
+          "y": 1465
+        },
+        {
+          "x": 990,
+          "y": 1694
+        },
+        {
+          "x": 1225,
+          "y": 1910
+        },
+        {
+          "x": 1448,
+          "y": 1687
+        },
+        {
+          "x": 1225,
+          "y": 1465
+        }
+      ]
+    },
+    {
+      "id": 98,
+      "order": 98,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 2,
+      "vertices": [
+        {
+          "x": 1448,
+          "y": 1694
+        },
+        {
+          "x": 1684,
+          "y": 1910
+        },
+        {
+          "x": 1455,
+          "y": 2146
+        },
+        {
+          "x": 1225,
+          "y": 1923
+        },
+        {
+          "x": 1442,
+          "y": 1701
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "order": 99,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1684,
+          "y": 1921
+        },
+        {
+          "x": 1907,
+          "y": 2151
+        },
+        {
+          "x": 1645,
+          "y": 2413
+        },
+        {
+          "x": 1330,
+          "y": 2275
+        },
+        {
+          "x": 1684,
+          "y": 1928
+        }
+      ]
+    },
+    {
+      "id": 100,
+      "order": 100,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1324,
+          "y": 2282
+        },
+        {
+          "x": 1324,
+          "y": 2786
+        },
+        {
+          "x": 1645,
+          "y": 2786
+        },
+        {
+          "x": 1651,
+          "y": 2406
+        },
+        {
+          "x": 1324,
+          "y": 2282
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "order": 101,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1324,
+          "y": 2788
+        },
+        {
+          "x": 1324,
+          "y": 3116
+        },
+        {
+          "x": 1651,
+          "y": 3116
+        },
+        {
+          "x": 1645,
+          "y": 2788
+        },
+        {
+          "x": 1324,
+          "y": 2788
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "order": 102,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1324,
+          "y": 3125
+        },
+        {
+          "x": 1324,
+          "y": 3623
+        },
+        {
+          "x": 1645,
+          "y": 3485
+        },
+        {
+          "x": 1651,
+          "y": 3118
+        },
+        {
+          "x": 1324,
+          "y": 3125
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "order": 103,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1324,
+          "y": 3623
+        },
+        {
+          "x": 1671,
+          "y": 3970
+        },
+        {
+          "x": 1900,
+          "y": 3741
+        },
+        {
+          "x": 1645,
+          "y": 3492
+        },
+        {
+          "x": 1324,
+          "y": 3623
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "order": 104,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1684,
+          "y": 3970
+        },
+        {
+          "x": 1907,
+          "y": 4200
+        },
+        {
+          "x": 2130,
+          "y": 3977
+        },
+        {
+          "x": 1907,
+          "y": 3747
+        },
+        {
+          "x": 1684,
+          "y": 3970
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "order": 105,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1907,
+          "y": 4206
+        },
+        {
+          "x": 2267,
+          "y": 4573
+        },
+        {
+          "x": 2405,
+          "y": 4252
+        },
+        {
+          "x": 2130,
+          "y": 3977
+        },
+        {
+          "x": 1907,
+          "y": 4213
+        }
+      ]
+    },
+    {
+      "id": 106,
+      "order": 106,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 2412,
+          "y": 4252
+        },
+        {
+          "x": 2785,
+          "y": 4252
+        },
+        {
+          "x": 2785,
+          "y": 4573
+        },
+        {
+          "x": 2274,
+          "y": 4573
+        },
+        {
+          "x": 2412,
+          "y": 4252
+        }
+      ]
+    },
+    {
+      "id": 107,
+      "order": 107,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 2785,
+          "y": 4252
+        },
+        {
+          "x": 3113,
+          "y": 4252
+        },
+        {
+          "x": 3106,
+          "y": 4573
+        },
+        {
+          "x": 2785,
+          "y": 4573
+        },
+        {
+          "x": 2785,
+          "y": 4252
+        }
+      ]
+    },
+    {
+      "id": 108,
+      "order": 108,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 4252
+        },
+        {
+          "x": 3486,
+          "y": 4252
+        },
+        {
+          "x": 3617,
+          "y": 4580
+        },
+        {
+          "x": 3113,
+          "y": 4573
+        },
+        {
+          "x": 3113,
+          "y": 4252
+        }
+      ]
+    },
+    {
+      "id": 109,
+      "order": 109,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 3493,
+          "y": 4252
+        },
+        {
+          "x": 3742,
+          "y": 3996
+        },
+        {
+          "x": 3978,
+          "y": 4219
+        },
+        {
+          "x": 3624,
+          "y": 4580
+        },
+        {
+          "x": 3493,
+          "y": 4252
+        }
+      ]
+    },
+    {
+      "id": 110,
+      "order": 110,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 3749,
+          "y": 3990
+        },
+        {
+          "x": 3978,
+          "y": 3767
+        },
+        {
+          "x": 4207,
+          "y": 3990
+        },
+        {
+          "x": 3978,
+          "y": 4219
+        },
+        {
+          "x": 3755,
+          "y": 3990
+        }
+      ]
+    },
+    {
+      "id": 111,
+      "order": 111,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 4253,
+          "y": 3492
+        },
+        {
+          "x": 4568,
+          "y": 3623
+        },
+        {
+          "x": 4201,
+          "y": 3990
+        },
+        {
+          "x": 3984,
+          "y": 3761
+        },
+        {
+          "x": 4253,
+          "y": 3492
+        }
+      ]
+    },
+    {
+      "id": 112,
+      "order": 112,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 4253,
+          "y": 3485
+        },
+        {
+          "x": 4253,
+          "y": 3112
+        },
+        {
+          "x": 4574,
+          "y": 3112
+        },
+        {
+          "x": 4574,
+          "y": 3623
+        },
+        {
+          "x": 4253,
+          "y": 3492
+        }
+      ]
+    },
+    {
+      "id": 113,
+      "order": 113,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 4253,
+          "y": 3112
+        },
+        {
+          "x": 4253,
+          "y": 2784
+        },
+        {
+          "x": 4574,
+          "y": 2784
+        },
+        {
+          "x": 4574,
+          "y": 3112
+        },
+        {
+          "x": 4253,
+          "y": 3112
+        }
+      ]
+    },
+    {
+      "id": 114,
+      "order": 114,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 4253,
+          "y": 2784
+        },
+        {
+          "x": 4247,
+          "y": 2404
+        },
+        {
+          "x": 4568,
+          "y": 2279
+        },
+        {
+          "x": 4568,
+          "y": 2784
+        },
+        {
+          "x": 4253,
+          "y": 2784
+        }
+      ]
+    },
+    {
+      "id": 115,
+      "order": 115,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 4574,
+          "y": 2275
+        },
+        {
+          "x": 4194,
+          "y": 1902
+        },
+        {
+          "x": 3971,
+          "y": 2124
+        },
+        {
+          "x": 4253,
+          "y": 2413
+        },
+        {
+          "x": 4568,
+          "y": 2275
+        }
+      ]
+    },
+    {
+      "id": 116,
+      "order": 116,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 4194,
+          "y": 1904
+        },
+        {
+          "x": 3958,
+          "y": 1674
+        },
+        {
+          "x": 3742,
+          "y": 1897
+        },
+        {
+          "x": 3965,
+          "y": 2127
+        },
+        {
+          "x": 4188,
+          "y": 1904
+        }
+      ]
+    },
+    {
+      "id": 117,
+      "order": 117,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 3965,
+          "y": 1679
+        },
+        {
+          "x": 3624,
+          "y": 1331
+        },
+        {
+          "x": 3486,
+          "y": 1653
+        },
+        {
+          "x": 3729,
+          "y": 1902
+        },
+        {
+          "x": 3958,
+          "y": 1672
+        }
+      ]
+    },
+    {
+      "id": 118,
+      "order": 118,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 3624,
+          "y": 1327
+        },
+        {
+          "x": 3119,
+          "y": 1327
+        },
+        {
+          "x": 3113,
+          "y": 1648
+        },
+        {
+          "x": 3486,
+          "y": 1648
+        },
+        {
+          "x": 3617,
+          "y": 1327
+        }
+      ]
+    },
+    {
+      "id": 119,
+      "order": 119,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 1325
+        },
+        {
+          "x": 2785,
+          "y": 1325
+        },
+        {
+          "x": 2785,
+          "y": 1653
+        },
+        {
+          "x": 3113,
+          "y": 1646
+        },
+        {
+          "x": 3113,
+          "y": 1325
+        }
+      ]
+    },
+    {
+      "id": 120,
+      "order": 120,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 2785,
+          "y": 1321
+        },
+        {
+          "x": 2281,
+          "y": 1321
+        },
+        {
+          "x": 2405,
+          "y": 1648
+        },
+        {
+          "x": 2779,
+          "y": 1648
+        },
+        {
+          "x": 2785,
+          "y": 1321
+        }
+      ]
+    },
+    {
+      "id": 121,
+      "order": 121,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 3,
+      "vertices": [
+        {
+          "x": 2274,
+          "y": 1325
+        },
+        {
+          "x": 1914,
+          "y": 1685
+        },
+        {
+          "x": 2143,
+          "y": 1915
+        },
+        {
+          "x": 2405,
+          "y": 1653
+        },
+        {
+          "x": 2274,
+          "y": 1325
+        }
+      ]
+    },
+    {
+      "id": 122,
+      "order": 122,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 1907,
+          "y": 1683
+        },
+        {
+          "x": 1684,
+          "y": 1919
+        },
+        {
+          "x": 1914,
+          "y": 2148
+        },
+        {
+          "x": 2143,
+          "y": 1919
+        },
+        {
+          "x": 1907,
+          "y": 1690
+        }
+      ]
+    },
+    {
+      "id": 123,
+      "order": 123,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 3,
+      "vertices": [
+        {
+          "x": 2143,
+          "y": 1919
+        },
+        {
+          "x": 2366,
+          "y": 2148
+        },
+        {
+          "x": 2136,
+          "y": 2371
+        },
+        {
+          "x": 1914,
+          "y": 2148
+        },
+        {
+          "x": 2143,
+          "y": 1919
+        }
+      ]
+    },
+    {
+      "id": 124,
+      "order": 124,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2372,
+          "y": 2146
+        },
+        {
+          "x": 2602,
+          "y": 2382
+        },
+        {
+          "x": 2366,
+          "y": 2605
+        },
+        {
+          "x": 2143,
+          "y": 2382
+        },
+        {
+          "x": 2372,
+          "y": 2146
+        }
+      ]
+    },
+    {
+      "id": 125,
+      "order": 125,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2136,
+          "y": 2384
+        },
+        {
+          "x": 1973,
+          "y": 2548
+        },
+        {
+          "x": 1973,
+          "y": 2791
+        },
+        {
+          "x": 2300,
+          "y": 2791
+        },
+        {
+          "x": 2300,
+          "y": 2679
+        },
+        {
+          "x": 2366,
+          "y": 2607
+        },
+        {
+          "x": 2143,
+          "y": 2384
+        }
+      ]
+    },
+    {
+      "id": 126,
+      "order": 126,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 1973,
+          "y": 2793
+        },
+        {
+          "x": 1973,
+          "y": 3114
+        },
+        {
+          "x": 2300,
+          "y": 3121
+        },
+        {
+          "x": 2300,
+          "y": 2793
+        },
+        {
+          "x": 1973,
+          "y": 2793
+        }
+      ]
+    },
+    {
+      "id": 127,
+      "order": 127,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 1973,
+          "y": 3116
+        },
+        {
+          "x": 1973,
+          "y": 3352
+        },
+        {
+          "x": 2130,
+          "y": 3516
+        },
+        {
+          "x": 2359,
+          "y": 3287
+        },
+        {
+          "x": 2300,
+          "y": 3221
+        },
+        {
+          "x": 2294,
+          "y": 3116
+        },
+        {
+          "x": 1973,
+          "y": 3116
+        }
+      ]
+    },
+    {
+      "id": 128,
+      "order": 128,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2366,
+          "y": 3291
+        },
+        {
+          "x": 2595,
+          "y": 3520
+        },
+        {
+          "x": 2366,
+          "y": 3750
+        },
+        {
+          "x": 2136,
+          "y": 3514
+        },
+        {
+          "x": 2366,
+          "y": 3291
+        }
+      ]
+    },
+    {
+      "id": 129,
+      "order": 129,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2372,
+          "y": 3754
+        },
+        {
+          "x": 2549,
+          "y": 3924
+        },
+        {
+          "x": 2785,
+          "y": 3918
+        },
+        {
+          "x": 2785,
+          "y": 3603
+        },
+        {
+          "x": 2674,
+          "y": 3597
+        },
+        {
+          "x": 2595,
+          "y": 3518
+        },
+        {
+          "x": 2366,
+          "y": 3754
+        }
+      ]
+    },
+    {
+      "id": 130,
+      "order": 130,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2785,
+          "y": 3603
+        },
+        {
+          "x": 3106,
+          "y": 3603
+        },
+        {
+          "x": 3113,
+          "y": 3924
+        },
+        {
+          "x": 2785,
+          "y": 3924
+        },
+        {
+          "x": 2785,
+          "y": 3603
+        }
+      ]
+    },
+    {
+      "id": 131,
+      "order": 131,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 3924
+        },
+        {
+          "x": 3349,
+          "y": 3924
+        },
+        {
+          "x": 3526,
+          "y": 3754
+        },
+        {
+          "x": 3296,
+          "y": 3518
+        },
+        {
+          "x": 3218,
+          "y": 3597
+        },
+        {
+          "x": 3113,
+          "y": 3597
+        },
+        {
+          "x": 3113,
+          "y": 3924
+        }
+      ]
+    },
+    {
+      "id": 132,
+      "order": 132,
+      "label": "Bazo",
+      "source_label": "Bazo",
+      "kind": "QUESTION",
+      "bank": "SPLEEN",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3296,
+          "y": 3520
+        },
+        {
+          "x": 3532,
+          "y": 3291
+        },
+        {
+          "x": 3755,
+          "y": 3520
+        },
+        {
+          "x": 3526,
+          "y": 3750
+        },
+        {
+          "x": 3303,
+          "y": 3527
+        }
+      ]
+    },
+    {
+      "id": 133,
+      "order": 133,
+      "label": "Erlenmeyer",
+      "source_label": "Erlenmeyer",
+      "kind": "QUESTION",
+      "bank": "FLASK",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3762,
+          "y": 3520
+        },
+        {
+          "x": 3925,
+          "y": 3350
+        },
+        {
+          "x": 3925,
+          "y": 3114
+        },
+        {
+          "x": 3598,
+          "y": 3114
+        },
+        {
+          "x": 3604,
+          "y": 3212
+        },
+        {
+          "x": 3532,
+          "y": 3291
+        },
+        {
+          "x": 3755,
+          "y": 3514
+        }
+      ]
+    },
+    {
+      "id": 134,
+      "order": 134,
+      "label": "Jeringuilla",
+      "source_label": "Jeringuilla",
+      "kind": "QUESTION",
+      "bank": "SYRINGE",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3598,
+          "y": 3114
+        },
+        {
+          "x": 3598,
+          "y": 2786
+        },
+        {
+          "x": 3925,
+          "y": 2786
+        },
+        {
+          "x": 3925,
+          "y": 3114
+        },
+        {
+          "x": 3598,
+          "y": 3114
+        }
+      ]
+    },
+    {
+      "id": 135,
+      "order": 135,
+      "label": "Cerebro",
+      "source_label": "Cerebro",
+      "kind": "BRAIN",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3925,
+          "y": 2780
+        },
+        {
+          "x": 3925,
+          "y": 2544
+        },
+        {
+          "x": 3749,
+          "y": 2373
+        },
+        {
+          "x": 3519,
+          "y": 2596
+        },
+        {
+          "x": 3598,
+          "y": 2681
+        },
+        {
+          "x": 3604,
+          "y": 2786
+        },
+        {
+          "x": 3925,
+          "y": 2786
+        }
+      ]
+    },
+    {
+      "id": 136,
+      "order": 136,
+      "label": "Virus",
+      "source_label": "Virus",
+      "kind": "VIRUS",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3749,
+          "y": 2369
+        },
+        {
+          "x": 3519,
+          "y": 2146
+        },
+        {
+          "x": 3283,
+          "y": 2369
+        },
+        {
+          "x": 3519,
+          "y": 2605
+        },
+        {
+          "x": 3742,
+          "y": 2376
+        }
+      ]
+    },
+    {
+      "id": 137,
+      "order": 137,
+      "label": "ADN",
+      "source_label": "ADN",
+      "kind": "DNA",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3519,
+          "y": 2144
+        },
+        {
+          "x": 3355,
+          "y": 1980
+        },
+        {
+          "x": 3113,
+          "y": 1980
+        },
+        {
+          "x": 3113,
+          "y": 2301
+        },
+        {
+          "x": 3224,
+          "y": 2301
+        },
+        {
+          "x": 3290,
+          "y": 2360
+        },
+        {
+          "x": 3519,
+          "y": 2151
+        }
+      ]
+    },
+    {
+      "id": 138,
+      "order": 138,
+      "label": "Linfocito",
+      "source_label": "Linfocito",
+      "kind": "QUESTION",
+      "bank": "LYMPHOCYTE",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 3113,
+          "y": 1974
+        },
+        {
+          "x": 2785,
+          "y": 1974
+        },
+        {
+          "x": 2785,
+          "y": 2295
+        },
+        {
+          "x": 3113,
+          "y": 2301
+        },
+        {
+          "x": 3113,
+          "y": 1974
+        }
+      ]
+    },
+    {
+      "id": 139,
+      "order": 139,
+      "label": "Macrófago",
+      "source_label": "Macrófago",
+      "kind": "QUESTION",
+      "bank": "MACROPHAGE",
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2785,
+          "y": 2295
+        },
+        {
+          "x": 3113,
+          "y": 2301
+        },
+        {
+          "x": 3106,
+          "y": 2616
+        },
+        {
+          "x": 2785,
+          "y": 2616
+        },
+        {
+          "x": 2785,
+          "y": 2301
+        }
+      ]
+    },
+    {
+      "id": 140,
+      "order": 140,
+      "label": "Llegada",
+      "source_label": "Llegada",
+      "kind": "FINISH",
+      "bank": null,
+      "level": 4,
+      "vertices": [
+        {
+          "x": 2785,
+          "y": 2616
+        },
+        {
+          "x": 2602,
+          "y": 2819
+        },
+        {
+          "x": 2602,
+          "y": 3094
+        },
+        {
+          "x": 2805,
+          "y": 3297
+        },
+        {
+          "x": 3087,
+          "y": 3304
+        },
+        {
+          "x": 3296,
+          "y": 3094
+        },
+        {
+          "x": 3296,
+          "y": 2806
+        },
+        {
+          "x": 3106,
+          "y": 2622
+        },
+        {
+          "x": 2785,
+          "y": 2616
+        }
+      ]
+    }
+  ],
+  "effects": {
+    "START": {
+      "status": "OBSERVED",
+      "description": "Salida en la casilla 1. Participantes e identidad pendientes."
+    },
+    "QUESTION": {
+      "status": "OBSERVED",
+      "description": "Pregunta del banco y nivel de la casilla. Continuidad tras acertar pendiente.",
+      "seconds": 60
+    },
+    "VIRUS": {
+      "status": "OBSERVED",
+      "description": "Retrocede tres, termina el turno y pierde el siguiente turno propio; no encadena la casilla de retroceso.",
+      "move_delta": -3,
+      "resolve_landing": false,
+      "skip_next_turn": true
+    },
+    "DNA": {
+      "status": "OBSERVED",
+      "description": "Avanza tres, limitado por la llegada, y aplica el efecto de destino.",
+      "move_delta": 3,
+      "resolve_landing": true
+    },
+    "BRAIN": {
+      "status": "PENDING",
+      "description": "Composición y reglas pendientes de confirmación. Sin parámetros provisionales."
+    },
+    "FINISH": {
+      "status": "OBSERVED",
+      "description": "Llegada en la casilla 140. Esta vista no ejecuta una partida."
+    }
+  }
+}
