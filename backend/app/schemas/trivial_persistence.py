@@ -2,6 +2,7 @@
 from typing import Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from app.schemas.trivial_board import Binding, CoverageRequest, Bank
 
 
 class ParticipantSpec(BaseModel):
@@ -24,9 +25,11 @@ class InternalSetup(BaseModel):
     operation_id: UUID
     play_mode: Literal['LOCAL', 'ONLINE']
     participants: tuple[ParticipantSpec, ...] = Field(min_length=1, max_length=4)
+    bindings: tuple[Binding, ...] = Field(default=(), max_length=4)
 
     @model_validator(mode='after')
     def roster(self):
+        CoverageRequest(bindings=list(self.bindings))
         accounts = [p.user_id for p in self.participants if p.user_id is not None]
         if len(accounts) != len(set(accounts)):
             raise ValueError('Accounts must be distinct')
@@ -52,6 +55,7 @@ class SavedMovementConfiguration(BaseModel):
     participants_closed: Literal[True]
     turn_order: tuple[int, ...] = Field(min_length=1, max_length=4)
     pending_rules: tuple[str, ...]
+    content_bindings: tuple[Binding, ...] = Field(default=(), max_length=4)
 
     @model_validator(mode='before')
     @classmethod
@@ -66,9 +70,19 @@ class SavedMovementConfiguration(BaseModel):
 
     @model_validator(mode='after')
     def preserved_pending_rules(self):
+        CoverageRequest(bindings=list(self.content_bindings))
         expected = {'BAZO', 'BRAIN', 'CORRECT_TURN', 'EXHAUSTION', 'ABANDONMENT'}
         if len(self.turn_order) != len(set(self.turn_order)):
             raise ValueError('Repeated turn slot')
         if len(self.pending_rules) != len(expected) or set(self.pending_rules) != expected:
             raise ValueError('Unsupported partial rules')
         return self
+
+
+class PresentationCommand(MoveCommand):
+    # Trusted internal selection only: never accept copy_id from a future client.
+    copy_id: int = Field(strict=True, gt=0)
+    arrival_operation_id: UUID
+    cell: int = Field(strict=True, ge=1, le=140)
+    bank: Bank
+    level: int = Field(strict=True, ge=1, le=4)

@@ -116,13 +116,15 @@ def store(participant, state):
     participant.skip_next_own_turn = state.skip_next_own_turn
 
 
-def view(db, match, people):
+def view(db, match, people, viewer_id):
     definition = saved_definition(match, people)
     turn = db.get(Turn, (match.id, match.current_turn))
     states = [movement_state(match, p, definition) for p in people]
     active = people[turn.participant_slot - 1]
     state = states[turn.participant_slot - 1]
-    return {'id': match.id, 'version': match.version, 'play_mode': match.play_mode,
+    from app.services.trivial_content import public_presentation
+    return {'presentation': public_presentation(db, match, turn, viewer_id),
+            'id': match.id, 'version': match.version, 'play_mode': match.play_mode,
             'scope': 'MOVEMENT_ONLY', 'board_version': match.board_version,
             'rules_version': match.rules_version, 'state_schema_version': match.state_schema_version,
             'configuration': match.configuration, 'phase': state.phase.value,
@@ -146,13 +148,15 @@ def create_internal(db, actor, request: InternalSetup):
         if request.participants[0].user_id != actor.id:
             fail('HOST_MUST_BE_FIRST', 403)
         # Serialize idempotent setup by owner (same lock order as commands).
-        payload = request.model_dump(mode='json', exclude={'operation_id'})
+        payload = request.model_dump(mode='json', exclude={'operation_id','bindings'})
+        if request.bindings:
+            payload['bindings'] = [b.model_dump() for b in request.bindings]
         existing = db.scalar(select(Match).where(Match.owner_id == actor.id, Match.setup_operation_id == str(request.operation_id)).with_for_update().execution_options(populate_existing=True))
         if existing:
             if existing.setup_payload != payload:
                 fail('IDEMPOTENCY_CONFLICT')
             existing, people = locked(db, actor, existing.id)
-            result = view(db, existing, people)
+            result = view(db, existing, people, actor.id)
             db.commit()
             return result
         definition = load_board()
@@ -164,8 +168,13 @@ def create_internal(db, actor, request: InternalSetup):
                       configuration={'schema_version': 1, 'scope': 'MOVEMENT_ONLY', 'participants_closed': True,
                                      'turn_order': list(range(1, len(request.participants) + 1)),
                                      'pending_rules': ['BAZO', 'BRAIN', 'CORRECT_TURN', 'EXHAUSTION', 'ABANDONMENT']}, created_at=now)
+        if request.bindings:
+            match.configuration = {**match.configuration, 'content_bindings': [b.model_dump() for b in request.bindings]}
         db.add(match)
         db.flush()
+        if request.bindings:
+            from app.services.trivial_content import freeze_content
+            freeze_content(db, match, request.bindings, now)
         people = []
         for slot, spec in enumerate(request.participants, 1):
             account = db.get(User, spec.user_id) if spec.user_id else None
@@ -179,7 +188,7 @@ def create_internal(db, actor, request: InternalSetup):
         db.flush()
         db.add(Turn(match_id=match.id, number=1, participant_slot=1, status='OPEN', started_at=now))
         db.flush()
-        result = view(db, match, people)
+        result = view(db, match, people, actor.id)
         db.commit()
         return result
     except Exception:
@@ -192,7 +201,7 @@ def read_state(db, actor, match_id):
     try:
         actor = authenticate(db, actor)
         match, people = locked(db, actor, match_id)
-        result = view(db, match, people)
+        result = view(db, match, people, actor.id)
         db.commit()
         return result
     except Exception:
@@ -241,7 +250,7 @@ def execute_move(db, actor, match_id, request: MoveCommand, *, roller=None):
             original_turn = db.get(Turn, (match.id, request.turn_number))
             if previous.participant_slot != participant.slot or original_turn is None or original_turn.participant_slot != participant.slot:
                 fail('INVALID_SAVED_RECEIPT')
-            result = {'operation': previous.result, 'state': view(db, match, people)}
+            result = {'operation': previous.result, 'state': view(db, match, people, actor.id)}
             db.commit()
             return result
         if request.expected_version != match.version:
@@ -274,7 +283,7 @@ def execute_move(db, actor, match_id, request: MoveCommand, *, roller=None):
         db.add(Operation(match_id=match.id, operation_id=str(request.operation_id), actor_id=actor.id,
                          participant_slot=participant.slot, payload=payload, result=receipt, created_at=now))
         db.flush()
-        result = {'operation': receipt, 'state': view(db, match, people)}
+        result = {'operation': receipt, 'state': view(db, match, people, actor.id)}
         db.commit()
         return result
     except Exception:

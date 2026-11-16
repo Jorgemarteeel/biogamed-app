@@ -391,6 +391,10 @@ def test_additive_migration_preserves_existing_rows_and_guards_data(pg):
     for name in ('trivial_board_matches','trivial_board_participants','trivial_board_turns','trivial_board_operations'):
         actual={c['name']:c['nullable'] for c in inspect(pg).get_columns(name)}
         assert actual=={c.name:c.nullable for c in Base.metadata.tables[name].columns}
+    # Current services require current head; preserve the explicit f75 schema
+    # assertions above, then upgrade before exercising the runtime adapter.
+    with patch('app.database.engine',pg):
+        command.upgrade(Config('alembic.ini'),'head')
     state,_=setup(pg,ids)
     with patch('app.database.engine',pg),pytest.raises(RuntimeError,match='Cannot discard'):
         command.downgrade(Config('alembic.ini'),'e64f73085196')
