@@ -18,7 +18,7 @@ class Question(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     # Source levels from the prototype; their academic meaning is not validated yet.
     difficulty: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    correct_answer: Mapped[str] = mapped_column(String(255), nullable=False)
+    correct_answer: Mapped[str | None] = mapped_column(String(255), nullable=True)
     options: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     correct_option_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
     game_letter: Mapped[str | None] = mapped_column(String(1), nullable=True)
@@ -28,7 +28,15 @@ class Question(Base):
     letter: Mapped[str | None] = mapped_column(String(1), nullable=True)
     exact_word: Mapped[str | None] = mapped_column(String(255), nullable=True)
     accepted_answers: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
-    topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id"), nullable=False)
+    reference_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bank: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    note_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    subject_id: Mapped[int | None] = mapped_column(ForeignKey("subjects.id", ondelete="RESTRICT"), nullable=True, index=True)
+    block_id: Mapped[int | None] = mapped_column(ForeignKey("content_blocks.id", ondelete="RESTRICT"), nullable=True, index=True)
+    subject: Mapped["Subject | None"] = relationship()
+    block: Mapped["ContentBlock | None"] = relationship()
+
+    topic_id: Mapped[int | None] = mapped_column(ForeignKey("topics.id"), nullable=True)
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("categories.id", ondelete="RESTRICT"), nullable=True, index=True,
     )

@@ -59,10 +59,10 @@ def test_errors_limits_and_changed_confirmation(db,test_user,hierarchy,topic,mon
 def test_conflict_before_confirmation_and_rollback(db,test_user,hierarchy,topic,monkeypatch):
     args=setup(db,test_user,hierarchy,topic);data=raw(count=2);checked=service.validate(db,test_user,data,*args,'TRIVIAL')
     original=service.build_question; calls=[]
-    def broken(*a):
+    def broken(*a, **kwargs):
         calls.append(1)
         if len(calls)==2:raise RuntimeError('controlled failure')
-        return original(*a)
+        return original(*a, **kwargs)
     monkeypatch.setattr(service,'build_question',broken)
     before=db.scalar(select(func.count()).select_from(Question))
     with pytest.raises(RuntimeError):service.confirm(db,test_user,data,*args,'TRIVIAL',checked['proof'],uuid4())

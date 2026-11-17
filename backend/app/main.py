@@ -4,7 +4,7 @@ from urllib.parse import urlsplit, urlunsplit
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 # Importamos nuestro nuevo router
-from app.routers import auth, game, questions, subjects, topics
+from app.routers import inmunoquest, auth, game, questions, subjects, topics
 from app.routers import pasapalabra, practice, monitoring, users, question_import, trivial_board
 
 # Las tablas se gestionan mediante `alembic upgrade head`.
@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 # Enganchamos el router a la app principal
+app.include_router(inmunoquest.router)
 app.include_router(auth.router)
 app.include_router(topics.router)
 app.include_router(subjects.router)
@@ -40,6 +41,7 @@ app.include_router(practice.router)
 app.include_router(monitoring.router)
 app.include_router(users.router)
 app.include_router(question_import.router)
+app.include_router(question_import.unclassified_router)
 app.include_router(trivial_board.router)
 
 @app.get("/")

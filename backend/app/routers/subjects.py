@@ -8,7 +8,7 @@ from app.dependencies import require_content_staff
 from app.models import Category, ContentBlock, Question, Subject, User
 from app.schemas.category import (BlockDetailResponse, CategoryCreate, CategoryDetailResponse, CategoryResponse,
                                   EmptyLinkRequest, UnassignedCategoryResponse)
-from app.schemas.question import CategoryQuestionCreate, CategoryQuestionEdit, CategoryQuestionResponse, QuestionStateUpdate, QuestionType
+from app.schemas.question import ContentType, CategoryQuestionCreate, CategoryQuestionEdit, CategoryQuestionResponse, QuestionStateUpdate
 from app.schemas.content_block import ContentBlockCreate, ContentBlockResponse
 from app.schemas.subject import SubjectCreate, SubjectResponse
 from app.services import subject as subject_service
@@ -145,7 +145,7 @@ def set_category_question_state(
 def list_category_questions(
     subject_id: int = Path(ge=1), block_id: int = Path(ge=1), category_id: int = Path(ge=1),
     skip: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=100),
-    mode: QuestionType | None = Query(default=None),
+    mode: ContentType | None = Query(default=None),
     difficulty: int | None = Query(default=None, ge=1, le=4),
     difficulty_unknown: bool = Query(default=False),
     state: Literal["active", "retired", "all"] = Query(default="all"),

@@ -7,12 +7,12 @@ import {readReference,type ImportReference} from '@/lib/import-recovery';
 export default function ImportRecovery({subjectId,blockId,categoryId,refresh=0}:{subjectId:number;blockId:number;categoryId:number;refresh?:number}){
  const [message,setMessage]=useState(''),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false);
  const reference=useRef<ImportReference|null>(null),locked=useRef(false);
- const base=`/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/imports`;
+ const base=categoryId?`/subjects/${subjectId}/blocks/${blockId}/categories/${categoryId}/imports`:"/question-imports";
  const query=useCallback(async()=>{
   if(locked.current)return;locked.current=true;setBusy(true);setConfirmed(false);setMessage('Consultando resultado…');
   try{const user=await getCurrentUser();reference.current=readReference(window.sessionStorage,user.id,subjectId,blockId,categoryId);
    if(!reference.current){setMessage('');return;}
-   const {data}=await api.get<{status:string;count?:number}>(`${base}/receipts/${reference.current.operationId}`);
+   const {data}=await api.get<{status:string;count?:number}>(`${base}/receipts/${reference.current.operationId}`,{params:{subject_id:subjectId,block_id:blockId,category_id:categoryId}});
    // Recheck identity before presenting a result from an earlier authenticated request.
    const current=await getCurrentUser();if(current.id!==user.id || !['teacher','admin'].includes(current.role)){setMessage('La cuenta ha cambiado. Consulta de nuevo con tu cuenta.');return;}
    if(data.status==='confirmed'){setConfirmed(true);setMessage(`Importación confirmada: ${data.count} ${data.count===1?"pregunta":"preguntas"}.`);}

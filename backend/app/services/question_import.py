@@ -23,6 +23,7 @@ from app.utils.security import SECRET_KEY, ALGORITHM
 MAX_BYTES = 2 * 1024 * 1024
 COLUMNS = {
     "TRIVIAL": ["enunciado", "opcion_a", "opcion_b", "opcion_c", "opcion_d", "correcta", "dificultad"],
+    "INMUNOQUEST": ["enunciado", "respuesta_referencia", "banco", "dificultad", "referencia_apuntes"],
     "PASAPALABRA": ["enunciado", "letra", "solucion", "alternativas", "dificultad"],
 }
 
@@ -37,7 +38,9 @@ def staff(db, user):
 
 
 def canonical(question):
-    fields = ["text", "difficulty", "options", "correct_option_index", "letter", "exact_word", "accepted_answers"]
+    fields = (["reference_answer", "bank", "note_reference"] if question.question_type == "INMUNOQUEST" else []) + ["text", "difficulty", "options", "correct_option_index", "letter", "exact_word", "accepted_answers"]
+    if question.question_type == "INMUNOQUEST":
+        fields += ["reference_answer", "bank", "note_reference"]
     data = {k: getattr(question, k) for k in fields}
     data["accepted_answers"] = data["accepted_answers"] or []
     def clean(value):
@@ -60,7 +63,7 @@ def parse(raw, mode, topic_id):
         reader = csv.reader(io.StringIO(source, newline=""), delimiter=";", strict=True)
         headers = next(reader)
         allowed = COLUMNS[mode]
-        required = set(allowed) - {"dificultad", "alternativas"}
+        required = set(allowed) - ({"referencia_apuntes"} if mode == "INMUNOQUEST" else {"dificultad", "alternativas"})
         if len(headers) != len(set(headers)) or not required.issubset(headers) or set(headers) - set(allowed):
             def labels(values):
                 values = list(values)
@@ -92,14 +95,23 @@ def parse(raw, mode, topic_id):
                     if answer not in ("A", "B", "C", "D"):
                         raise ValueError("correcta: usa A, B, C o D.")
                     data.update(options=[row[f"opcion_{v}"] for v in "abcd"], correct_option_index="ABCD".index(answer))
+                elif mode == "INMUNOQUEST":
+                    if not row["enunciado"].strip(): raise ValueError("enunciado: no puede estar vacío.")
+                    if not row["respuesta_referencia"].strip(): raise ValueError("respuesta_referencia: no puede estar vacía.")
+                    if not level:
+                        raise ValueError("dificultad: obligatoria, usa 1–4.")
+                    banks = {"Linfocito":"LYMPHOCYTE", "Macrófago":"MACROPHAGE", "Bazo":"SPLEEN", "Matraz":"FLASK", "ADN":"DNA"}
+                    if row["banco"].strip() not in banks:
+                        raise ValueError("banco: usa Linfocito, Macrófago, Bazo, Matraz o ADN.")
+                    data.update(reference_answer=row["respuesta_referencia"], bank=banks[row["banco"].strip()], note_reference=row.get("referencia_apuntes", "").strip() or None)
                 else:
                     data.update(letter=row["letra"], exact_word=row["solucion"], accepted_answers=row.get("alternativas", "").splitlines())
                 rows.append((number, CategoryQuestionCreate(**data)))
             except ValidationError as exc:
                 for error in exc.errors():
-                    errors.append({"row": number, "column": ".".join(map(str, error["loc"])) or "contenido", "message": error["msg"]})
+                    errors.append({"row": number, "column": {"text":"enunciado","reference_answer":"respuesta_referencia","note_reference":"referencia_apuntes","bank":"banco"}.get(".".join(map(str,error["loc"])), ".".join(map(str,error["loc"])) or "contenido"), "message": error["msg"]})
             except ValueError as exc:
-                errors.append({"row": number, "column": "contenido", "message": str(exc)})
+                errors.append({"row": number, "column": str(exc).split(":",1)[0] if ":" in str(exc) else "contenido", "message": str(exc)})
         if count == 0:
             raise ValueError("El archivo no contiene preguntas.")
         return rows, errors, count
@@ -107,9 +119,12 @@ def parse(raw, mode, topic_id):
         raise HTTPException(422, "CSV inválido: " + (str(exc) or "Faltan cabeceras.")) from exc
 
 
-def duplicates(db, category_id, topic_id, mode, rows):
+def duplicates(db, category_id, topic_id, mode, rows, subject_id=None, block_id=None):
     existing = {}
-    for q in db.scalars(select(Question).where(Question.category_id == category_id, Question.topic_id == topic_id, Question.question_type == mode)):
+    statement = select(Question).where(Question.category_id == (category_id or None), Question.topic_id == topic_id, Question.question_type == mode)
+    if not category_id:
+        statement = statement.where(Question.subject_id == (subject_id or None), Question.block_id == (block_id or None))
+    for q in db.scalars(statement):
         existing.setdefault(canonical(q), []).append(q.id)
     seen, errors = {}, []
     for number, q in rows:
@@ -127,20 +142,32 @@ def context(raw, user, subject_id, block_id, category_id, topic_id, mode):
                 category=category_id, topic=topic_id, mode=mode, sha=hashlib.sha256(raw).hexdigest())
 
 
+def destination(db, subject_id, block_id, category_id, topic_id, mode):
+    from app.services.question_catalog import academic_destination
+    academic = academic_destination(db, subject_id or None, block_id or None, category_id or None)
+    if mode not in COLUMNS: raise HTTPException(422, "Formato no válido.")
+    if mode == "INMUNOQUEST":
+        if topic_id is not None: raise HTTPException(422, "InmunoQuest no utiliza temática; banco y nivel se indican por pregunta.")
+    else:
+        if topic_id is None: raise HTTPException(422, "La temática es obligatoria para este formato.")
+        _require_topic(db, topic_id)
+    return academic
+
+
 def validate(db, user, raw, subject_id, block_id, category_id, topic_id, mode):
     staff(db, user)
-    get_category(db, subject_id, block_id, category_id); _require_topic(db, topic_id)
+    academic = destination(db, subject_id, block_id, category_id, topic_id, mode)
     rows, errors, total = parse(raw, mode, topic_id)
-    errors += duplicates(db, category_id, topic_id, mode, rows)
-    proof = None if errors else jwt.encode({**context(raw, user, subject_id, block_id, category_id, topic_id, mode), "exp": now() + timedelta(minutes=15)}, SECRET_KEY, algorithm=ALGORITHM)
+    errors += duplicates(db, academic["category_id"], topic_id, mode, rows, academic["subject_id"], academic["block_id"])
+    proof = None if errors else jwt.encode({**context(raw, user, academic["subject_id"] or 0, academic["block_id"] or 0, academic["category_id"] or 0, topic_id, mode), "exp": now() + timedelta(minutes=15)}, SECRET_KEY, algorithm=ALGORITHM)
     return {"total": total, "valid": len(rows), "errors": errors, "proof": proof,
             "preview": [{"row": n, **q.model_dump()} for n, q in rows]}
 
 
 def confirm(db, user, raw, subject_id, block_id, category_id, topic_id, mode, proof, operation_id):
     staff(db, user)
-    get_category(db, subject_id, block_id, category_id); _require_topic(db, topic_id)
-    expected = context(raw, user, subject_id, block_id, category_id, topic_id, mode)
+    academic = destination(db, subject_id, block_id, category_id, topic_id, mode)
+    expected = context(raw, user, academic["subject_id"] or 0, academic["block_id"] or 0, academic["category_id"] or 0, topic_id, mode)
     try:
         claims = jwt.decode(proof, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False, "require": ["exp"]})
         if any(claims.get(k) != v for k, v in expected.items()):
@@ -148,7 +175,10 @@ def confirm(db, user, raw, subject_id, block_id, category_id, topic_id, mode, pr
     except (jwt.InvalidTokenError, ValueError):
         raise HTTPException(422, "La validación no corresponde al archivo, cuenta o destinos.")
     fingerprint = hashlib.sha256(json.dumps(expected, sort_keys=True).encode()).hexdigest()
-    lock_question_destination(db, category_id)
+    lock_question_destination(db, category_id or None)
+    academic = destination(db, subject_id, block_id, category_id, topic_id, mode)
+    if context(raw, user, academic["subject_id"] or 0, academic["block_id"] or 0, academic["category_id"] or 0, topic_id, mode) != expected:
+        raise HTTPException(409, "El destino académico ha cambiado. Vuelve a validar.")
     staff(db, user)
     key = (user.id, str(operation_id))
     def replay(receipt):
@@ -161,11 +191,11 @@ def confirm(db, user, raw, subject_id, block_id, category_id, topic_id, mode, pr
     if claims["exp"] <= now().timestamp():
         raise HTTPException(409, "Validación caducada. Vuelve a validar el archivo.")
     rows, errors, _ = parse(raw, mode, topic_id)
-    errors += duplicates(db, category_id, topic_id, mode, rows)
+    errors += duplicates(db, academic["category_id"], topic_id, mode, rows, academic["subject_id"], academic["block_id"])
     if errors:
         raise HTTPException(409, {"message": "No se importó ninguna pregunta. Revisa el archivo.", "errors": errors})
     try:
-        questions = [build_question(q, category_id) for _, q in rows]
+        questions = [build_question(q, academic=academic) for _, q in rows]
         db.add_all(questions); db.flush()
         receipt = QuestionImport(owner_id=user.id, operation_id=str(operation_id), fingerprint=fingerprint, question_ids=[q.id for q in questions])
         db.add(receipt); db.commit()
@@ -183,11 +213,12 @@ def confirm(db, user, raw, subject_id, block_id, category_id, topic_id, mode, pr
 
 def read_receipt(db, user, subject_id, block_id, category_id, operation_id):
     staff(db, user)
-    get_category(db, subject_id, block_id, category_id)
+    from app.services.question_catalog import academic_destination
+    academic = academic_destination(db, subject_id or None, block_id or None, category_id or None)
     receipt = db.get(QuestionImport, (user.id, str(operation_id)))
     if receipt is None:
         return {"status": "unknown"}
-    destinations = list(db.execute(select(Question.id, Question.category_id).where(Question.id.in_(receipt.question_ids))))
-    if len(destinations) != len(receipt.question_ids) or any(row.category_id != category_id for row in destinations):
+    destinations = list(db.execute(select(Question.id, Question.category_id, Question.subject_id, Question.block_id).where(Question.id.in_(receipt.question_ids))))
+    if len(destinations) != len(receipt.question_ids) or any(any(getattr(row, key) != value for key, value in academic.items()) for row in destinations):
         return {"status": "unknown"}
     return {"status": "confirmed", "count": len(receipt.question_ids)}

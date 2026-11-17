@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import Category, Question, Topic
@@ -33,24 +33,32 @@ def _require_topic(db: Session, topic_id: int) -> None:
 
 
 def _question_values(question: QuestionCreate) -> dict:
-    return {**question.model_dump(), "correct_answer": (
-        question.options[question.correct_option_index] if question.question_type == "TRIVIAL"
-        else question.exact_word.strip())}
+    values=question.model_dump()
+    for key in ("subject_id", "block_id", "category_id"): values.pop(key, None)
+    values["correct_answer"] = (None if question.question_type=="INMUNOQUEST" else question.options[question.correct_option_index] if question.question_type=="TRIVIAL" else question.exact_word.strip())
+    return values
 
 
-def lock_question_destination(db: Session, category_id: int) -> None:
-    db.scalar(select(Category).where(Category.id == category_id).with_for_update())
+def lock_question_destination(db: Session, category_id: int | None) -> None:
+    if category_id is not None:
+        db.scalar(select(Category).where(Category.id==category_id).with_for_update().execution_options(populate_existing=True))
+    elif db.bind.dialect.name=="postgresql":
+        db.execute(text("SELECT pg_advisory_xact_lock(873460, 1)"))
 
 
-def build_question(question: QuestionCreate, category_id: int | None = None) -> Question:
-    return Question(**_question_values(question), category_id=category_id)
+def build_question(question: QuestionCreate, category_id: int | None = None, *, academic=None) -> Question:
+    return Question(**_question_values(question), **(academic or {"category_id": category_id}))
 
 
 def create_question(db: Session, question: QuestionCreate, *, category_id: int | None = None) -> Question:
-    _require_topic(db, question.topic_id)
-    if category_id is not None:
-        lock_question_destination(db, category_id)
-    db_question = build_question(question, category_id)
+    if question.question_type != "INMUNOQUEST": _require_topic(db, question.topic_id)
+    from app.services.question_catalog import academic_destination
+    if category_id and question.category_id and category_id != question.category_id:
+        raise HTTPException(422, "La categoría del formulario contradice el destino.")
+    academic = academic_destination(db, question.subject_id, question.block_id, category_id or question.category_id)
+    lock_question_destination(db, academic["category_id"])
+    academic = academic_destination(db, question.subject_id, question.block_id, category_id or question.category_id)
+    db_question = build_question(question, academic=academic)
     db.add(db_question)
     try:
         db.commit()
@@ -78,7 +86,12 @@ def edit_category_question(db: Session, subject_id: int, block_id: int, category
         raise HTTPException(404, "La pregunta no existe en esta categoría.")
     if payload.question_type != question.question_type:
         raise HTTPException(422, "No se puede cambiar la modalidad de la pregunta.")
-    _require_topic(db, payload.topic_id)
+    if payload.question_type != "INMUNOQUEST": _require_topic(db, payload.topic_id)
+    from app.services.question_catalog import academic_destination
+    for field, value in (("subject_id", subject_id), ("block_id", block_id), ("category_id", category_id)):
+        if getattr(payload, field) not in (None, value): raise HTTPException(422, "El destino del formulario contradice la ruta.")
+    academic = academic_destination(db, subject_id, block_id, category_id)
+    for field, value in academic.items(): setattr(question, field, value)
     for field, value in _question_values(payload).items():
         setattr(question, field, value)
     try:
@@ -122,10 +135,14 @@ def get_questions_by_category(
     if difficulty is not None and difficulty_unknown:
         raise HTTPException(422, "No se puede indicar difficulty junto con difficulty_unknown.")
     statement = select(Question).where(Question.category_id == category_id)
+    if mode is None:
+        statement = statement.where(Question.question_type.in_(["TRIVIAL","PASAPALABRA"]))
     if state != "all":
         statement = statement.where(Question.is_active.is_(state == "active"))
     if mode is not None:
         statement = statement.where(Question.question_type == mode)
+    else:
+        statement = statement.where(Question.question_type.in_(["TRIVIAL","PASAPALABRA"]))
     if difficulty is not None:
         statement = statement.where(Question.difficulty == difficulty)
     elif difficulty_unknown:

@@ -1,14 +1,14 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import path from 'node:path';import Module from 'node:module';import {fileURLToPath} from 'node:url';import ts from 'typescript';import React from 'react';
-function harness(failTopics=false){
+function harness(failTopics=false, openOnly=false,fixedMode){
  const effects=[]; global.window={sessionStorage:{setItem(){}}}; const slots=[];let cursor=0,resolve,reject,imports=0;const calls=[];
  const hooks={...React,useEffect(effect){effects.push(effect);},useState(initial){const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],v=>slots[i]=typeof v==='function'?v(slots[i]):v];},useRef(initial){const i=cursor++;return slots[i]??={current:initial};}};
  const file=fileURLToPath(new URL('../src/components/QuestionImportForm.tsx',import.meta.url)),mod=new Module(file);mod.filename=file;mod.paths=Module._nodeModulePaths(path.dirname(file));
  const original=Module._load;
  try{Module._load=function(r,p,m){if(r==='react')return hooks;if(r.startsWith('@/components/'))return ()=>null;if(r==='@/lib/import-recovery')return {writeReference:(storage,value)=>storage.setItem('pending',JSON.stringify(value))};if(r==='@/services/api')return {__esModule:true,default:{post:(...args)=>{calls.push(args);return new Promise((yes,no)=>{resolve=yes;reject=no;});}},getCurrentUser:async()=>({id:'00000000-0000-4000-8000-000000000001',role:'teacher'}),getQuestionTopics:async()=>{if(failTopics)throw new Error('offline');return [{id:1,name:'Ficticia'}];}};return original.call(this,r,p,m);};mod._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,file);}finally{Module._load=original;}
  function all(n){return !n||typeof n!=='object'?[]:[n,...React.Children.toArray(n.props?.children).flatMap(all)];}
- const find=f=>{cursor=0;return all(mod.exports.default({subjectId:1,blockId:2,categoryId:3,onImported:()=>imports++})).find(f);};
+ const find=f=>{cursor=0;return all(mod.exports.default({subjectId:openOnly?0:1,blockId:openOnly?0:2,categoryId:openOnly?0:3,openOnly,fixedMode,onImported:()=>imports++})).find(f);};
  const button=text=>find(n=>n.type==='button'&&React.Children.toArray(n.props.children).join('')===text);
  const selectFile=()=>find(n=>n.props?.id==='import-file').props.onChange({target:{files:[new File(['enunciado'], 'fixture.csv')]}});
  return {open:async()=>{find(()=>false);effects.splice(0).forEach(e=>e());await new Promise(setImmediate);},find,button,selectFile,calls,resolve:data=>resolve({data}),reject:()=>reject(new Error('lost response')),imports:()=>imports};
@@ -53,3 +53,16 @@ test('unavailable session storage prevents sending confirmation',async()=>{
  await h.button('Confirmar importación de 11 preguntas').props.onClick();assert.equal(h.calls.length,1);
  assert.match(h.find(n=>n.props?.role==='alert').props.children,/No se ha enviado/);
 });
+
+
+test('open CSV validates unclassified destination without Topic and retains idempotent operation',async()=>{
+ const h=harness(false,true);await h.open();h.selectFile();
+ const validate=h.button('Validar sin guardar');assert.equal(validate.props.disabled,false);
+ const request=validate.props.onClick();assert.equal(h.calls[0][0],'/question-imports/validate');assert.equal(h.calls[0][1].get('mode'),'INMUNOQUEST');assert.equal(h.calls[0][1].has('topic_id'),false);
+ h.resolve({...checked,total:1,valid:1,preview:[{row:2,text:'Ficticia',reference_answer:'Referencia',bank:'DNA',difficulty:4}]});await request;
+ const confirm=h.find(n=>n.type==='button'&&String(n.props.children).includes('Confirmar importación'));
+ assert.ok(confirm);const send=confirm.props.onClick();await new Promise(setImmediate);assert.equal(h.calls[1][0],'/question-imports/confirm');const op=h.calls[1][1].get('operation_id');h.reject();await send;
+ const retry=h.find(n=>n.type==='button'&&String(n.props.children).includes('Confirmar importación')).props.onClick();await new Promise(setImmediate);assert.equal(h.calls[2][1].get('operation_id'),op);h.resolve({count:1,question_ids:[9]});await retry;
+});
+
+test('fixed game has a readable format label and no contradictory inner game selector',async()=>{for(const game of ['INMUNOQUEST','PASAPALABRA']){const h=harness(false,false,game);await h.open();assert.equal(h.find(n=>n.props?.label==='Juego para importar'),undefined);assert.ok(h.find(n=>n.type==='p'&&String(n.props.children).includes('Formato:')));}});

@@ -123,7 +123,7 @@ export default function SubjectsView({ page }: { page: number }) {
     <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12" aria-busy={state === "loading"}>
       <ContentBreadcrumbs />
       <p className="mt-5 text-xs font-bold uppercase tracking-widest text-orange-700">Gestión de contenidos</p>
-      <h1 className="mt-2 text-3xl font-black text-blue-950">Asignaturas</h1>
+      <Link className="text-link block my-3" href="/gestion/inmunoquest">InmunoQuest · preguntas abiertas y mazos</Link><h1 className="mt-2 text-3xl font-black text-blue-950">Asignaturas</h1>
       <p className="mt-2 max-w-2xl text-slate-600">Consulta, crea y edita asignaturas para organizar el contenido académico.</p>
 
       {state === "loading" && <p role="status" className="mt-6 rounded-2xl bg-white p-6">Cargando asignaturas…</p>}

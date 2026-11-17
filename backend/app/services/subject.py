@@ -59,12 +59,20 @@ def get_unassigned_categories(db: Session, skip: int = 0, limit: int = 100) -> l
 
 def link_category(db: Session, subject_id: int, block_id: int, category_id: int) -> Category:
     get_block(db, subject_id, block_id)
+    from app.models import Question
     result = db.execute(
         update(Category).where(Category.id == category_id, Category.block_id.is_(None))
         .values(block_id=block_id).returning(Category.id),
         execution_options={"synchronize_session": False},
     ).scalar_one_or_none()
     if result is not None:
+        conflict = db.scalar(select(Question.id).where(Question.category_id == category_id, Question.subject_id.is_not(None), Question.subject_id != subject_id).limit(1))
+        if conflict is not None:
+            db.rollback()
+            raise HTTPException(409, "La categoría contiene preguntas asignadas a otra asignatura; revisa su clasificación antes de vincularla.")
+        # Explicit category linkage also resolves its questions' academic destination.
+        from app.models import Question
+        db.execute(update(Question).where(Question.category_id == category_id).values(subject_id=subject_id, block_id=block_id))
         db.commit()
         return db.get(Category, category_id)
     db.rollback()
