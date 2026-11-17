@@ -1,4 +1,5 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,8 +18,9 @@ export function PasapalabraLoginLink() {
         catch { /* login remains available when storage is disabled */ }
     }}>Iniciar sesión</Link>;
 }
-export function Frame({ children, title = "Pasapalabra local", playing = false, academic, backControl }: {
+export function Frame({ children, title = "Pasapalabra local", playing = false, academic, backControl, backHref="/dashboard" }: {
     backControl?: React.ReactNode;
+    backHref?: string;
     academic?: import("@/services/api").AcademicContext | null;
     playing?: boolean;
     title?: string;
@@ -33,7 +35,7 @@ export function Frame({ children, title = "Pasapalabra local", playing = false, 
     </header>
     <main className={layout.main}>
     <div className={layout.titleRow}>
-    {backControl??<Link className="text-link" href="/dashboard">← Volver al panel</Link>}
+    {backControl??<ReturnLink className="text-link" href={backHref}>{backHref==="/historial"?"← Volver al historial":"← Volver al panel"}</ReturnLink>}
     {academic&&<div className="hidden min-w-0 flex-1 lg:block"><AcademicContext value={academic} compact/></div>}<h1>{title}</h1></div>{academic&&<div className="lg:hidden"><AcademicContext value={academic}/></div>}<div className={layout.content}>{children}</div></main>
     </div>;
 }
@@ -265,7 +267,7 @@ export function PasapalabraGame({ id }: {
     }
     const s = state;
     const q = s?.active_question;
-    return <Frame academic={s?.academic} playing={s?.status==='RUNNING'} title={s?.play_mode==='ONLINE'?'Pasapalabra en línea':s?'Pasapalabra local':'Pasapalabra'}>
+    return <Frame backHref={s?.status==='FINISHED'?'/historial':'/dashboard'} academic={s?.academic} playing={s?.status==='RUNNING'} title={s?.play_mode==='ONLINE'?'Pasapalabra en línea':s?'Pasapalabra local':'Pasapalabra'}>
       {connectionError&&<p role="alert" className="notice-warning mb-2">{connectionError} {connectionError.includes('sesión')&&<PasapalabraLoginLink/>}</p>}
       {error&&<p role="alert" className="notice-error mb-2">{error} <PasapalabraLoginLink/></p>}
       {!s?<p role="status">{error||connectionError?'No se pudo cargar la partida. Revisa el aviso anterior o vuelve al panel.':'Cargando partida…'}</p>:<>

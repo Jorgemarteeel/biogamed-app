@@ -1,6 +1,6 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
@@ -153,7 +153,7 @@ export default function GameStart({ topicId, mode }: {
         </nav>
       </header>
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-        <Link href="/dashboard" className="text-link inline-flex min-h-11 items-center">← Volver al panel</Link>
+        <ReturnLink href="/dashboard" className="text-link inline-flex min-h-11 items-center">← Volver al panel</ReturnLink>
         <p className="mt-6 text-xs font-bold uppercase tracking-widest text-orange-700">Tu espacio de práctica</p>
         <h1 className="mt-3 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl">{mode === "PASAPALABRA" ? "Pasapalabra" : mode === "TRIVIAL" ? "Trivial" : "Preparar partida"}</h1>
 

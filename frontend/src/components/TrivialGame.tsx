@@ -1,7 +1,7 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 
 import {academicLabel} from "@/lib/academic";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { submitTrivialGame, isLegacySessionError, type GameResult, type GameSessionStart } from "@/services/api";
@@ -128,7 +128,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
         <p className="mt-5 text-4xl font-black text-blue-950">{result.score} <span className="text-xl font-semibold text-slate-600">de {result.total_questions} aciertos</span></p>
         <p className="mt-3 leading-7 text-slate-600">Tu resultado se ha guardado. Revisa tus respuestas para seguir aprendiendo.</p>
         <GameReview items={liveReviewItems(session, result)} />
-        <Link href="/dashboard" className="button-primary mt-8 w-full sm:w-auto">Volver al panel</Link>
+        <ReturnLink href="/dashboard" className="button-primary mt-8 w-full sm:w-auto">Volver al panel</ReturnLink>
       </div>
     );
   }

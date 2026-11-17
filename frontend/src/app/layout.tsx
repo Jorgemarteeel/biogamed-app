@@ -1,3 +1,5 @@
+import {Suspense} from "react";
+import {NavigationObserver} from "@/components/ReturnLink";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
@@ -18,7 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${geistSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><Suspense fallback={null}><NavigationObserver/></Suspense>{children}</body>
     </html>
   );
 }

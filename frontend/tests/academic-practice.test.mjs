@@ -74,8 +74,8 @@ test('reopening mode keeps local/online and selecting it preserves scope without
 
 test('back destinations are deterministic after direct entry/reload and preserve valid academic choices',()=>{
  const base='subject=1&block=2&category=3&subjectsPage=2&blocksPage=3&categoriesPage=4&difficulty=2&mode=PASAPALABRA&play=LOCAL';
- for(const step of ['prepare','mode','game']){const query=base+'&step='+step;const href=model.practiceBackHref(query);assert.equal(href,model.practiceBackHref(query));const q=new URL(href,'http://local').searchParams;for(const key of ['subject','block','category','difficulty','play','subjectsPage','blocksPage','categoriesPage'])assert.equal(q.get(key),new URLSearchParams(base).get(key));if(step==='prepare')assert.equal(q.get('step'),'mode');if(step==='mode')assert.equal(q.get('step'),'game');if(step==='game')assert.equal(q.get('edit'),'content');}
- const editing=new URL(model.practiceBackHref(base+'&step=prepare&edit=content'),'http://local').searchParams;assert.equal(editing.has('edit'),false);assert.equal(editing.get('step'),'prepare');
+ for(const step of ['prepare','mode','game']){const query=base+'&step='+step;const href=model.practiceBackHref(query);assert.equal(href,model.practiceBackHref(query));const q=new URL(href,'http://local').searchParams;for(const key of ['subject','block',...(step==='game'?[]:['category']),'difficulty','play','subjectsPage','blocksPage','categoriesPage'])assert.equal(q.get(key),new URLSearchParams(base).get(key));if(step==='prepare')assert.equal(q.get('step'),'mode');if(step==='mode')assert.equal(q.get('step'),'game');if(step==='game'){assert.equal(q.has('category'),false);assert.equal(q.has('edit'),false);}}
+ const editing=new URL(model.practiceBackHref(base+'&step=prepare&edit=content'),'http://local').searchParams;assert.equal(editing.has('edit'),false);assert.equal(editing.get('step'),'game');assert.equal(editing.has('category'),false);assert.equal(editing.get('block'),'2');
  assert.equal(model.practiceBackHref('subject=1&subjectsPage=2'),'/dashboard?subjectsPage=2');assert.equal(model.practiceBackHref(''),'/dashboard');
  const parent=new URL(model.practiceBackHref('subject=1&block=2&difficulty=2'),'http://local').searchParams;assert.equal(parent.get('subject'),'1');assert.equal(parent.has('block'),false);assert.equal(parent.get('difficulty'),'2');
 });
@@ -86,3 +86,19 @@ test('game choice shows category totals before difficulty while preserving the U
 test('a rejected direct category link returns to its content parent instead of cycling invalid steps',async()=>{const h=harness({query:'subject=1&block=2&category=999&mode=PASAPALABRA&play=LOCAL&difficulty=2',getStatus:404});try{await h.boot();const back=h.find(n=>n.props?.href&&n.props['aria-label']==='Volver al paso anterior');const q=new URL(back.props.href,'http://local').searchParams;assert.equal(q.has('category'),false);assert.equal(q.get('block'),'2');assert.equal(q.get('subject'),'1');assert.equal(q.get('difficulty'),'2');assert.equal(h.calls.length,0);assert.match(h.html(),/no está disponible/);}finally{h.close();}});
 
  test('unavailable game has no arrow or link decoration',async()=>{const h=harness({query:'subject=1&block=2&category=3&step=game',count:0});try{await h.boot();const card=h.find(n=>n.type==='button'&&n.props['aria-label']==='Elegir Trivial');const html=renderToStaticMarkup(card);assert.match(html,/No disponible/);assert.doesNotMatch(html,/→|group-hover:underline/);}finally{h.close();}});
+
+
+test('Back from category preparation reaches subject selection without cycling',()=>{
+ for(const tail of ['', '&mode=TRIVIAL&step=game', '&mode=TRIVIAL&step=prepare', '&mode=PASAPALABRA&play=ONLINE&step=prepare', '&mode=PASAPALABRA&play=LOCAL&step=mode', '&mode=TRIVIAL&edit=content']){
+  let url='/practicar?subject=4&block=5&category=21&subjectsPage=2&blocksPage=3&categoriesPage=4&difficulty=2'+tail;
+  const seen=new Set();
+  while(!url.startsWith('/dashboard')){
+   assert.ok(!seen.has(url),'Back must not revisit '+url);seen.add(url);assert.ok(seen.size<8);
+   const query=new URL(url,'http://local').searchParams;
+   assert.equal(model.practiceQuery(query).valid,true);
+   assert.equal(query.get('difficulty'),'2');assert.equal(query.get('subjectsPage'),'2');
+   url=model.practiceBackHref(query.toString());
+  }
+  assert.equal(url,'/dashboard?subjectsPage=2');
+ }
+});

@@ -1,4 +1,5 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 import {useEffect,useRef,useState} from 'react';
 import {isAxiosError} from 'axios';
 import Link from 'next/link';
@@ -22,7 +23,7 @@ export default function TrivialBoardReview(){
  const options=[{value:'none',label:'Sin vincular'},...destinations.flatMap(d=>d.items.map(x=>({value:`${x.kind}:${x.id}`,label:destinationLabel(x)})))];
  const visibleCells=board?.cells.slice(page*20,page*20+20)??[];
  return <div className="min-h-screen bg-background text-slate-900"><header className="site-header"><nav aria-label="Revisión docente de Trivial" className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-4"><Brand/><ProfileMenu/></nav></header>
- <main className="mx-auto max-w-7xl space-y-5 px-5 py-5"><Link href="/dashboard" className="text-link inline-flex min-h-11 items-center gap-2"><ArrowLeftIcon/>Volver al panel</Link>
+ <main className="mx-auto max-w-7xl space-y-5 px-5 py-5"><ReturnLink href="/dashboard" className="text-link inline-flex min-h-11 items-center gap-2"><ArrowLeftIcon/>Volver al panel</ReturnLink>
  <h1 className="text-2xl font-black text-blue-950">Tablero y cobertura de Trivial</h1><p>Revisión docente de solo lectura. No crea partidas ni modifica contenido.</p>
  {loading&&<p role="status">Consultando tablero y destinos…</p>}{error&&<div><p role="alert" className="notice-error">{error}</p>{sessionError?<Link className="text-link" href="/login">Iniciar sesión</Link>:!board&&error!=='Acceso exclusivo para docentes y administradores.'?<button className="button-secondary mt-2" type="button" onClick={()=>{setLoading(true);setError('');setAllowed(false);setSessionError(false);setAttempt(n=>n+1);}}>Reintentar carga</button>:null}</div>}
  {allowed&&board&&report&&!loading&&<>

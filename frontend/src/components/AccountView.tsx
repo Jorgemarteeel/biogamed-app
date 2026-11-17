@@ -1,10 +1,10 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {isAxiosError} from 'axios';
 import {useRouter} from 'next/navigation';
 import Brand from '@/components/Brand';
 import ProfileMenu from '@/components/ProfileMenu';
-import Link from 'next/link';
 import {ArrowLeftIcon} from '@/components/BackLink';
 import api,{getCurrentUser,type UserResponse} from '@/services/api';
 const roles={student:'Estudiante',teacher:'Docente',admin:'Administrador'};
@@ -26,7 +26,7 @@ export default function AccountView(){
  async function savePassword(event:FormEvent){event.preventDefault();if(locked.current)return;setPasswordError('');const length=Array.from(password).length;if(!current||Array.from(current).length>255||length<8||length>255){setPasswordError('Introduce la contraseña actual y una nueva de entre 8 y 255 caracteres.');return;}if(password!==confirmation){setPasswordError('La nueva contraseña y su confirmación no coinciden.');return;}
   locked.current=true;setBusy(true);const token=window.localStorage.getItem('token');try{await api.post('/auth/me/password',{current_password:current,new_password:password,confirmation});setCurrent('');setPassword('');setConfirmation('');if(window.localStorage.getItem('token')===token)window.localStorage.removeItem('token');router.replace('/login?password=changed');}catch(error){setPasswordError(failure(error));}finally{locked.current=false;setBusy(false);}}
  return <div className="min-h-screen bg-background text-slate-900"><header className="site-header"><nav aria-label="Mi cuenta" className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-5"><Brand/><ProfileMenu name={user?.name}/></nav></header>
- <main className="mx-auto max-w-3xl space-y-4 px-5 py-5"><Link href="/dashboard" className="text-link inline-flex min-h-11 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"><ArrowLeftIcon/>Volver al panel</Link><h1 className="text-3xl font-black text-blue-950">Mi cuenta</h1>
+ <main className="mx-auto max-w-3xl space-y-4 px-5 py-5"><ReturnLink href="/dashboard" className="text-link inline-flex min-h-11 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"><ArrowLeftIcon/>Volver al panel</ReturnLink><h1 className="text-3xl font-black text-blue-950">Mi cuenta</h1>
  {loading&&<p role="status">Cargando tu cuenta…</p>}{loadError&&<div><p role="alert">No se pudo cargar tu cuenta. Si tu sesión ha caducado, inicia sesión de nuevo.</p><button type="button" className="button-secondary" onClick={()=>{setLoading(true);setAttempt(v=>v+1);}}>Reintentar</button></div>}
  {user&&!loadError&&<>
  <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="account-data-heading">

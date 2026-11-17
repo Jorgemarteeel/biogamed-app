@@ -1,4 +1,5 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -193,7 +194,7 @@ export function PasapalabraRoom({ id }: {
         </>:<p role="status" className="font-bold text-blue-950">{room.status==='CANCELLED'?'Sala cancelada.':room.status==='EXPIRED'?'Sala caducada.':'Abriendo partida…'}</p>}
         {uncertain&&<button className="button-primary" disabled={busy} onClick={()=>act(pending.current!.kind)}>Reintentar la misma operación</button>}
         <details className={layout.help}><summary>Cómo funciona la sala</summary><p>Dispones de 30 minutos desde su creación para iniciar. Si el segundo jugador sale, ambos tendréis que confirmar de nuevo. La lista muestra pertenencia a la sala, no presencia en línea.</p></details>
-        <Link className="text-link inline-flex min-h-8 items-center text-sm" href="/pasapalabra">Volver a elegir modalidad</Link>
+        <ReturnLink className="text-link inline-flex min-h-8 items-center text-sm" href="/pasapalabra">Volver a elegir modalidad</ReturnLink>
       </section>}
     </Frame>;
 }

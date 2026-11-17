@@ -55,8 +55,8 @@ export function practiceBackHref(query: string, unavailable=false) {
     if(ids.block)return practiceHref(query,{block:undefined,categoriesPage:undefined,edit:undefined,step:"game",focus:"prepare"});
     return `/dashboard${ids.subjectsPage?`?subjectsPage=${ids.subjectsPage}`:""}`;
   }
-  if(parsed.get("edit")==="content")return practiceHref(query,{edit:undefined,focus:"prepare"});
-  if(!explicitMode||step==="game")return practiceHref(query,{edit:"content",focus:"prepare"});
+  // Back ascends to the parent catalogue; Conservar contenido cancels editing.
+  if(parsed.get("edit")==="content"||!explicitMode||step==="game")return practiceHref(query,{category:undefined,edit:undefined,step:"game",focus:"prepare"});
   if(mode==="PASAPALABRA"&&(!explicitPlay||step==="mode"))return practiceHref(query,{step:"game",focus:"prepare"});
   return practiceHref(query,{step:mode==="PASAPALABRA"?"mode":"game",focus:"prepare"});
 }

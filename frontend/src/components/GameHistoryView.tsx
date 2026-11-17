@@ -1,4 +1,5 @@
 "use client";
+import ReturnLink from "@/components/ReturnLink";
 
 import {academicLabel} from "@/lib/academic";
 import { useEffect, useState } from "react";
@@ -70,7 +71,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
       </nav>
     </header>
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14" aria-busy={state === "loading"}>
-      <Link href="/dashboard" className="text-link inline-flex min-h-11 items-center">← Volver al panel</Link>
+      <ReturnLink href="/historial" className="text-link inline-flex min-h-11 items-center">← Volver al historial</ReturnLink>
       <p className="mt-6 text-xs font-bold uppercase tracking-widest text-orange-700">Tu historial de práctica</p>
       <h1 className="mt-3 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl">Detalle de partida</h1>
       <section aria-label="Partida anterior" className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
