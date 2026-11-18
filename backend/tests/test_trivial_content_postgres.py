@@ -312,23 +312,27 @@ def test_migration_keeps_previous_movement_and_no_backfill(pg,clock):
     from alembic import command
     from alembic.config import Config
     from test_trivial_persistence_postgres import setup
+    from migration_fixtures import origin_schema, copy_synthetic_rows, snapshot
     users=accounts(pg);state,_=setup(pg,users)
     moved,_=move(pg,users[0],state,roll=6)
-    def snapshot():
-        with pg.connect() as conn:
-            return {table:conn.scalar(text(f"SELECT jsonb_agg(to_jsonb(t)) FROM {table} t"))
-                    for table in ('trivial_board_matches','trivial_board_participants','trivial_board_turns','trivial_board_operations')}
-    before=snapshot()
-    with patch('app.database.engine',pg):
-        command.downgrade(Config('alembic.ini'),'f75e841962a7')
-        command.upgrade(Config('alembic.ini'),'a86f952a73b8')
-    assert snapshot()==before
-    with Session(pg) as db:
-        assert db.scalar(text('SELECT version_num FROM alembic_version'))=='a86f952a73b8'
-        assert db.scalar(select(func.count()).select_from(Copy))==0
-        assert db.scalar(select(func.count()).select_from(Presentation))==0
-        assert persistence.read_state(db,db.get(User,users[0]),state['id'])==moved['state']
-
+    tables=('trivial_board_matches','trivial_board_participants','trivial_board_turns','trivial_board_operations')
+    with origin_schema(pg,'f75e841962a7') as historical:
+        copy_synthetic_rows(pg,historical,('users',*tables))
+        before=snapshot(historical,tables)
+        with patch('app.database.engine',historical):
+            command.upgrade(Config('alembic.ini'),'a86f952a73b8')
+        assert snapshot(historical,tables)==before
+        with historical.connect() as connection:
+            assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='a86f952a73b8'
+            assert connection.scalar(text('SELECT count(*) FROM trivial_board_content_copies'))==0
+            assert connection.scalar(text('SELECT count(*) FROM trivial_board_presentations'))==0
+        # Current ORM columns are checked only after their migrations exist.
+        with patch('app.database.engine',historical):
+            command.upgrade(Config('alembic.ini'),'head')
+        with Session(historical) as db:
+            assert db.scalar(select(func.count()).select_from(Copy))==0
+            assert db.scalar(select(func.count()).select_from(Presentation))==0
+            assert persistence.read_state(db,db.get(User,users[0]),state['id'])==moved['state']
 
 
 def test_freeze_refreshes_cached_question_under_lock(pg,clock):

@@ -38,19 +38,19 @@ El estado contiene posiciones y grupos de orden, índice activo, fase, elección
 
 El manual contempla Jeringuillas consecutivas, pero en su ciclo están a ocho casillas y un d6 no permite llegar directamente de una a otra. El motor vuelve a resolver cada llegada y permite nuevas Jeringuillas en el mismo turno; se prueba el recorrido válido con una pregunta acertada intermedia. No se inventa un dado de ocho ni se altera el tablero para simular la condición imposible. Análogamente, el primer Virus es 8 y la tirada máxima 6 deja como mínimo 2: el límite defensivo a salida está implementado, pero ningún Virus real del tablero permite rebasarla. No se fabrica un Virus en una casilla anterior.
 
-## Compatibilidad y futura persistencia (no implementada)
+## Compatibilidad e integración
 
-`trivial_movement.py` y sus pruebas son compatibilidad del HTML para el servicio interno `trivial_persistence` y las copias existentes. No hay partida pública operativa que se cambie en esta entrega. No se modifican esos estados, versiones o servicios ni se crean nuevos mediante el motor manual. Los dos tipos de estado se rechazan mutuamente. El nuevo motor no está importado por routers ni por servicios de persistencia; no constituye un segundo modo jugable.
+`trivial_movement.py` y sus pruebas son compatibilidad del HTML para el servicio interno `trivial_persistence` y las copias existentes. No hay partida pública operativa que se cambie en esta entrega. No se modifican esos estados, versiones o servicios ni se crean nuevos mediante el motor manual. Los dos tipos de estado se rechazan mutuamente. El motor del manual se utiliza ahora en un [servicio interno de persistencia](inmunoquest-persistence.md), separado del adaptador HTML. No está importado por routers y no constituye un modo jugable público.
 
 La integración posterior deberá:
 
-- Guardar versión de reglas/tablero y estado coherente del manual; ampliar las validaciones actuales de 1–4 local/2–4 online a la preparación acordada de 2–6 y registrar rondas/desempates. Conservar lectura/ejecución histórica solo de versiones que lo necesiten; no usar flags de penalización heredados en el manual.
+- La persistencia interna del manual ya guarda versiones, estado, preparación de 2–6 y rondas/desempates. Conserva la interpretación histórica separada y no utiliza sus flags de penalización. Falta conectarla con la preparación jugable y el contenido, sin reinterpretar estados.
 - Adaptar bancos: las copias antiguas restringen a Linfocito/Macrófago/Matraz/Jeringuilla y no admiten Bazo/ADN. El formato abierto y la respuesta de referencia requieren otra versión de copia. No reconstruir copias ausentes ni modificar las existentes.
 - Sustituir para las partidas nuevas el plazo obligatorio de 60 segundos de las presentaciones antiguas: deadline_at actualmente no es nulo y tiene una restricción de fecha. El manual no debe pasar por ese contrato ni recibir un plazo inventado. Conservar tiempos históricos.
 - Reutilizar autenticación vigente, bloqueo de partida, versión y recibos idempotentes. La futura capa autenticada obtendrá al actor desde get_current_user, comprobará participante/turno/lector y generará los dados del servidor. Ningún endpoint permitirá al cliente decidirlos. El motor puro no autoriza ni protege por sí solo reintentos de red. Sus acciones siempre afectan al participante activo derivado del orden: no reciben un actor autenticado ni demuestran quién las solicita. Rechaza identidades/órdenes/índices incoherentes y acciones incompatibles con la fase; la autorización de la cuenta y del lector corresponde al futuro servicio.
 - Asociar la evaluación humana con la presentación y el contenido congelado. La fase QUESTION de este motor expresa una necesidad de pregunta, no demuestra que alguien haya recibido una carta.
 
-No se añade ahora esquema, migración, selector/consumo/repetición de cartas, permisos del lector, salas, cronómetro, resultados históricos nuevos o frontend. No se alteran Trivial individual, Pasapalabra ni la gestión de contenidos.
+La entrega original del motor no añadió esquema ni migración; la persistencia interna posterior se documenta por separado. Siguen fuera selección/consumo/repetición de cartas, permisos del lector, salas, cronómetro, resultados históricos nuevos y frontend. No cambian reglas de Trivial individual, Pasapalabra ni gestión de contenidos.
 
 ## Verificación
 

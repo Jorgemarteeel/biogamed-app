@@ -356,10 +356,8 @@ def test_invalid_setup_account_and_host_roll_back(pg):
 
 
 def test_additive_migration_preserves_existing_rows_and_guards_data(pg):
-    from app.models import Topic, Question
-    from datetime import datetime, timezone
-    with patch('app.database.engine',pg):
-        command.downgrade(Config('alembic.ini'),'e64f73085196')
+    from app.models import Topic, Question, Base
+    from migration_fixtures import origin_schema, copy_synthetic_rows, snapshot, assert_guarded_downgrade
     ids=accounts(pg)
     with Session(pg) as db:
         topic=Topic(name='Synthetic existing bank'); db.add(topic); db.flush()
@@ -369,7 +367,6 @@ def test_additive_migration_preserves_existing_rows_and_guards_data(pg):
         db.add(session); db.flush()
         db.add(AnswerLog(game_session_id=session.id,question_id=q.id,question_text='Synthetic historical copy',question_type='TRIVIAL',options=['A','B'],selected_index=0,correct_option_index=0,is_correct=True))
         db.commit()
-        # Existing shared Pasapalabra state and its private copies must also survive.
         db.add_all([Question(topic_id=topic.id,text=f'Synthetic Pasapalabra {i}',correct_answer='Aorta',exact_word='Aorta',letter='A',question_type='PASAPALABRA') for i in range(40)])
         db.commit()
         from app.services import pasapalabra
@@ -377,29 +374,38 @@ def test_additive_migration_preserves_existing_rows_and_guards_data(pg):
         shared=pasapalabra.start_local(db,db.get(User,ids[0]),LocalStart(operation_id=uuid4(),topic_id=topic.id,guest_name='Synthetic historical guest'))
         participant=shared['active_participant']
         pasapalabra.execute(db,db.get(User,ids[0]),shared['id'],'answer',Answer(operation_id=uuid4(),expected_version=shared['version'],participant=participant,number=1,text_answer='Aorta'))
-    def snapshot():
-        with pg.connect() as connection:
-            return {name:connection.scalar(text(f'SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY id),\'[]\'::jsonb) FROM {name} t'))
-                    for name in ('users','topics','questions','game_engine_sessions','answer_logs','pasapalabra_matches','pasapalabra_participants','pasapalabra_questions','pasapalabra_commands')}
-    before=snapshot()
-    with patch('app.database.engine',pg):
-        command.upgrade(Config('alembic.ini'),'f75e841962a7')
-    assert snapshot()==before
-    with pg.connect() as connection:
-        assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='f75e841962a7'
-    from app.models import Base
-    for name in ('trivial_board_matches','trivial_board_participants','trivial_board_turns','trivial_board_operations'):
-        actual={c['name']:c['nullable'] for c in inspect(pg).get_columns(name)}
-        assert actual=={c.name:c.nullable for c in Base.metadata.tables[name].columns}
-    # Current services require current head; preserve the explicit f75 schema
-    # assertions above, then upgrade before exercising the runtime adapter.
-    with patch('app.database.engine',pg):
-        command.upgrade(Config('alembic.ini'),'head')
-    state,_=setup(pg,ids)
-    with patch('app.database.engine',pg),pytest.raises(RuntimeError,match='Cannot discard'):
-        command.downgrade(Config('alembic.ini'),'e64f73085196')
-    with Session(pg) as db:
-        assert service.read_state(db,db.get(User,ids[0]),state['id'])==state
+    tables=('users','topics','questions','pasapalabra_matches','game_engine_sessions',
+            'pasapalabra_participants','pasapalabra_questions','pasapalabra_commands','answer_logs')
+    with origin_schema(pg,'e64f73085196') as historical:
+        copy_synthetic_rows(pg,historical,tables)
+        before=snapshot(historical,tables)
+        with patch('app.database.engine',historical):
+            command.upgrade(Config('alembic.ini'),'f75e841962a7')
+        assert snapshot(historical,tables)==before
+        with historical.connect() as connection:
+            assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='f75e841962a7'
+        board_tables=('trivial_board_matches','trivial_board_participants','trivial_board_turns','trivial_board_operations')
+        for name in board_tables:
+            actual={c['name']:c['nullable'] for c in inspect(historical).get_columns(name)}
+            # Exact schema at f75, before the additive manual-state migration.
+            expected={c.name:c.nullable for c in Base.metadata.tables[name].columns
+                      if not (name=='trivial_board_matches' and c.name in {'manual_state','subject_id'})}
+            if name=='trivial_board_participants':
+                expected.update(position=False,phase=False,skip_next_own_turn=False)
+            assert actual==expected
+        with patch('app.database.engine',historical):
+            command.upgrade(Config('alembic.ini'),'head')
+        for name in board_tables:
+            assert {c['name']:c['nullable'] for c in inspect(historical).get_columns(name)}=={c.name:c.nullable for c in Base.metadata.tables[name].columns}
+        state,_=setup(historical,ids)
+        assert_guarded_downgrade(historical,'f75e841962a7')
+        # The later no-downgrade policy remains enforced too, without masking
+        # the separate assertion of the original f75 data-loss guard above.
+        with patch('app.database.engine',historical),pytest.raises(RuntimeError,match='Restore an isolated backup'):
+            command.downgrade(Config('alembic.ini'),'e64f73085196')
+        with Session(historical) as db:
+            assert service.read_state(db,db.get(User,ids[0]),state['id'])==state
+
 
 @pytest.mark.parametrize('field,bad,expected', [
     ('state_schema_version',2,'UNSUPPORTED_SAVED_VERSION'),

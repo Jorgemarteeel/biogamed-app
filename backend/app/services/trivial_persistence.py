@@ -15,7 +15,7 @@ from app.models import User
 from app.models.trivial_board import TrivialBoardMatch as Match, TrivialBoardParticipant as Participant, TrivialBoardTurn as Turn, TrivialBoardOperation as Operation
 from app.schemas.trivial_board import Board
 from app.schemas.trivial_persistence import InternalSetup, MoveCommand, SavedMovementConfiguration
-from app.services.pasapalabra import server_now
+from app.utils.server_time import server_now
 
 RULES_VERSION = 'trivial-movement-partial-v1'
 RNG = SystemRandom()

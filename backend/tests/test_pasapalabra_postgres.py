@@ -105,6 +105,7 @@ def test_real_concurrent_commands(postgres, race):
 def test_additive_migration_keeps_old_rows_and_guards_downgrade(postgres):
     from app.services.game import start_game_session, submit_game_session
     from app.schemas.game import UserAnswer
+    from migration_fixtures import origin_schema, copy_synthetic_rows, snapshot, column_names, assert_guarded_downgrade
     with Session(postgres) as db:
         user = User(name="Legacy", email="legacy@example.test", hashed_password="unused")
         topic = Topic(name="Trivial aislado")
@@ -117,13 +118,19 @@ def test_additive_migration_keeps_old_rows_and_guards_downgrade(postgres):
         assert submit_game_session(db, user, game.session_id, [UserAnswer(question_id=game.questions[0].id, selected_index=0)]).score == 1
         session = db.get(GameSession, game.session_id)
         assert session.shared_match_id is None and session.is_completed
-    with patch("app.database.engine", postgres):
-        alembic_command.downgrade(Config("alembic.ini"), "e2b47c91a306")
-    with postgres.connect() as connection:
-        assert connection.execute(text("SELECT score,is_completed FROM game_engine_sessions")).one() == (1, True)
-    with patch("app.database.engine", postgres):
-        alembic_command.upgrade(Config("alembic.ini"), "head")
-    assert "shared_match_id" in {c["name"] for c in inspect(postgres).get_columns("game_engine_sessions")}
-    setup_match(postgres)
-    with patch("app.database.engine", postgres), pytest.raises(RuntimeError, match="Cannot discard"):
-        alembic_command.downgrade(Config("alembic.ini"), "e2b47c91a306")
+    tables=('users','topics','questions','game_engine_sessions','answer_logs')
+    with origin_schema(postgres,'e2b47c91a306') as historical:
+        copy_synthetic_rows(postgres,historical,tables,omitted_defaults={('users','auth_version'):0})
+        before=snapshot(historical,tables)
+        original_columns=column_names(historical,tables)
+        with historical.connect() as connection:
+            assert connection.execute(text("SELECT score,is_completed FROM game_engine_sessions")).one() == (1, True)
+        with patch("app.database.engine", historical):
+            alembic_command.upgrade(Config("alembic.ini"), "head")
+        assert snapshot(historical,tables,columns=original_columns)==before
+        assert "shared_match_id" in {c["name"] for c in inspect(historical).get_columns("game_engine_sessions")}
+        with Session(historical) as db:
+            assert db.get(GameSession,game.session_id).shared_match_id is None
+            assert db.get(GameSession,game.session_id).score==1
+        setup_match(historical)
+        assert_guarded_downgrade(historical,'f17a20b30c41')

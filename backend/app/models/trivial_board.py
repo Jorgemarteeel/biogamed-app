@@ -1,4 +1,4 @@
-"""Internal partial Trivial persistence; deliberately unrelated to GameSession."""
+"""Shared internal board aggregates with explicit legacy/manual state versions; no GameSession."""
 from datetime import datetime
 from uuid import UUID
 
@@ -26,6 +26,9 @@ class TrivialBoardMatch(Base):
     state_schema_version: Mapped[int] = mapped_column(Integer)
     board_snapshot: Mapped[dict] = mapped_column(JSON)
     configuration: Mapped[dict] = mapped_column(JSON)
+    # Manual state is canonical; the HTML participant state stays NULL for manual rows.
+    manual_state: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    subject_id: Mapped[int | None] = mapped_column(ForeignKey('subjects.id'), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
@@ -33,7 +36,10 @@ class TrivialBoardParticipant(Base):
     __tablename__ = 'trivial_board_participants'
     __table_args__ = (
         UniqueConstraint('match_id', 'user_id'),
-        CheckConstraint('slot BETWEEN 1 AND 4 AND position BETWEEN 1 AND 140'),
+        CheckConstraint('slot BETWEEN 1 AND 6 AND (position IS NULL OR position BETWEEN 1 AND 140)', name='ck_trivial_participant_bounds'),
+        CheckConstraint('(position IS NULL AND phase IS NULL AND skip_next_own_turn IS NULL) OR '
+                        '(position IS NOT NULL AND phase IS NOT NULL AND skip_next_own_turn IS NOT NULL)',
+                        name='ck_trivial_participant_state_shape'),
         CheckConstraint("phase IN ('READY','QUESTION_REQUIRED','RULE_PENDING','TURN_ENDED','GOAL_REACHED')"),
         CheckConstraint("NOT skip_next_own_turn OR phase = 'TURN_ENDED'"),
     )
@@ -41,9 +47,9 @@ class TrivialBoardParticipant(Base):
     slot: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[UUID | None] = mapped_column(ForeignKey('users.id'), index=True)
     name: Mapped[str] = mapped_column(String(255))
-    position: Mapped[int] = mapped_column(Integer)
-    phase: Mapped[str] = mapped_column(String(24))
-    skip_next_own_turn: Mapped[bool] = mapped_column(Boolean)
+    position: Mapped[int | None] = mapped_column(Integer)
+    phase: Mapped[str | None] = mapped_column(String(24))
+    skip_next_own_turn: Mapped[bool | None] = mapped_column(Boolean)
 
 
 class TrivialBoardTurn(Base):

@@ -10,7 +10,7 @@ from app.schemas.trivial_persistence import PresentationCommand
 from app.services.game_questions import playable_question_filter
 from app.services.game import _classification
 from app.services.trivial_board import destination
-from app.services.pasapalabra import server_now, utc
+from app.utils.server_time import server_now, utc
 from app.services import trivial_persistence as persistence
 
 NORMAL_SECONDS = 60

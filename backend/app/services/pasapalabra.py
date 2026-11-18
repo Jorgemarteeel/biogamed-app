@@ -1,9 +1,9 @@
 """One transactional engine for shared Pasapalabra; local transport first."""
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from random import SystemRandom
 
 from fastapi import HTTPException
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import Session, object_session
 
 from app.models import AnswerLog, GameSession, Question, Topic, User
@@ -12,22 +12,13 @@ from app.schemas.game_snapshot import StoredQuestion, SharedQuestionSnapshot
 from app.services.game_questions import selectable_questions
 from app.services.content_selection import resolve, selection_dump
 from app.utils.answers import is_accepted_answer
+from app.utils.server_time import server_now, utc
 
 COUNT = 20
 TIME_MS = 600000
 RULES = "pasapalabra-local-v1"
 RNG = SystemRandom()
 UNRESOLVED = {"PENDING", "PASSED"}
-
-
-def server_now(db):
-    value = (db.scalar(select(func.clock_timestamp())) if db.bind.dialect.name == "postgresql"
-             else datetime.now(timezone.utc))
-    return value.replace(microsecond=(value.microsecond // 1000) * 1000)
-
-
-def utc(value):
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
 
 
 def counts(participant):
