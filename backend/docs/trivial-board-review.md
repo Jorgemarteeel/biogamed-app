@@ -1,3 +1,5 @@
+> Referencia histórica del HTML y su persistencia parcial. Las reglas nuevas del manual se documentan en [inmunoquest-rules.md](inmunoquest-rules.md); los pendientes y efectos que figuran abajo no describen esa nueva versión. No se convierten estados históricos.
+
 # Trivial — Entrega A: tablero y cobertura verificable
 
 ## Alcance

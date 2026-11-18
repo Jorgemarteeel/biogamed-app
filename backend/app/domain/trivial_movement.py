@@ -1,4 +1,8 @@
-"""Pure deterministic movement. No HTTP, ORM, RNG, question selection or I/O writes."""
+"""Legacy HTML rules, retained for existing partial persistence and its snapshots.
+
+Not the manual engine: new manual rules live in inmunoquest_rules. Do not convert
+stored states or route manual games through this compatibility implementation.
+"""
 from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
