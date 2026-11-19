@@ -50,11 +50,6 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
     return () => { active = false; };
   }, [router, sessionId, attempt]);
 
-  function logout() {
-    window.localStorage.removeItem("token");
-    router.replace("/login");
-  }
-
   const mode = game?.game_mode === "PASAPALABRA" ? "Pasapalabra" : "Trivial";
   const context = game ? describeContentContext(game.content_context) : null;
   const date = game ? new Date(game.created_at) : null;
@@ -67,7 +62,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
     <header className="site-header">
       <nav aria-label="Partida anterior" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-12">
         <Brand />
-        <div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button onClick={logout} className="button-primary">Cerrar sesión</button></div>
+        <ProfileMenu />
       </nav>
     </header>
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14" aria-busy={state === "loading"}>

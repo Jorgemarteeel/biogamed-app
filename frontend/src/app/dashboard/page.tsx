@@ -84,25 +84,13 @@ export default function DashboardPage() {
     setAttempt((value) => value + 1);
   }
 
-  function logout() {
-    window.localStorage.removeItem("token");
-    setUser(null);
-    setTopics([]);
-    setGames([]);
-    setLoading(true);
-    router.replace("/login");
-  }
-
   return (
     <div className="min-h-screen bg-background font-sans text-slate-900">
       <header className="site-header">
         <div className="mx-auto flex max-w-[68rem] flex-wrap items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-12">
           <Brand />
-          <div className="flex w-full min-w-0 items-center justify-between gap-4 sm:w-auto">
+          <div className="flex w-full min-w-0 items-center justify-end gap-4 sm:w-auto">
             <ProfileMenu name={user?.name} role={user?.role} />
-            <button onClick={logout} className="button-primary shrink-0">
-              Cerrar sesión
-            </button>
           </div>
         </div>
       </header>

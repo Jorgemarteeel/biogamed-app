@@ -136,20 +136,12 @@ export default function GameStart({ topicId, mode }: {
     }
   }
 
-  function logout() {
-    window.localStorage.removeItem("token");
-    mounted.current = false;
-    setSession(null);
-    setAuthenticated(false);
-    router.replace("/login");
-  }
-
   return (
     <div className="min-h-screen bg-background text-slate-900">
       <header className="site-header">
         <nav aria-label="Partida" className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-12">
           <Brand />
-          <div className="flex flex-wrap items-center gap-2"><ProfileMenu /><button onClick={logout} className="button-primary">Cerrar sesión</button></div>
+          <ProfileMenu />
         </nav>
       </header>
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">

@@ -61,3 +61,32 @@ test('examples explain options and a numbered clue without pretending to be play
   assert.match(cards[1],/Casilla 7/);
   assert.match(cards[1],/Pista: Unidad básica de los seres vivos/);
 });
+test('the BioGaMed logo leads guests to the landing and signed-in users to the panel', () => {
+  const guestWindow = global.window;
+  let token = null;
+  let browser = false;
+  try {
+    const useSessionToken = load('../src/lib/session-token.ts', {
+      react: {
+        ...React,
+        useSyncExternalStore: (_subscribe, snapshot, serverSnapshot) =>
+          browser ? snapshot() : serverSnapshot(),
+      },
+    });
+    const Brand = load('../src/components/Brand.tsx', {
+      'next/link': mocks['next/link'],
+      '@/lib/session-token': useSessionToken,
+    });
+    const render = () => renderToStaticMarkup(React.createElement(Brand));
+    assert.match(render(), /href="\/" aria-label="BioGaMed, página de inicio"/);
+    global.window = {localStorage: {getItem: key => key === 'token' ? token : null}};
+    browser = true;
+    assert.match(render(), /href="\/" aria-label="BioGaMed, página de inicio"/);
+    token = 'test-session';
+    assert.match(render(), /href="\/dashboard" aria-label="BioGaMed, volver al panel"/);
+    token = null;
+    assert.match(render(), /href="\/" aria-label="BioGaMed, página de inicio"/);
+  } finally {
+    global.window = guestWindow;
+  }
+});

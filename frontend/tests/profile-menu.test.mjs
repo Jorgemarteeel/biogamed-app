@@ -7,17 +7,22 @@ import {fileURLToPath} from 'node:url';
 import ts from 'typescript';
 import React from 'react';
 
-function harness(name,role='student'){
- const slots=[],pending=[],listeners=new Map();let cursor=0,focuses=0;
+function harness(name,role='student',signedIn=true){
+ const slots=[],pending=[],listeners=new Map(),routes=[],removed=[];let cursor=0,focuses=0;
  const hooks={...React,useState(initial){const i=cursor++;if(!(i in slots))slots[i]=initial;return[slots[i],v=>slots[i]=typeof v==='function'?v(slots[i]):v];},useRef(initial){const i=cursor++;return slots[i]??={current:initial};},useEffect(effect,deps){const i=cursor++;const prev=slots[i];if(!prev||deps.some((v,j)=>v!==prev.deps[j])){prev?.cleanup?.();slots[i]={deps};pending.push(()=>{slots[i].cleanup=effect();});}}};
- global.window={addEventListener(){},removeEventListener(){}};
+ global.window={
+  addEventListener(){},removeEventListener(){},
+  localStorage:{removeItem(key){removed.push(key);signedIn=false;}},
+  sessionStorage:{removeItem(key){removed.push(key);}},
+  location:{replace(path){routes.push(path);}},
+ };
  global.document={addEventListener:(k,f)=>listeners.set(k,f),removeEventListener:k=>listeners.delete(k)};
  const file=fileURLToPath(new URL('../src/components/ProfileMenu.tsx',import.meta.url)),m=new Module(file);m.filename=file;m.paths=Module._nodeModulePaths(path.dirname(file));const old=Module._load;
- try{Module._load=function(r,p,main){if(r==='react')return hooks;if(r==='next/link')return 'a';if(r==='@/services/api')return {getCurrentUser:async()=>({name,role})};if(r==='@/lib/subjects')return {canManageSubjects:r=>['teacher','admin'].includes(r)};return old.call(this,r,p,main);};m._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,file);}finally{Module._load=old;}
+ try{Module._load=function(r,p,main){if(r==='react')return hooks;if(r==='next/link')return 'a';if(r==='@/lib/session-token')return ()=>signedIn;if(r==='@/services/api')return {getCurrentUser:async()=>({name,role})};if(r==='@/lib/subjects')return {canManageSubjects:r=>['teacher','admin'].includes(r)};return old.call(this,r,p,main);};m._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,file);}finally{Module._load=old;}
  function all(n){return !n||typeof n!=='object'?[]:[n,...React.Children.toArray(n.props?.children).flatMap(all)];}
  function nodes(){cursor=0;const result=all(m.exports.default({name,role}));result.find(n=>n.type==='button').props.ref.current={focus:()=>focuses++};result[0].props.ref.current={contains:()=>false};return result;}
  async function flush(){nodes();pending.splice(0).forEach(f=>f());await new Promise(setImmediate);nodes();}
- return{nodes,flush,listeners,focuses:()=>focuses,toggle:()=>nodes().find(n=>n.type==='button').props.onClick()};
+ return{nodes,flush,listeners,routes,removed,focuses:()=>focuses,toggle:()=>nodes().find(n=>n.type==='button').props.onClick()};
 }
 
 test('long visible names retain their full accessible text and linked navigation state',async()=>{
@@ -34,4 +39,24 @@ test('Escape closes the menu and returns focus to its trigger without changing i
 test('outside click and navigation links close the menu',async()=>{
  const h=harness('Cuenta ficticia');await h.flush();h.toggle();await h.flush();h.listeners.get('pointerdown')({target:{}});await h.flush();assert.ok(!h.nodes().some(x=>x.type==='nav'));
  h.toggle();await h.flush();h.nodes().find(x=>x.props?.href==='/cuenta').props.onClick();await h.flush();assert.ok(!h.nodes().some(x=>x.type==='nav'));
+});
+
+test('sign out is offered inside the shared profile menu for every signed-in role', async () => {
+ for (const role of ['student','teacher','admin']) {
+  const h = harness('Cuenta ficticia', role);
+  await h.flush();
+  const signOut = () => h.nodes().find(node => node.type === 'button' && node.props.children === 'Cerrar sesión');
+  assert.equal(signOut(), undefined);
+  h.toggle();
+  await h.flush();
+  assert.ok(signOut());
+  signOut().props.onClick();
+  assert.deepEqual(h.removed, ['token','pasapalabra-return']);
+  assert.deepEqual(h.routes, ['/']);
+ }
+ const guest = harness('Sin sesión', 'student', false);
+ await guest.flush();
+ guest.toggle();
+ await guest.flush();
+ assert.ok(!guest.nodes().some(node => node.props?.children === 'Cerrar sesión'));
 });
