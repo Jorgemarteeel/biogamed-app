@@ -42,9 +42,15 @@ El manual contempla Jeringuillas consecutivas, pero en su ciclo están a ocho ca
 
 `trivial_movement.py` y sus pruebas son compatibilidad del HTML para el servicio interno `trivial_persistence` y las copias existentes. No hay partida pública operativa que se cambie en esta entrega. No se modifican esos estados, versiones o servicios ni se crean nuevos mediante el motor manual. Los dos tipos de estado se rechazan mutuamente. El motor del manual se utiliza ahora en un [servicio interno de persistencia](inmunoquest-persistence.md), separado del adaptador HTML. No está importado por routers y no constituye un modo jugable público.
 
-La persistencia interna del manual guarda versiones, estado, participantes y desempates. La [preparación automática](inmunoquest-decks.md) congela las copias abiertas v2 y los veinte órdenes iniciales. Las copias v1 del HTML conservan bancos, opciones y tiempos.
+Estado de la integración interna y tareas posteriores:
 
-QUESTION indica que el motor requiere una pregunta. Extracción, presentación sin plazo y evaluación del lector son entregas posteriores. La futura capa HTTP deberá obtener al actor desde get_current_user. El motor puro calcula las transiciones y los servicios internos se encargan de permisos, generación de tiradas y protección frente a reintentos.
+- La persistencia interna del manual ya guarda versiones, estado, preparación de 2–6 y rondas/desempates. Conserva la interpretación histórica separada y no utiliza sus flags de penalización. La preparación interna ya congela el contenido y los veinte mazos; falta la preparación jugable pública, sin reinterpretar estados.
+- Las [copias abiertas v2 y mazos](inmunoquest-decks.md) admiten los cinco bancos del manual. Las v1 del HTML conservan bancos, opciones y tiempos, sin reconstruir ni modificar registros antiguos. La [entrega interna de cartas](inmunoquest-cards.md) incorpora extracción, reserva, evaluación del lector y circulación sin modificar este motor.
+- La migración f3be4a7fc80d permite presentaciones v2 sin plazo exclusivamente para el manual. Las v1 siguen exigiendo los 60 segundos históricos y no se reinterpretan.
+- Los servicios internos reutilizan cuenta vigente, bloqueo de partida, versión y recibos idempotentes; autorizan participante, turno y lector, y generan los dados en servidor. La futura capa HTTP debe obtener al actor desde get_current_user. Ningún endpoint permitirá al cliente decidir las tiradas. El motor puro no autoriza ni protege por sí solo reintentos de red. Sus acciones afectan al participante activo derivado del orden: no reciben un actor autenticado ni demuestran quién las solicita. Rechaza identidades/órdenes/índices incoherentes y acciones incompatibles con la fase; la autorización pertenece a los servicios que lo coordinan.
+- El servicio de cartas asocia ya la evaluación humana con una presentación vigente y su contenido congelado. La fase QUESTION de este motor sigue expresando una necesidad de pregunta, no demuestra por sí sola que alguien haya recibido una carta.
+
+La entrega original del motor no añadió esquema ni migración; la persistencia y las cartas posteriores se documentan por separado. Siguen fuera API y salas, frontend, resultados personales e integración educativa. No se añade cronómetro. No cambian reglas de Trivial individual, Pasapalabra ni gestión de contenidos.
 
 ## Verificación
 

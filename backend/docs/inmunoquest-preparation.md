@@ -2,6 +2,8 @@
 
 > Estado posterior: el [motor del manual](inmunoquest-rules.md), su persistencia interna y la [preparación automática de mazos](inmunoquest-decks.md) están implementados internamente. No hay partida pública ni esta gestión habilita el inicio.
 
+> La ampliación interna de [cartas y evaluación del lector](inmunoquest-cards.md) conserva esta gestión y sus contratos; todavía no incorpora una pantalla jugable.
+
 Entrega desarrollada sobre main/a2119a1, conservando los seis commits anteriores. No hay partidas del manual ni retirada del cuestionario individual.
 
 ## Organización y acceso
@@ -93,7 +95,7 @@ La demo de reunión, instalación habitual e instalación limpia no se migran ni
 
 Durante este cierre solo se actualizaron las imágenes de frontend/backend del entorno aislado. No se aplicaron migraciones adicionales ni se confirmaron importaciones. El cotejo final de recuentos y huellas coincidió con el estado al comenzar el cierre: todas las filas previas permanecieron iguales (49 preguntas, 2 cuentas, 1 recibo y 0 partidas/respuestas), en c08b174c95da. Los CSV, capturas, credenciales y evidencias privadas permanecen fuera del repositorio. Los recursos PostgreSQL nuevos de prueba son sintéticos, propios y sin puertos; se retiran al finalizar, sin borrar registros del entorno de revisión.
 
-Para jugar a InmunoQuest desde la aplicación faltan la creación pública de partidas, extracción/presentación de cartas, lector/evaluación humana y modos local/online accesibles. La preparación de mazos y copias al crear la partida ya existe internamente. Esta entrega solo permite gestionar contenido y consultar disponibilidad. El Trivial individual permanece compatible y no se amplía.
+Para jugar a InmunoQuest desde la aplicación faltan el acceso público a las partidas y la interfaz de juego local y online. La preparación de mazos, presentación de cartas y evaluación del lector ya funcionan internamente. Esta entrega solo permite gestionar contenido y consultar disponibilidad. El Trivial individual permanece compatible y no se amplía.
 
 ## Revisión manual breve
 

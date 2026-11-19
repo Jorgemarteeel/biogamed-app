@@ -1,4 +1,4 @@
-"""Private frozen content and immutable arrivals. No answer/result records."""
+"""Private frozen content and immutable versioned presentations."""
 from datetime import datetime
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Integer, JSON, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -32,12 +32,21 @@ class TrivialPresentation(Base):
     __tablename__ = 'trivial_board_presentations'
     __table_args__ = (
         UniqueConstraint('match_id','arrival_operation_id'),
+        UniqueConstraint('match_id','id', name='uq_trivial_presentation_match_id'),
+        UniqueConstraint('match_id','request_operation_id', name='uq_trivial_presentation_request'),
         ForeignKeyConstraint(['match_id','copy_id'],['trivial_board_content_copies.match_id','trivial_board_content_copies.id']),
         ForeignKeyConstraint(['match_id','participant_slot'],['trivial_board_participants.match_id','trivial_board_participants.slot']),
         ForeignKeyConstraint(['match_id','turn_number'],['trivial_board_turns.match_id','trivial_board_turns.number']),
         ForeignKeyConstraint(['match_id','arrival_operation_id'],['trivial_board_operations.match_id','trivial_board_operations.operation_id']),
+        ForeignKeyConstraint(['match_id','reader_slot'],['trivial_board_participants.match_id','trivial_board_participants.slot'], name='fk_trivial_presentation_reader'),
+        ForeignKeyConstraint(['match_id','request_operation_id'],['trivial_board_operations.match_id','trivial_board_operations.operation_id'], name='fk_trivial_presentation_request'),
         CheckConstraint('cell BETWEEN 1 AND 140'),
         CheckConstraint('deadline_at > opened_at'),
+        CheckConstraint('(presentation_version = 1 AND deadline_at IS NOT NULL AND reader_slot IS NULL '
+                        'AND request_operation_id IS NULL AND deck_cycle IS NULL) OR '
+                        '(presentation_version = 2 AND deadline_at IS NULL AND reader_slot IS NOT NULL '
+                        'AND reader_slot <> participant_slot AND request_operation_id IS NOT NULL '
+                        'AND deck_cycle IS NOT NULL AND deck_cycle >= 1)', name='ck_trivial_presentation_version'),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
     match_id: Mapped[int] = mapped_column(ForeignKey('trivial_board_matches.id'), index=True)
@@ -47,4 +56,8 @@ class TrivialPresentation(Base):
     copy_id: Mapped[int] = mapped_column(Integer)
     arrival_operation_id: Mapped[str] = mapped_column(String(36))
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    deadline_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    presentation_version: Mapped[int] = mapped_column(Integer, server_default='1')
+    reader_slot: Mapped[int | None] = mapped_column(Integer)
+    request_operation_id: Mapped[str | None] = mapped_column(String(36))
+    deck_cycle: Mapped[int | None] = mapped_column(Integer)

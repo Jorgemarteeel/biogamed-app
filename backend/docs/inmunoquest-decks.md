@@ -2,6 +2,8 @@
 
 Entrega sobre main/19b0093501e4a0dd4980d41bac15f5f899aa9f29, inicialmente limpio. No habilita partidas públicas.
 
+> Ampliación interna posterior, separada de esta preparación: [extracción, lector, evaluación y circulación](inmunoquest-cards.md). El orden inicial descrito aquí permanece inmutable; la circulación tiene su propio estado y migración f3be4a7fc80d.
+
 ## Creación y contenido seleccionado
 
 `inmunoquest_persistence.create_internal` conserva autenticación vigente, participantes cerrados, modalidad, motor y estado. Ahora exige una asignatura existente para toda creación nueva y prepara automáticamente su contenido en la misma transacción que partida, participantes y recibo. El único dato de selección es subject_id: no admite categorías aisladas, dificultad global, listas de preguntas, orden de cartas ni actividades preparadas.
@@ -56,7 +58,7 @@ En la revisión final se reprodujo un nombre de asignatura obsoleto en la caché
 
 Se reutilizan las 127 pruebas puras del motor y la evidencia HTTP/frontend anterior que no cubre código modificado; no se presentan como ejecutadas ahora. El motor, los endpoints existentes, la importación y el frontend no se han cambiado. No hay interfaz nueva que revisar. No son pruebas de carga ni de navegador. La validación de integridad de la preparación examina los IDs/metadatos de una partida, no el banco de toda la plataforma; su coste depende del contenido de esa partida y no se ha medido bajo carga. La recuperación privada completa carga las copias de esa partida en servidor, nunca en un cliente.
 
-La preparación termina al guardar el contenido inicial. Extracción, reserva, lector, evaluación humana, circulación, API, interfaz y resultados personales corresponden a entregas posteriores.
+Al terminar esta preparación faltaban extracción, presentación/reserva/descarte, lector, evaluación y reinicio del descarte; su implementación posterior está documentada en la entrega de cartas enlazada arriba. Siguen fuera salas/API, interfaz y resultados personales. El motor puro no cambia y se rechaza cualquier evaluación sin presentación real.
 
 Comando del conjunto principal, desde backend con las variables de prueba aisladas: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest --noconftest -p no:cacheprovider tests/test_inmunoquest_decks_postgres.py tests/test_inmunoquest_persistence_postgres.py -q. La regresión adicional ejecuta test_trivial_content_postgres.py y los casos históricos de f75 y f17. INMUNOQUEST_TEST_DATABASE_URL debe apuntar a pg/biogamed_iq_persistence_test con usuario iq_test y un INMUNOQUEST_TEST_RESOURCE que empiece por iq-persistence-; las credenciales se proporcionan privadamente en el recurso desechable, nunca desde la configuración habitual.
 

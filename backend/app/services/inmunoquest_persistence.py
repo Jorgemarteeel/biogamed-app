@@ -1,4 +1,4 @@
-"""Internal manual movement coordinator; no routes, card draws, evaluation or GameSession.
+"""Internal manual coordinator; card operations live in inmunoquest_cards, no routes.
 
 The boundary MUST authenticate with get_current_user and pass that actor. A User
 object alone is not proof of login. Each entry point rechecks the current account
@@ -133,7 +133,9 @@ def locked(db, actor, match_id):
         fail('MATCH_NOT_FOUND', 404)
     state = recover(match, people)
     validate_turn(db, match, state)
-    content.validate_preparation(db, match)
+    decks = content.validate_preparation(db, match)
+    from app.services.inmunoquest_cards import validate_flow
+    validate_flow(db, match, people, state, decks=decks)
     return match, people, state
 
 
@@ -145,7 +147,7 @@ def validate_turn(db, match, state):
         Turn.status == 'SKIPPED',
         and_(Turn.status == 'OPEN', or_(Turn.reason.is_not(None), Turn.ended_at.is_not(None))),
         and_(Turn.status == 'ENDED', or_(Turn.reason.is_(None), Turn.ended_at.is_(None))),
-        and_(Turn.number < match.current_turn, Turn.reason != 'VIRUS'),
+        and_(Turn.number < match.current_turn, Turn.reason.not_in(('VIRUS', 'INCORRECT'))),
     )
     total, last, open_count, invalid_count = db.execute(
         select(func.count(), func.max(Turn.number),
@@ -187,12 +189,21 @@ def public_state(match, people, state):
     }
 
 
+def view(db, match, people, state):
+    from app.services.inmunoquest_cards import public_presentation
+    result = public_state(match, people, state)
+    presentation = public_presentation(db, match, state)
+    if presentation is not None:
+        result['presentation'] = presentation
+    return result
+
+
 def read_state(db, actor, match_id):
     clean(db)
     try:
         actor = authenticate(db, actor)
         match, people, state = locked(db, actor, match_id)
-        result = public_state(match, people, state)
+        result = view(db, match, people, state)
         db.commit()
         return result
     except Exception:
@@ -265,7 +276,10 @@ def create_internal(db, actor, request: InternalSetup, *, shuffler=None):
             people.append(person)
         db.flush()
         content.prepare(db, match, now, shuffler=shuffler)
-        result = public_state(match, people, recover(match, people))
+        from app.services.inmunoquest_cards import initialize_decks, validate_flow
+        initialize_decks(db, match)
+        validate_flow(db, match, people, state)
+        result = view(db, match, people, recover(match, people))
         db.add(Operation(match_id=match.id, operation_id=str(request.operation_id), actor_id=actor.id,
                          participant_slot=1, payload=payload, result={'state': result}, created_at=now))
         db.flush()
@@ -287,7 +301,8 @@ def store_transition(db, match, transition, now):
             if turn is None or turn.status != 'OPEN' or str(turn.participant_slot) != event.participant:
                 fail('INVALID_SAVED_TURN')
             turn.status, turn.ended_at = 'ENDED', now
-            turn.reason = 'VICTORY' if event.kind == 'VICTORY' else 'VIRUS'
+            turn.reason = ('VICTORY' if event.kind == 'VICTORY' else
+                           'INCORRECT' if any(e.kind == 'INCORRECT' for e in transition.events) else 'VIRUS')
         elif event.kind == 'TURN_STARTED':
             if db.get(Turn, (match.id, match.current_turn)) is not None:
                 match.current_turn += 1
@@ -357,7 +372,7 @@ def execute(db, actor, match_id, request: Command, *, roller=None):
             'operation': {'operation_id': str(request.operation_id), 'participant_slot': participant.slot,
                           'kind': request.kind, 'roll': roll, 'ordering_round': ordering_round,
                           'events': events, 'version': match.version},
-            'state': public_state(match, people, recovered),
+            'state': view(db, match, people, recovered),
         }
         db.add(Operation(match_id=match.id, operation_id=str(request.operation_id), actor_id=actor.id,
                          participant_slot=participant.slot, payload=payload, result=result, created_at=now))

@@ -368,13 +368,16 @@ def seed_pre_decks_manual(db, actor, *, subject_id=None, operation=None):
 def test_additive_migration_preserves_html_copies_and_old_manual_states_without_backfill(pg):
     from test_trivial_content_postgres import prepare, arrival, present, request_for
     from app.services import trivial_persistence as old_service, trivial_content as old_content
-    with patch('app.database.engine', pg): command.downgrade(Config('alembic.ini'), 'd19c285da6eb')
     users, html, _, _, _, _ = prepare(pg, bank='SYRINGE')
     moved, move_request = arrival(pg, users, html, roll=5)
     presentation_request = request_for(pg, moved['state'], move_request)
     presented = present(pg, users[0], moved['state'], presentation_request)
     with Session(pg) as db:
         manual, setup = seed_pre_decks_manual(db, db.get(User, users[0]))
+    # Build a v1-only fixture with the current ORM, then remove additive empty
+    # structures before recording the old schema. No version-2 presentation or
+    # prepared deck is discarded; f3/e2 guards remain active.
+    with patch('app.database.engine', pg): command.downgrade(Config('alembic.ini'), 'd19c285da6eb')
     tables=('users','topics','subjects','content_blocks','categories','questions','trivial_board_matches',
             'trivial_board_participants','trivial_board_turns','trivial_board_operations',
             'trivial_board_content_copies','trivial_board_presentations')
@@ -383,7 +386,12 @@ def test_additive_migration_preserves_html_copies_and_old_manual_states_without_
             return {name:connection.scalar(text(f"SELECT coalesce(jsonb_agg(v ORDER BY v::text),'[]'::jsonb) FROM (SELECT to_jsonb(t) v FROM {name} t) data")) for name in tables}
     before = rows()
     with patch('app.database.engine', pg): command.upgrade(Config('alembic.ini'), 'head')
-    assert rows() == before
+    after = rows()
+    for p in after['trivial_board_presentations']:
+        assert p.pop('presentation_version') == 1
+        for field in ('reader_slot','request_operation_id','deck_cycle'):
+            assert p.pop(field) is None
+    assert after == before
     with Session(pg) as db, patch.object(old_content, 'server_now', return_value=presented['state']['presentation']['server_now']):
         actor = db.get(User, users[0])
         assert old_service.read_state(db, actor, html['id']) == presented['state']

@@ -532,6 +532,10 @@ def test_migration_preserves_actual_legacy_rows_copies_receipts_and_interpretati
     for row in after['trivial_board_matches']:
         assert row.pop('manual_state') is None
         assert row.pop('subject_id') is None
+    for row in after['trivial_board_presentations']:
+        assert row.pop('presentation_version') == 1
+        for field in ('reader_slot', 'request_operation_id', 'deck_cycle'):
+            assert row.pop(field) is None
     assert after == before
     with Session(pg) as db, patch.object(historical_content, 'server_now', return_value=old_presentation['state']['presentation']['server_now']):
         actor = db.get(User, users[0])

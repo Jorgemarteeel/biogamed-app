@@ -4,9 +4,11 @@ Base: main, `541cfcba08fdd17a366891b644b6fab85cdb0841`. Entrega interna con cier
 
 > Actualización: la [preparación automática de mazos](inmunoquest-decks.md) se integra en la creación interna, con copias privadas v2. No añade partidas públicas.
 
+> Ampliación siguiente: el servicio interno [inmunoquest_cards](inmunoquest-cards.md) extrae, reserva, autoriza al lector y registra evaluaciones. Conserva este coordinador para movimientos y recuperación; no añade API o interfaz.
+
 ## Qué se puede ejecutar
 
-`app.services.inmunoquest_persistence` crea un agregado interno cerrado para 2–6 participantes, recupera su estado y ejecuta cuatro comandos de movimiento: `order`, `advance`, `virus` y `choose_bank`. El motor puro existente calcula las reglas; el servicio no vuelve a calcular efectos, ganador, nivel ni banco. Al llegar a `QUESTION` el comando de movimiento conserva el requisito y se detiene. `FINISHED` conserva la victoria aprobada en 140, sin pregunta final.
+`app.services.inmunoquest_persistence` crea un agregado interno cerrado para 2–6 participantes, recupera su estado y ejecuta cuatro comandos de movimiento: `order`, `advance`, `virus` y `choose_bank`. El motor puro existente calcula las reglas; el servicio no vuelve a calcular efectos, ganador, nivel ni banco. Al llegar a `QUESTION` el comando de movimiento conserva el requisito y se detiene. La extracción y evaluación pertenecen al servicio interno de cartas, que exige una presentación real. `FINISHED` conserva la victoria aprobada en 140, sin pregunta final.
 
 Local: anfitrión registrado en plaza 1 y uno a cinco invitados. Online: dos a seis cuentas distintas, con el anfitrión en plaza 1. El orden inicial se obtiene por tiradas, no por plazas; no se cambian las identidades al ordenar. Las creaciones nuevas requieren asignatura explícita y preparan sus veinte mazos; el mínimo técnico y su recuperación se documentan en la entrega de contenido. Los estados/recibos anteriores con subject_id=None siguen siendo interpretables, sin añadirles contenido automáticamente.
 
@@ -61,7 +63,7 @@ Evidencia anterior a la revisión de cierre (18 de noviembre de 2026):
 - **33 regresiones HTTP aprobadas en 9,87 s**, con las bases SQLite en memoria existentes: Pasapalabra local, salas y Trivial individual. Aparece el aviso de deprecación de Starlette TestClient/httpx ya presente; no se actualizan dependencias.
  No son pruebas de carga, navegador ni de una integración HTTP. Las 127 pruebas puras del motor aprobadas en la entrega anterior siguen vigentes: el motor no se modifica aquí.
 
-La preparación de mazos enlazada arriba incorpora copias abiertas y orden inicial. Presentación, lector y evaluación son entregas posteriores. Siguen fuera salas y acciones públicas, interfaz, resultados personales e integración educativa. No hay política nueva de abandono/desconexión; desconectarse no se transforma en abandono. No se migra ningún entorno existente.
+Las ampliaciones de mazos y cartas enlazadas arriba incorporan copias abiertas, presentación sin plazo, lector y evaluación interna autorizada. Siguen fuera salas y acciones públicas, interfaz, resultados personales e integración educativa. No hay política nueva de abandono/desconexión; desconectarse no se transforma en abandono. No se migra ningún entorno existente.
 
 Cierre de recursos: se detuvieron y eliminaron únicamente el contenedor PostgreSQL desechable y su red propia, verificando sus etiquetas. Los procesos de pruebas se retiraron con --rm. No se crearon volúmenes persistentes ni se retiraron imágenes existentes. Se eliminaron la configuración efímera de pruebas y la copia temporal del código de referencia, fuera del repositorio. Comprobadas también sintaxis/espacios de los diez archivos Python afectados, única cabeza Alembic d19c285da6eb y diff sin secretos ni temporales. La primera entrega se dejó sin staging ni commit; el cierre posterior se describe a continuación.
 ## Revisión de cierre y commit local
@@ -70,7 +72,7 @@ Se adaptan los tres tests históricos mediante `tests/migration_fixtures.py`: ca
 
 Se mantienen todas las verificaciones de conservación, esquema, ausencia de backfill y recuperación. Los guards de f75 y f17 se invocan con el contexto real de operaciones Alembic en una transacción que siempre se revierte: así se verifica su rechazo exacto sin atravesar revisiones posteriores. Se verifica además que c08 sigue rechazando un downgrade de la cadena. Ninguna migración aplicada se modifica, no se usa stamp y no se omiten tests.
 
-La revisión original descubre y corrige una validación incompleta: se comprobaba la fila actual de turno, pero no los huecos o contradicciones del registro previo. Antes de devolver estado o recibos se comprueban en una agregación SQL la continuidad del registro, el último número, el número de turnos abiertos y los metadatos de cierre. Se rechazan turnos adicionales, omitidos, varios abiertos, cierres sin fecha y turnos abiertos con cierre. Los cierres de turnos anteriores solo pueden deberse a Virus. No se admite SKIPPED del HTML ni se cambia el reloj.
+La revisión original descubre y corrige una validación incompleta: se comprobaba la fila actual de turno, pero no los huecos o contradicciones del registro previo. Antes de devolver estado o recibos se comprueban en una agregación SQL la continuidad del registro, el último número, el número de turnos abiertos y los metadatos de cierre. Se rechazan turnos adicionales, omitidos, varios abiertos, cierres sin fecha y turnos abiertos con cierre. Entonces los cierres solo podían deberse a Virus; la ampliación de cartas añade INCORRECT para el fallo evaluado mediante el motor. No se admite SKIPPED del HTML ni se cambia el reloj.
 
 Evidencia nueva de cierre:
 
