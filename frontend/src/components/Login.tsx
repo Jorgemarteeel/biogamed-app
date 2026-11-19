@@ -1,10 +1,10 @@
 "use client";
 
 import {academicReturn} from "@/lib/academic";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
-import { loginUser } from "@/services/api";
+import { loginUser, SESSION_REJECTION_NOTICE_KEY } from "@/services/api";
 
 export default function Login({ sessionExpired = false, passwordChanged = false }: { sessionExpired?: boolean; passwordChanged?: boolean }) {
   const router = useRouter();
@@ -13,7 +13,24 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showSessionNotice, setShowSessionNotice] = useState(sessionExpired);
+  const [showSessionNotice, setShowSessionNotice] = useState(false);
+
+  useEffect(() => {
+    if (!sessionExpired) return;
+
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        const storage = window.sessionStorage;
+        if (storage.getItem(SESSION_REJECTION_NOTICE_KEY) === "1") {
+          storage.removeItem(SESSION_REJECTION_NOTICE_KEY);
+          setShowSessionNotice(true);
+        }
+      } catch { /* sign-in remains available without tab storage */ }
+    });
+    return () => { active = false; };
+  }, [sessionExpired]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,7 +48,7 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
       setSuccess("Sesión iniciada correctamente.");
       setTimeout(() => {
         let destination = "/dashboard";
-          try { const saved = sessionStorage.getItem("pasapalabra-return"); sessionStorage.removeItem("pasapalabra-return"); if (saved && (/^\/pasapalabra(?:\/rooms)?(?:\/[1-9]\d*)?$/.test(saved) || academicReturn(saved) || saved === "/dashboard?join=1")) destination = saved; } catch { /* use dashboard when storage is unavailable */ }
+          try { const saved = sessionStorage.getItem("pasapalabra-return"); sessionStorage.removeItem("pasapalabra-return"); if (saved && (/^\/pasapalabra(?:\/rooms)?(?:\/[1-9]\d*)?$/.test(saved) || academicReturn(saved) || /^\/trivial\/[1-9]\d*$/.test(saved) || saved === "/dashboard?join=1")) destination = saved; } catch { /* use dashboard when storage is unavailable */ }
           router.push(destination);
       }, 1000);
     } catch (err: unknown) {
@@ -54,7 +71,7 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
   return (
     <form method="post" onSubmit={handleSubmit} aria-busy={isLoading} className="space-y-5">
       {passwordChanged && <p role="status" className="notice-success">Contraseña cambiada. Todas las sesiones anteriores están cerradas. Inicia sesión de nuevo.</p>}
-      {showSessionNotice && (
+      {sessionExpired && showSessionNotice && (
         <p role="status" className="notice-warning">
           Tu sesión ha caducado o ya no es válida. Vuelve a iniciar sesión.
         </p>

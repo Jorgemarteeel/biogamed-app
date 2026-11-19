@@ -5,7 +5,9 @@ export class QuestionExposure {
   private visible = false;
   private stopped = false;
 
-  constructor(private readonly now: () => number) {}
+  constructor(private readonly now: () => number, previous: Record<number, number> = {}) {
+    this.totals = new Map(Object.entries(previous).map(([id, value]) => [Number(id), value]));
+  }
 
   private close() {
     if (this.current !== null && this.since !== null) {
@@ -44,6 +46,7 @@ export class QuestionExposure {
   }
 
   milliseconds(questionId: number) {
-    return Math.min(2147483647, Math.floor(this.totals.get(questionId) ?? 0));
+    const live = this.current === questionId && this.since !== null ? Math.max(0, this.now() - this.since) : 0;
+    return Math.min(2147483647, Math.floor((this.totals.get(questionId) ?? 0) + live));
   }
 }

@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import Brand from "@/components/Brand";
 import ProfileMenu from "@/components/ProfileMenu";
-import TrivialGame from "@/components/TrivialGame";
+
 import {
   getCurrentUser, getTopics, getTrivialAvailability, startTrivialGame,
-  type GameAvailability, type GameMode, type GameSessionStart, type TrivialFilters,
+  type GameAvailability, type GameMode, type TrivialFilters,
 } from "@/services/api";
 
 export default function GameStart({ topicId, mode }: {
@@ -22,7 +22,7 @@ export default function GameStart({ topicId, mode }: {
   const [authAttempt, setAuthAttempt] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [session, setSession] = useState<GameSessionStart | null>(null);
+
   const [availability, setAvailability] = useState<GameAvailability | null>(null);
   const [availabilityError, setAvailabilityError] = useState("");
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
@@ -109,10 +109,11 @@ export default function GameStart({ topicId, mode }: {
 
   async function start() {
     if (!authenticated || topicId === null || mode !== "TRIVIAL" || starting.current
-      || session || !availability || availability.topic_id !== topicId || availableCount === 0) return;
+      || !availability || availability.topic_id !== topicId || availableCount === 0) return;
     starting.current = true;
     setLoading(true);
     setError("");
+    let started = false;
     try {
       const result = await startTrivialGame(topicId, filters);
       if (!mounted.current) return;
@@ -120,7 +121,8 @@ export default function GameStart({ topicId, mode }: {
         setError("No se han recibido preguntas válidas. Vuelve al panel y elige otra temática.");
         return;
       }
-      setSession(result);
+      started = true;
+      router.push(`/trivial/${result.session_id}`);
     } catch (err: unknown) {
       if (!mounted.current) return;
       const status = isAxiosError(err) ? err.response?.status : undefined;
@@ -131,8 +133,10 @@ export default function GameStart({ topicId, mode }: {
           ? "Esta combinación ya no tiene preguntas disponibles. Revisa la selección o vuelve a consultar la disponibilidad."
           : "No se pudo cargar la partida. Comprueba la conexión e inténtalo de nuevo.");
     } finally {
-      starting.current = false;
-      if (mounted.current) setLoading(false);
+      if (!started) {
+        starting.current = false;
+        if (mounted.current) setLoading(false);
+      }
     }
   }
 
@@ -158,10 +162,10 @@ export default function GameStart({ topicId, mode }: {
             : mode === "PASAPALABRA" ? <>
               <h2 className="text-xl font-bold text-blue-950">Pasapalabra está en preparación</h2>
               <p className="mt-3 leading-7 text-slate-600">Todavía no puedes iniciar esta modalidad. Puedes volver al panel para explorar Trivial.</p>
-            </> : session ? <TrivialGame session={session} topicName={topicName || `Temática ${topicId}`} /> : <>
+            </> : <>
               <h2 className="text-xl font-bold text-blue-950">Practica eligiendo una respuesta</h2>
               <p className="mt-3 leading-7 text-slate-600">Temática: {topicName || `Temática ${topicId}`}. Elige el contenido que quieres practicar antes de comenzar.</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">La partida se crea al pulsar «Comenzar partida». Después, si abandonas o recargas antes de terminar, perderás tus selecciones y quedará «Sin finalizar».</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">La partida se crea al pulsar «Comenzar partida». Puedes retomar tus selecciones en la misma pestaña antes de finalizar.</p>
               {availabilityLoading && <p role="status" className="mt-5 text-sm text-slate-600">Consultando preguntas disponibles…</p>}
               {availabilityError && <div className="mt-5"><p role="alert" className="notice-error">{availabilityError}</p><button type="button" className="button-secondary mt-3" onClick={() => { setAvailability(null); setAvailabilityLoading(true); setAvailabilityError(""); setAvailabilityAttempt((value) => value + 1); }}>Reintentar consulta</button></div>}
               {availability && <div className="mt-6 grid gap-5 sm:grid-cols-2">

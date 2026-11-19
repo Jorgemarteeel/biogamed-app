@@ -128,6 +128,8 @@ export async function getQuestionTopics(): Promise<Topic[]> {
   }
 }
 
+export const SESSION_REJECTION_NOTICE_KEY = "biogamed-session-rejected";
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
 });
@@ -162,10 +164,13 @@ api.interceptors.response.use(
       // A delayed rejection of an old token must not clear a newer login.
       // Removing the token also makes simultaneous 401s redirect only once.
       if (token && error.config?.headers.Authorization === `Bearer ${token}`) {
-        if (window.location.pathname?.startsWith("/pasapalabra") || window.location.pathname === "/practicar") {
+        if (window.location.pathname?.startsWith("/pasapalabra") || window.location.pathname === "/practicar" || /^\/trivial\/[1-9]\d*$/.test(window.location.pathname)) {
           try { window.sessionStorage.setItem("pasapalabra-return", window.location.pathname + (window.location.pathname === "/practicar" ? window.location.search ?? "" : "")); } catch { /* storage may be disabled */ }
         }
         window.localStorage.removeItem("token");
+        try {
+          window.sessionStorage.setItem(SESSION_REJECTION_NOTICE_KEY, "1");
+        } catch { /* sign-in remains available without tab storage */ }
         window.location.replace("/login?session=expired");
       }
     }
@@ -248,6 +253,11 @@ export async function startTrivialGame(topicId: number, filters: TrivialFilters 
     params: { mode: "TRIVIAL", ...filters },
   });
   return response.data;
+}
+
+export async function resumeTrivialGame(sessionId: number): Promise<GameSessionStart> {
+  const { data } = await api.get<GameSessionStart>(`/game/trivial/${sessionId}/resume`, { timeout: 10000 });
+  return data;
 }
 
 export interface TrivialAnswer {

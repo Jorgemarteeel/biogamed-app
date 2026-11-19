@@ -64,6 +64,14 @@ def start_game(
     )
 
 
+@router.get("/trivial/{session_id}/resume", response_model=GameSessionStartResponse)
+def resume_trivial(
+    session_id: int = Path(ge=1), db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> GameSessionStartResponse:
+    return game_service.resume_trivial_session(db, current_user, session_id)
+
+
 @router.post("/submit/{session_id}", response_model=GameResultResponse)
 def submit_game(
     submission: GameSubmit,

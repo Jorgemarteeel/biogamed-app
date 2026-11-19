@@ -3,11 +3,10 @@ import {useEffect, useRef, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
 import Link from "next/link";
 import {isAxiosError} from "axios";
-import api, {type AcademicContext as Context, type GameAvailability, type GameSessionStart} from "@/services/api";
+import api, {type AcademicContext as Context, type GameAvailability} from "@/services/api";
 import {Frame} from "@/components/Pasapalabra";
 import preparation from "./AcademicPractice.module.css";
 import BackLink from "@/components/BackLink";
-import TrivialGame from "@/components/TrivialGame";
 import GameIllustration from "@/components/GameIllustration";
 import GameChoiceCards from "@/components/GameChoiceCards";
 import PasapalabraModePicker, {PasapalabraModeIllustration} from "@/components/PasapalabraModePicker";
@@ -41,7 +40,6 @@ function Practice({query}:{query:string}){
   const [busy,setBusy]=useState(false);
   const [uncertain,setUncertain]=useState(false);
   const [guest,setGuest]=useState("");
-  const [session,setSession]=useState<GameSessionStart|null>(null);
   const pending=useRef<{url:string;body:Record<string,unknown>}|null>(null);
   const lock=useRef(false);
   const heading=useRef<HTMLHeadingElement>(null);
@@ -73,7 +71,7 @@ function Practice({query}:{query:string}){
   useEffect(()=>{if(loading)return;const focus=new URLSearchParams(query).get("focus");if(focus==="difficulty")difficultyField.current?.focus({preventScroll:true});else if(!selected.explicitMode||focus==="prepare")heading.current?.focus({preventScroll:true});},[loading,selected.explicitMode,query]);
   useEffect(()=>{try{const saved=sessionStorage.getItem("academic-guest");if(saved)Promise.resolve().then(()=>setGuest(saved));}catch{}},[]);
   const href=(changes:Record<string,string|number|undefined>)=>practiceHref(query,changes);
-  const academic=session?.content_context?.academic??catalog?.academic;
+  const academic=catalog?.academic;
   const combinations=bank?.combinations??[];
   const available=questionsForDifficulty(bank,difficulty);
   const cardAvailability={TRIVIAL:questionsForDifficulty(gameBanks.TRIVIAL,"all"),PASAPALABRA:questionsForDifficulty(gameBanks.PASAPALABRA,"all")};
@@ -85,21 +83,23 @@ function Practice({query}:{query:string}){
     lock.current=true;setBusy(true);setError("");
     const selection={subject_id:academic.subject_id,block_id:academic.block_id,category_id:academic.category_id,...(difficulty==="unknown"?{difficulty_unknown:true}:difficulty!=="all"?{difficulty:Number(difficulty)}:{})};
     pending.current??={url:mode==="TRIVIAL"?"/game/academic/start":play==="ONLINE"?"/pasapalabra/rooms":"/pasapalabra/local/start",body:{...selection,...(mode==="PASAPALABRA"?{operation_id:crypto.randomUUID(),...(play==="LOCAL"?{guest_name:guest.trim()}:{})}:{})}};
+    let started=false;
     try{
       const {data}=await api.post(pending.current.url,pending.current.body,{timeout:10000});
       pending.current=null;setUncertain(false);
-      if(mode==="TRIVIAL")setSession(data);else router.push(play==="ONLINE"?`/pasapalabra/rooms/${data.id}`:`/pasapalabra/${data.id}`);
+      started=true;
+      router.push(mode==="TRIVIAL"?`/trivial/${data.session_id}`:play==="ONLINE"?`/pasapalabra/rooms/${data.id}`:`/pasapalabra/${data.id}`);
     }catch(e){
       setError(errorMessage(e));
       if(isAxiosError(e)&&e.response&&e.response.status<500&&e.response.status!==408){pending.current=null;setUncertain(false);}
       else setUncertain(true);
-    }finally{lock.current=false;setBusy(false);}
+    }finally{if(!started){lock.current=false;setBusy(false);}}
   }
   const context=catalog?.context;
-  return <div className={`${preparation.page} ${!session?preparation.preparing:""}`}><Frame backControl={!session?<BackLink href={practiceBackHref(query,unavailablePath)} disabled={busy||uncertain}/>:undefined} title={session?(academic?.subject_name??"Práctica académica"):academic?"Prepara tu partida":context?.subject?.name??"Elige asignatura"}>
+  return <div className={`${preparation.page} ${preparation.preparing}`}><Frame backControl={<BackLink href={practiceBackHref(query,unavailablePath)} disabled={busy||uncertain}/>} title={academic?"Prepara tu partida":context?.subject?.name??"Elige asignatura"}>
     <div className="w-full min-w-0 space-y-4">
-      {error&&<div role="alert" className="notice-warning">{error} {!session&&selected.valid&&<button className="text-link ml-3 min-h-11" disabled={busy||uncertain} onClick={()=>{setError("");setLoading(true);setAttempt(v=>v+1);}}>Volver a consultar</button>} {error.includes("sesión")&&<Link href="/login" className="text-link">Iniciar sesión</Link>}</div>}
-      {loading?<p role="status">Consultando contenido académico…</p>:session?<TrivialGame session={session} topicName={academic?.category_name??"Práctica académica"}/>:catalog?<>
+      {error&&<div role="alert" className="notice-warning">{error} {selected.valid&&<button className="text-link ml-3 min-h-11" disabled={busy||uncertain} onClick={()=>{setError("");setLoading(true);setAttempt(v=>v+1);}}>Volver a consultar</button>} {error.includes("sesión")&&<Link href="/login" className="text-link">Iniciar sesión</Link>}</div>}
+      {loading?<p role="status">Consultando contenido académico…</p>:catalog?<>
         {ids.subject?<>
           <div className="w-full space-y-3" onClickCapture={e=>{if((busy||uncertain)&&(e.target as HTMLElement).closest('a[href^="/practicar"]'))e.preventDefault();}}>
           {academic&&<div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2" aria-label="Contenido elegido"><p className="min-w-0 break-words text-sm font-semibold text-blue-950">{academic.subject_name} → {academic.block_name} → <strong>{academic.category_name}</strong></p><button className="text-link min-h-11 shrink-0" disabled={busy||uncertain} onClick={()=>router.push(href({edit:changingContent?undefined:"content",focus:"prepare"}),{scroll:false})}>{changingContent?"Conservar contenido":"Cambiar contenido"}</button></div>}
@@ -122,14 +122,14 @@ function Practice({query}:{query:string}){
         {mode==="PASAPALABRA"&&available>0&&available<40&&<p className="notice-warning">Preguntas insuficientes. Elige otra dificultad o categoría; los filtros no se cambiarán automáticamente.</p>}
         <button className="button-primary" disabled={busy||(uncertain&&mode==="TRIVIAL")||(!uncertain&&!canStart)} onClick={()=>void start()}>{busy?"Preparando…":uncertain?(mode==="TRIVIAL"?"Inicio sin confirmar":"Reintentar la misma operación"):mode==="PASAPALABRA"&&play==="ONLINE"?"Crear sala privada":"Comenzar partida"}</button>
         {uncertain&&mode==="TRIVIAL"&&<p className="notice-warning">No repetimos este inicio para evitar duplicados. <Link className="text-link" href="/historial">Revisa tu historial</Link> antes de preparar otra partida.</p>}
-        <details className="text-sm text-slate-600"><summary className="min-h-11 cursor-pointer font-semibold text-sky-900">Sobre el inicio de la partida</summary><p>{mode==="TRIVIAL"?"La partida comienza solo al pulsar el botón. Recargar después de iniciarla conserva el registro, pero no las respuestas sin enviar.":"La selección se comprueba otra vez al comenzar. Recargar una partida no pausa el reloj."}</p></details>
+        <details className="text-sm text-slate-600"><summary className="min-h-11 cursor-pointer font-semibold text-sky-900">Sobre el inicio de la partida</summary><p>{mode==="TRIVIAL"?"La partida comienza solo al pulsar el botón. Puedes retomar las respuestas marcadas en la misma pestaña antes de finalizar.":"La selección se comprueba otra vez al comenzar. Recargar una partida no pausa el reloj."}</p></details>
             </div></div>}
             </>}
           </section>:null}
         </div></>:<><h2 ref={heading} tabIndex={-1} className="text-xl font-black text-blue-950 outline-none">Elige asignatura</h2><AcademicCards items={catalog.items??[]} query={query} page={page}/></>}
       </>:null}
-      {!session&&(context?.subject?.description||information.some(item=>item.description))&&<details className="text-sm text-slate-600"><summary className="min-h-11 cursor-pointer font-semibold text-sky-900">Sobre este contenido</summary><p className="max-w-3xl">{context?.subject?.description}</p>{information.filter(item=>item.description).map((item,index)=><p key={`${index}-${item.id}`} className="mt-2 max-w-3xl"><strong>{item.name}: </strong>{item.description}</p> )}</details>}
-      {!session&&<div className="flex flex-wrap gap-4 text-sm"><Link className="text-link inline-flex min-h-11 items-center" href="/dashboard?banks=1">Explorar otros contenidos</Link><Link className="text-link inline-flex min-h-11 items-center" href="/pasapalabra?join=1">Unirme con código</Link></div>}
+      {(context?.subject?.description||information.some(item=>item.description))&&<details className="text-sm text-slate-600"><summary className="min-h-11 cursor-pointer font-semibold text-sky-900">Sobre este contenido</summary><p className="max-w-3xl">{context?.subject?.description}</p>{information.filter(item=>item.description).map((item,index)=><p key={`${index}-${item.id}`} className="mt-2 max-w-3xl"><strong>{item.name}: </strong>{item.description}</p> )}</details>}
+      <div className="flex flex-wrap gap-4 text-sm"><Link className="text-link inline-flex min-h-11 items-center" href="/dashboard?banks=1">Explorar otros contenidos</Link><Link className="text-link inline-flex min-h-11 items-center" href="/pasapalabra?join=1">Unirme con código</Link></div>
     </div>
   </Frame></div>;
 }

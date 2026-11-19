@@ -21,6 +21,7 @@ const api = loaded.exports.default;
 function browser(token = "old-token") {
   const values = new Map(token ? [["token", token]] : []);
   const redirects = [];
+  const saved = new Map();
   global.window = {
     localStorage: {
       getItem: (key) => values.get(key) ?? null,
@@ -28,8 +29,9 @@ function browser(token = "old-token") {
       removeItem: (key) => values.delete(key),
     },
     location: { replace: (url) => redirects.push(url) },
+    sessionStorage: { setItem: (key, value) => saved.set(key, value) },
   };
-  return { values, redirects };
+  return { values, redirects, saved };
 }
 
 function rejectWith(status, beforeReject = () => {}) {
@@ -52,12 +54,13 @@ test("expired Pasapalabra auth retains only current path for login recovery", as
 });
 
 test("401 with current token clears it and redirects once for simultaneous requests", async () => {
-  const { values, redirects } = browser();
+  const { values, redirects, saved } = browser();
   await Promise.allSettled([
     api.get("/auth/me", { adapter: rejectWith(401) }),
     api.get("/game/history", { adapter: rejectWith(401) }),
   ]);
   assert.equal(values.has("token"), false);
+  assert.equal(saved.get(loaded.exports.SESSION_REJECTION_NOTICE_KEY), "1");
   assert.deepEqual(redirects, ["/login?session=expired"]);
 });
 
@@ -88,37 +91,42 @@ test("progress uses an authenticated GET and returns the server counts", async (
 
 for (const url of ["/auth/login", "/auth/register", "/auth/login/?x=1"]) {
   test(`public auth ${url} does not send a stored token or trigger expiry handling`, async () => {
-    const { values, redirects } = browser();
+    const { values, redirects, saved } = browser();
     await assert.rejects(api.post(url, {}, { adapter: rejectWith(401, (config) => {
       assert.equal(config.headers.Authorization, undefined);
     }) }));
     assert.equal(values.get("token"), "old-token");
     assert.deepEqual(redirects, []);
+    assert.equal(saved.size, 0);
   });
 }
 
 test("late 401 does not destroy a newer login", async () => {
-  const { values, redirects } = browser();
+  const { values, redirects, saved } = browser();
   await assert.rejects(api.get("/auth/me", { adapter: rejectWith(401, () => {
     values.set("token", "new-token");
   }) }));
   assert.equal(values.get("token"), "new-token");
   assert.deepEqual(redirects, []);
+  assert.equal(saved.size, 0);
 });
 
 for (const status of [403, 500, undefined]) {
   test(`${status ?? "network error"} does not clear the session`, async () => {
-    const { values, redirects } = browser();
+    const { values, redirects, saved } = browser();
     await assert.rejects(api.get("/auth/me", { adapter: rejectWith(status) }));
     assert.equal(values.get("token"), "old-token");
     assert.deepEqual(redirects, []);
+    assert.equal(saved.size, 0);
   });
 }
 
 test("401 without a token does not cause a redirect loop", async () => {
-  const { redirects } = browser(null);
+  const { redirects, saved } = browser(null);
   await assert.rejects(api.get("/auth/me", { adapter: rejectWith(401) }));
   assert.deepEqual(redirects, []);
+  assert.equal(saved.size, 0);
+
 });
 
 test("server-side errors remain rejected without accessing window", async () => {
@@ -213,13 +221,14 @@ test("full history requests one extra server item for the next-page check", asyn
 });
 
 test("history detail leaves an unavailable session as a 404 without clearing login", async () => {
-  const { values, redirects } = browser();
+  const { values, redirects, saved } = browser();
   const originalAdapter = api.defaults.adapter;
   api.defaults.adapter = rejectWith(404);
   try {
     await assert.rejects(loaded.exports.getGameHistoryDetail(9999), (error) => error.response.status === 404);
     assert.equal(values.get("token"), "old-token");
     assert.deepEqual(redirects, []);
+    assert.equal(saved.size, 0);
   } finally {
     api.defaults.adapter = originalAdapter;
   }
@@ -251,13 +260,14 @@ test("starting Trivial sends selected category, level or unknown difficulty", as
 });
 
 test("a topic with no playable questions keeps the session and exposes the 409", async () => {
-  const { values, redirects } = browser();
+  const { values, redirects, saved } = browser();
   const originalAdapter = api.defaults.adapter;
   api.defaults.adapter = rejectWith(409);
   try {
     await assert.rejects(loaded.exports.startTrivialGame(3), (error) => error.response.status === 409);
     assert.equal(values.get("token"), "old-token");
     assert.deepEqual(redirects, []);
+    assert.equal(saved.size, 0);
   } finally {
     api.defaults.adapter = originalAdapter;
   }
@@ -324,7 +334,7 @@ test("a conflict on an unfinished game stays an error instead of showing a false
 });
 
 test("expired sessions during submission redirect to login without fetching history", async () => {
-  const { values, redirects } = browser();
+  const { values, redirects, saved } = browser();
   const originalAdapter = api.defaults.adapter;
   let calls = 0;
   api.defaults.adapter = rejectWith(401, () => { calls += 1; });
@@ -332,6 +342,7 @@ test("expired sessions during submission redirect to login without fetching hist
     await assert.rejects(loaded.exports.submitTrivialGame(17, [{ question_id: 21, selected_index: 0 }]));
     assert.equal(calls, 1);
     assert.equal(values.has("token"), false);
+  assert.equal(saved.get(loaded.exports.SESSION_REJECTION_NOTICE_KEY), "1");
     assert.deepEqual(redirects, ["/login?session=expired"]);
   } finally {
     api.defaults.adapter = originalAdapter;
@@ -361,4 +372,13 @@ test("expired academic auth retains hierarchy, filters and pagination", async ()
   global.window.sessionStorage = { setItem: (key,value) => saved.set(key,value) };
   await assert.rejects(api.get("/practice/subjects", {adapter:rejectWith(401)}));
   assert.equal(saved.get("pasapalabra-return"), "/practicar?subject=1&block=2&categoriesPage=2");
+});
+
+
+test("expired Trivial auth remembers the exact game URL", async () => {
+  const { saved, redirects } = browser();
+  global.window.location.pathname = "/trivial/23";
+  await assert.rejects(api.post("/game/submit/23", {}, { adapter: rejectWith(401) }));
+  assert.equal(saved.get("pasapalabra-return"), "/trivial/23");
+  assert.deepEqual(redirects, ["/login?session=expired"]);
 });

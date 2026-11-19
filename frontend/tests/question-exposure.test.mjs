@@ -64,3 +64,15 @@ test("sending freezes a snapshot; failed send resumes without network wait", () 
   assert.equal(timer.milliseconds(1), 125);
   assert.equal(pendingPayload[0].response_time_ms, 100);
 });
+
+
+test("resumed exposure keeps earlier time without counting the time away", () => {
+  let clock = 5000;
+  const timer = new QuestionExposure(() => clock, { 9: 1700 });
+  timer.show(9, true);
+  clock = 5300;
+  assert.equal(timer.milliseconds(9), 2000);
+  timer.stop();
+  clock = 9000;
+  assert.equal(timer.milliseconds(9), 2000);
+});

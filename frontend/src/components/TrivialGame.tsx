@@ -10,12 +10,13 @@ import GameReview from "@/components/GameReview";
 import { describeContentContext, liveReviewItems } from "@/lib/game-review";
 import { QuestionExposure } from "@/lib/question-exposure";
 import type { TrivialAnswer } from "@/services/api";
+import { clearTrivialDraft, saveTrivialDraft, type TrivialDraft } from "@/lib/trivial-draft";
 
 const monotonicNow = () => performance.now();
 
-export default function TrivialGame({ session, topicName }: { session: GameSessionStart; topicName: string }) {
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+export default function TrivialGame({ session, topicName, initialDraft }: { session: GameSessionStart; topicName: string; initialDraft: TrivialDraft }) {
+  const [questionIndex, setQuestionIndex] = useState(initialDraft.questionIndex);
+  const [answers, setAnswers] = useState(initialDraft.answers);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [legacyIncompatible, setLegacyIncompatible] = useState(false);
@@ -25,7 +26,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
   const mounted = useRef(false);
   const exposure = useRef<QuestionExposure | null>(null);
   const pendingAnswers = useRef<TrivialAnswer[] | null>(null);
-  if (exposure.current === null) exposure.current = new QuestionExposure(monotonicNow);
+  if (exposure.current === null) exposure.current = new QuestionExposure(monotonicNow, initialDraft.exposure);
   const question = session.questions[questionIndex];
   const selectedIndex = answers[question.id];
   const allAnswered = session.questions.every((item) => answers[item.id] !== undefined);
@@ -45,6 +46,20 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => { timer.setVisible(false); document.removeEventListener("visibilitychange", onVisibilityChange); };
   }, [session.questions, questionIndex]);
+
+  useEffect(() => {
+    if (result) return;
+    const timer = exposure.current!;
+    const persist = () => {
+      saveTrivialDraft(session.session_id, {
+        questionIndex, answers,
+        exposure: Object.fromEntries(session.questions.map(({ id }) => [id, timer.milliseconds(id)])),
+      });
+    };
+    persist();
+    window.addEventListener("pagehide", persist);
+    return () => window.removeEventListener("pagehide", persist);
+  }, [answers, questionIndex, result, session]);
 
   function navigate(index: number) {
     exposure.current!.show(session.questions[index].id, document.visibilityState === "visible");
@@ -69,6 +84,7 @@ export default function TrivialGame({ session, topicName }: { session: GameSessi
     setError("");
     try {
       const response = await submitTrivialGame(session.session_id, pendingAnswers.current);
+      clearTrivialDraft(session.session_id);
       if (mounted.current) setResult(response);
     } catch (err: unknown) {
       exposure.current!.resume(document.visibilityState === "visible");

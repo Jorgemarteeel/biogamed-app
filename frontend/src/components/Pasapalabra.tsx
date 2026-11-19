@@ -11,7 +11,8 @@ import { getMatch, sendOperation, newer, questionKey, remaining, startsCelebrati
 import { StateLegend, Corrections, FinalAnswers, ResultHero } from "@/components/PasapalabraPresentation";
 import layout from "./PasapalabraLayout.module.css";
 import AcademicContext from "@/components/AcademicContext";
-function message(e: unknown) { const status = isAxiosError(e) ? e.response?.status : 0; return status === 404 || status === 403 ? "Esta partida no está disponible para tu cuenta." : status === 401 ? "Tu sesión ha caducado. Inicia sesión para recuperar la partida." : status === 409 ? "La partida ha cambiado. Consulta el estado antes de continuar." : "No se pudo confirmar la operación. Comprueba tu conexión y reintenta. El reloj sigue corriendo."; }
+import { readAnswerDraft, saveAnswerDraft } from "@/lib/pasapalabra-answer-draft";
+function message(e: unknown) { const status = isAxiosError(e) ? e.response?.status : 0; return status === 404 || status === 403 ? "Esta partida no está disponible para tu cuenta." : status === 401 ? "Inicia sesión para recuperar la partida." : status === 409 ? "La partida ha cambiado. Consulta el estado antes de continuar." : "No se pudo confirmar la operación. Comprueba tu conexión y reintenta. El reloj sigue corriendo."; }
 export function PasapalabraLoginLink() {
     return <Link href="/login" className="text-link" onClick={() => {
         try { sessionStorage.setItem("pasapalabra-return", window.location.pathname); }
@@ -188,8 +189,8 @@ export function PasapalabraGame({ id }: {
     function accept(s: Match) {
         if (!mounted.current || !newer(latest.current, s))
             return;
-        if (latest.current && questionKey(latest.current) !== questionKey(s))
-            setText("");
+        if (!latest.current || latest.current.version !== s.version || questionKey(latest.current) !== questionKey(s))
+            setText(readAnswerDraft(s));
         if (startsCelebration(latest.current, s)) setCelebrate(true);
         latest.current = s;
         received.current = performance.now();
@@ -285,7 +286,7 @@ export function PasapalabraGame({ id }: {
               </div>
               <p id="question-scroll-hint" className={layout.questionHint}>Si el enunciado es largo, desplázalo con rueda, gesto o teclado.</p>
               {q&&<form className={layout.answerForm} onSubmit={e=>{e.preventDefault();if(text.trim()&&!uncertain)void act('answer');}}>
-                <label htmlFor="word">Respuesta</label><input id="word" className="form-input" autoComplete="off" value={text} onChange={e=>setText(e.target.value)} readOnly={busy||uncertain}/>
+                <label htmlFor="word">Respuesta</label><input id="word" className="form-input" autoComplete="off" value={text} onChange={e=>{setText(e.target.value);if(latest.current)saveAnswerDraft(latest.current,e.target.value);}} readOnly={busy||uncertain}/>
                 <div className={layout.actions}><button className="button-primary" disabled={busy||uncertain||!text.trim()}>Responder</button><button type="button" className="button-secondary" disabled={busy||uncertain} onClick={()=>act('pass')}>Pasapalabra</button></div>
               </form>}
               <div className={layout.questionFooter}><span>El reloj continúa al cerrar la pestaña.</span><button ref={abandonTrigger} className="text-link" disabled={busy||uncertain} onClick={()=>setAbandon(s.play_mode==='ONLINE'?s.self_position!:q!.participant)}>Abandonar…</button></div>

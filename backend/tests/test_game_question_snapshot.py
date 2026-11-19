@@ -202,3 +202,41 @@ def test_snapshot_solutions_are_private_even_with_an_unfinished_log(client, db, 
     assert client.get(f"/game/history/{session.id}", headers=auth_headers).status_code == 404
     assert client.post(f"/game/submit/{session.id}", headers=auth_headers,
                        json={"answers": [{"question_id": snapshot_bank[0].id, "selected_index": 1}]}).status_code == 403
+
+
+def test_resume_same_trivial_after_expiration(client, db, topic, test_user, auth_headers, snapshot_bank):
+    from datetime import timedelta
+    from app.utils.security import create_access_token
+
+    original, _, subject, block, category = snapshot_bank
+    started = client.post("/game/academic/start", headers=auth_headers, json={
+        "subject_id": subject.id, "block_id": block.id, "category_id": category.id,
+    }).json()
+    session_id = started["session_id"]
+    path = f"/game/trivial/{session_id}/resume"
+    submission = {"answers": [{"question_id": original.id, "selected_index": 0}]}
+    expired = create_access_token({"email": test_user.email}, timedelta(seconds=-1))
+    assert client.get(path).status_code == 401
+    assert client.post(f"/game/submit/{session_id}", json=submission,
+                       headers={"Authorization": f"Bearer {expired}"}).status_code == 401
+    assert not db.get(GameSession, session_id).is_completed
+    assert not list(db.scalars(select(AnswerLog).where(AnswerLog.game_session_id == session_id)))
+
+    original.text = "Changed after starting"
+    original.is_active = False
+    category.name = "Renamed"
+    db.commit()
+    resumed = client.get(path, headers=auth_headers)
+    assert resumed.status_code == 200
+    assert resumed.json() == started
+    assert_no_solutions(resumed.json())
+
+    other = User(name="Another student", email="another-resume@example.com", hashed_password="unused")
+    db.add(other)
+    db.commit()
+    other_token = create_access_token({"email": other.email})
+    assert client.get(path, headers={"Authorization": f"Bearer {other_token}"}).status_code == 404
+    assert client.post(f"/game/submit/{session_id}", json=submission, headers=auth_headers).status_code == 200
+    completed = client.get(path, headers=auth_headers)
+    assert completed.status_code == 409
+    assert completed.json()["detail"]["code"] == "TRIVIAL_ALREADY_COMPLETED"

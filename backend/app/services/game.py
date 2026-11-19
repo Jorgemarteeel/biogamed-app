@@ -100,6 +100,22 @@ def start_game_session(
     return result
 
 
+def resume_trivial_session(db: Session, current_user: User, session_id: int) -> GameSessionStartResponse:
+    session = db.scalar(select(GameSession).where(
+        GameSession.id == session_id, GameSession.user_id == current_user.id,
+        GameSession.game_mode == "TRIVIAL", GameSession.shared_match_id.is_(None),
+    ))
+    if session is None:
+        raise HTTPException(404, "La partida no existe.")
+    if session.is_completed:
+        raise HTTPException(409, {"code": "TRIVIAL_ALREADY_COMPLETED"})
+    return GameSessionStartResponse(
+        session_id=session.id, topic_id=session.topic_id,
+        questions=[QuestionForGame.model_validate(question.model_dump()) for question in _session_questions(session)],
+        content_context=session.content_context,
+    )
+
+
 def get_game_availability(db: Session, topic_id: int | None, game_mode: str = "TRIVIAL",
                           category_id: int | None = None, difficulty: int | None = None,
                           difficulty_unknown: bool = False, subject_id: int | None = None,
