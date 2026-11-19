@@ -12,6 +12,8 @@ class InternalSetup(BaseModel):
     model_config = ConfigDict(extra='forbid', frozen=True)
     operation_id: UUID
     play_mode: Literal['LOCAL', 'ONLINE']
+    # None remains parseable only to recover a pre-decks setup receipt.
+    # New creation rejects it before selecting content.
     subject_id: int | None = Field(default=None, strict=True, gt=0)
     participants: tuple[ParticipantSpec, ...] = Field(min_length=2, max_length=6)
 

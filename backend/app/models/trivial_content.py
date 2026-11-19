@@ -10,9 +10,11 @@ class TrivialContentCopy(Base):
     __table_args__ = (
         UniqueConstraint('match_id','bank','question_id'),
         UniqueConstraint('match_id','id'),
-        CheckConstraint("bank IN ('LYMPHOCYTE','MACROPHAGE','FLASK','SYRINGE')"),
+        CheckConstraint("(snapshot_version = 1 AND bank IN ('LYMPHOCYTE','MACROPHAGE','FLASK','SYRINGE')) OR "
+                        "(snapshot_version = 2 AND bank IN ('LYMPHOCYTE','MACROPHAGE','SPLEEN','FLASK','DNA') "
+                        "AND difficulty IS NOT NULL AND difficulty BETWEEN 1 AND 4)",
+                        name='ck_trivial_copy_format_version'),
         CheckConstraint('difficulty IS NULL OR difficulty BETWEEN 1 AND 4'),
-        CheckConstraint('snapshot_version = 1'),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
     match_id: Mapped[int] = mapped_column(ForeignKey('trivial_board_matches.id'), index=True)

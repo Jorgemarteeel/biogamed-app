@@ -1,4 +1,4 @@
-"""Internal manual movement coordinator; no routes, cards, evaluation or GameSession.
+"""Internal manual movement coordinator; no routes, card draws, evaluation or GameSession.
 
 The boundary MUST authenticate with get_current_user and pass that actor. A User
 object alone is not proof of login. Each entry point rechecks the current account
@@ -9,7 +9,9 @@ from copy import deepcopy
 from dataclasses import asdict
 from random import SystemRandom
 
-from sqlalchemy import select, func, case, or_, and_
+from sqlalchemy import select, func, case, or_, and_, text
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException
 
 from app.domain.inmunoquest_rules import (
     InmunoQuestEngine, State, Player, Phase, Bank, integer,
@@ -25,6 +27,7 @@ from app.services.trivial_persistence import (
     authenticate, authorized_participant, clean, fail, roster,
 )
 from app.utils.server_time import server_now
+from app.services import inmunoquest_content as content
 
 STATE_SCHEMA = 2
 RNG = SystemRandom()
@@ -98,9 +101,14 @@ def recover(match, people):
     if not valid_roster:
         fail('INVALID_SAVED_ROSTER')
     config = match.configuration
-    if (not isinstance(config, dict) or set(config) != {'schema_version', 'scope', 'participants_closed', 'subject'}
+    if (not isinstance(config, dict) or set(config) != ({'schema_version', 'scope', 'participants_closed', 'subject'} |
+                    ({'content_preparation_version'} if 'content_preparation_version' in config else set()))
             or type(config.get('schema_version')) is not int or config['schema_version'] != STATE_SCHEMA
             or config.get('scope') != 'MANUAL_MOVEMENT_ONLY' or config.get('participants_closed') is not True):
+        fail('INVALID_SAVED_CONFIGURATION')
+    if 'content_preparation_version' in config and config['content_preparation_version'] != content.PREPARATION_VERSION:
+        fail('UNSUPPORTED_CONTENT_VERSION')
+    if 'content_preparation_version' in config and match.subject_id is None:
         fail('INVALID_SAVED_CONFIGURATION')
     subject = config['subject']
     if match.subject_id is None:
@@ -125,6 +133,7 @@ def locked(db, actor, match_id):
         fail('MATCH_NOT_FOUND', 404)
     state = recover(match, people)
     validate_turn(db, match, state)
+    content.validate_preparation(db, match)
     return match, people, state
 
 
@@ -191,17 +200,27 @@ def read_state(db, actor, match_id):
         raise
 
 
-def create_internal(db, actor, request: InternalSetup):
+def create_internal(db, actor, request: InternalSetup, *, shuffler=None):
     clean(db)
     try:
         request = InternalSetup.model_validate(request.model_dump())
-        actor = authenticate(db, actor, exclusive=True)
+        actor = authenticate(db, actor)
         if request.participants[0].user_id != actor.id:
             fail('HOST_MUST_BE_FIRST', 403)
         payload = {'kind': 'setup', **request.model_dump(mode='json', exclude={'operation_id'})}
+        # UUID-scoped creation lock, across creators. A shared account lock keeps
+        # credentials current without blocking roster FK checks of other players.
+        if db.bind.dialect.name == 'postgresql':
+            db.execute(text('SELECT pg_advisory_xact_lock(873461, hashtext(:operation_id))'),
+                       {'operation_id': str(request.operation_id)})
         match = db.scalar(select(Match).where(Match.owner_id == actor.id,
                           Match.setup_operation_id == str(request.operation_id))
                           .execution_options(populate_existing=True).with_for_update())
+        # Preserve historical owner-scoped receipts if that UUID was used by
+        # several old creators. A new creation cannot reuse somebody else's key.
+        if match is None and db.scalar(select(Match.id).where(
+                Match.setup_operation_id == str(request.operation_id)).limit(1)) is not None:
+            fail('IDEMPOTENCY_CONFLICT')
         if match is not None:
             if match.setup_payload != payload:
                 fail('IDEMPOTENCY_CONFLICT')
@@ -213,9 +232,12 @@ def create_internal(db, actor, request: InternalSetup):
             result = deepcopy(receipt.result['state'])
             db.commit()
             return result
+        if request.subject_id is None:
+            fail('SUBJECT_REQUIRED', 422)
         subject = None
         if request.subject_id is not None:
-            row = db.scalar(select(Subject).where(Subject.id == request.subject_id).with_for_update(read=True))
+            row = db.scalar(select(Subject).where(Subject.id == request.subject_id).with_for_update(read=True)
+                            .execution_options(populate_existing=True))
             if row is None:
                 fail('SUBJECT_NOT_FOUND', 422)
             subject = {'id': row.id, 'name': row.name}
@@ -242,12 +264,16 @@ def create_internal(db, actor, request: InternalSetup):
             db.add(person)
             people.append(person)
         db.flush()
+        content.prepare(db, match, now, shuffler=shuffler)
         result = public_state(match, people, recover(match, people))
         db.add(Operation(match_id=match.id, operation_id=str(request.operation_id), actor_id=actor.id,
                          participant_slot=1, payload=payload, result={'state': result}, created_at=now))
         db.flush()
         db.commit()
         return result
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(500, {'code': 'MATCH_PERSISTENCE_FAILED'}) from None
     except Exception:
         db.rollback()
         raise

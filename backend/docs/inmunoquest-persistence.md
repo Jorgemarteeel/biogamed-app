@@ -2,11 +2,13 @@
 
 Base: main, `541cfcba08fdd17a366891b644b6fab85cdb0841`. Entrega interna con cierre autorizado en un commit local; sin push. No habilita partidas públicas.
 
+> Actualización: la [preparación automática de mazos](inmunoquest-decks.md) se integra en la creación interna, con copias privadas v2. No añade partidas públicas.
+
 ## Qué se puede ejecutar
 
-`app.services.inmunoquest_persistence` crea un agregado interno cerrado para 2–6 participantes, recupera su estado y ejecuta cuatro comandos: `order`, `advance`, `virus` y `choose_bank`. El motor puro existente calcula las reglas; el servicio no vuelve a calcular efectos, ganador, nivel ni banco. Al llegar a `QUESTION` se conserva el requisito y se detiene: no selecciona cartas, no crea presentaciones y no permite evaluar. `FINISHED` conserva la victoria aprobada en 140, sin pregunta final.
+`app.services.inmunoquest_persistence` crea un agregado interno cerrado para 2–6 participantes, recupera su estado y ejecuta cuatro comandos de movimiento: `order`, `advance`, `virus` y `choose_bank`. El motor puro existente calcula las reglas; el servicio no vuelve a calcular efectos, ganador, nivel ni banco. Al llegar a `QUESTION` el comando de movimiento conserva el requisito y se detiene. `FINISHED` conserva la victoria aprobada en 140, sin pregunta final.
 
-Local: anfitrión registrado en plaza 1 y uno a cinco invitados. Online: dos a seis cuentas distintas, con el anfitrión en plaza 1. El orden inicial se obtiene por tiradas, no por plazas; no se cambian las identidades al ordenar. Una asignatura existente puede elegirse expresamente; `subject_id=None` significa contexto sin asignatura, no mezclar todas las asignaturas. Esta entrega todavía no selecciona contenido ni garantiza disponibilidad para jugar.
+Local: anfitrión registrado en plaza 1 y uno a cinco invitados. Online: dos a seis cuentas distintas, con el anfitrión en plaza 1. El orden inicial se obtiene por tiradas, no por plazas; no se cambian las identidades al ordenar. Las creaciones nuevas requieren asignatura explícita y preparan sus veinte mazos; el mínimo técnico y su recuperación se documentan en la entrega de contenido. Los estados/recibos anteriores con subject_id=None siguen siendo interpretables, sin añadirles contenido automáticamente.
 
 ## Datos y versiones
 
@@ -36,7 +38,7 @@ El futuro router deberá ejecutar `get_current_user` y obtener de ahí el actor.
 
 Antes de operar o devolver un recibo se comprueban cuenta vigente, pertenencia y modalidad. En local solo el anfitrión opera las plazas; en online cada cuenta actúa exclusivamente por la suya. Para una acción nueva se comprueban además versión, fase, turno y participante activo o pendiente de desempate. No se crea progreso personal del invitado ni del anfitrión por sus acciones.
 
-Cada método posee commit/rollback y requiere una Session dedicada sin escrituras pendientes. El orden de bloqueo es cuenta y después partida: bloqueo exclusivo de la cuenta anfitriona para creación idempotente; bloqueo de lectura de la cuenta y exclusivo de partida para acciones y recuperación. Estado, turnos y recibo quedan confirmados en la misma transacción.
+Cada método posee commit/rollback y requiere una Session dedicada sin escrituras pendientes. El orden de bloqueo es cuenta y después partida: la creación actual mantiene un bloqueo compartido de cuenta y un advisory lock por UUID; las acciones y recuperación mantienen bloqueo de lectura de cuenta y exclusivo de partida. La actualización conserva los recibos históricos por propietario. Estado, turnos y recibo quedan confirmados en la misma transacción.
 
 Un recibo se identifica por partida y operación. El actor, plaza y contenido completo del comando deben coincidir; otro uso produce conflicto. Un reintento confirmado devuelve **exactamente la respuesta original**, aunque posteriormente haya cambiado el estado, sin tirar de nuevo ni exigir que el turno histórico siga activo. Se vuelven a comprobar autorización vigente e integridad de la partida. `read_state` permite obtener el estado actual por separado. La creación también conserva su respuesta original en un recibo de setup. Las operaciones rechazadas o revertidas no tienen recibo confirmado.
 
@@ -59,7 +61,7 @@ Evidencia anterior a la revisión de cierre (18 de noviembre de 2026):
 - **33 regresiones HTTP aprobadas en 9,87 s**, con las bases SQLite en memoria existentes: Pasapalabra local, salas y Trivial individual. Aparece el aviso de deprecación de Starlette TestClient/httpx ya presente; no se actualizan dependencias.
  No son pruebas de carga, navegador ni de una integración HTTP. Las 127 pruebas puras del motor aprobadas en la entrega anterior siguen vigentes: el motor no se modifica aquí.
 
-Faltan mazos/cartas de partida y copias abiertas, presentaciones sin plazo obligatorio, lector y evaluación humana autorizada, salas y acciones públicas, interfaz, resultados personales e integración educativa. No hay política nueva de abandono/desconexión; desconectarse no se transforma en abandono. No se migra ningún entorno existente.
+La preparación de mazos enlazada arriba incorpora copias abiertas y orden inicial. Presentación, lector y evaluación son entregas posteriores. Siguen fuera salas y acciones públicas, interfaz, resultados personales e integración educativa. No hay política nueva de abandono/desconexión; desconectarse no se transforma en abandono. No se migra ningún entorno existente.
 
 Cierre de recursos: se detuvieron y eliminaron únicamente el contenedor PostgreSQL desechable y su red propia, verificando sus etiquetas. Los procesos de pruebas se retiraron con --rm. No se crearon volúmenes persistentes ni se retiraron imágenes existentes. Se eliminaron la configuración efímera de pruebas y la copia temporal del código de referencia, fuera del repositorio. Comprobadas también sintaxis/espacios de los diez archivos Python afectados, única cabeza Alembic d19c285da6eb y diff sin secretos ni temporales. La primera entrega se dejó sin staging ni commit; el cierre posterior se describe a continuación.
 ## Revisión de cierre y commit local
@@ -68,7 +70,7 @@ Se adaptan los tres tests históricos mediante `tests/migration_fixtures.py`: ca
 
 Se mantienen todas las verificaciones de conservación, esquema, ausencia de backfill y recuperación. Los guards de f75 y f17 se invocan con el contexto real de operaciones Alembic en una transacción que siempre se revierte: así se verifica su rechazo exacto sin atravesar revisiones posteriores. Se verifica además que c08 sigue rechazando un downgrade de la cadena. Ninguna migración aplicada se modifica, no se usa stamp y no se omiten tests.
 
-La revisión descubre y corrige una validación incompleta: se comprobaba la fila actual de turno, pero no los huecos o contradicciones del registro previo. Antes de devolver estado o recibos se comprueban en una agregación SQL la continuidad del registro, el último número, el número de turnos abiertos y los metadatos de cierre. Se rechazan turnos adicionales, omitidos, varios abiertos, cierres sin fecha y turnos abiertos con cierre. En esta entrega los turnos anteriores solo pueden haber terminado por Virus; no se admite SKIPPED del HTML. No se añaden efectos del juego ni nuevas acciones y no se cambia el reloj.
+La revisión original descubre y corrige una validación incompleta: se comprobaba la fila actual de turno, pero no los huecos o contradicciones del registro previo. Antes de devolver estado o recibos se comprueban en una agregación SQL la continuidad del registro, el último número, el número de turnos abiertos y los metadatos de cierre. Se rechazan turnos adicionales, omitidos, varios abiertos, cierres sin fecha y turnos abiertos con cierre. Los cierres de turnos anteriores solo pueden deberse a Virus. No se admite SKIPPED del HTML ni se cambia el reloj.
 
 Evidencia nueva de cierre:
 

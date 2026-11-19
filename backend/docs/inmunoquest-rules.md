@@ -42,15 +42,9 @@ El manual contempla Jeringuillas consecutivas, pero en su ciclo están a ocho ca
 
 `trivial_movement.py` y sus pruebas son compatibilidad del HTML para el servicio interno `trivial_persistence` y las copias existentes. No hay partida pública operativa que se cambie en esta entrega. No se modifican esos estados, versiones o servicios ni se crean nuevos mediante el motor manual. Los dos tipos de estado se rechazan mutuamente. El motor del manual se utiliza ahora en un [servicio interno de persistencia](inmunoquest-persistence.md), separado del adaptador HTML. No está importado por routers y no constituye un modo jugable público.
 
-La integración posterior deberá:
+La persistencia interna del manual guarda versiones, estado, participantes y desempates. La [preparación automática](inmunoquest-decks.md) congela las copias abiertas v2 y los veinte órdenes iniciales. Las copias v1 del HTML conservan bancos, opciones y tiempos.
 
-- La persistencia interna del manual ya guarda versiones, estado, preparación de 2–6 y rondas/desempates. Conserva la interpretación histórica separada y no utiliza sus flags de penalización. Falta conectarla con la preparación jugable y el contenido, sin reinterpretar estados.
-- Adaptar bancos: las copias antiguas restringen a Linfocito/Macrófago/Matraz/Jeringuilla y no admiten Bazo/ADN. El formato abierto y la respuesta de referencia requieren otra versión de copia. No reconstruir copias ausentes ni modificar las existentes.
-- Sustituir para las partidas nuevas el plazo obligatorio de 60 segundos de las presentaciones antiguas: deadline_at actualmente no es nulo y tiene una restricción de fecha. El manual no debe pasar por ese contrato ni recibir un plazo inventado. Conservar tiempos históricos.
-- Reutilizar autenticación vigente, bloqueo de partida, versión y recibos idempotentes. La futura capa autenticada obtendrá al actor desde get_current_user, comprobará participante/turno/lector y generará los dados del servidor. Ningún endpoint permitirá al cliente decidirlos. El motor puro no autoriza ni protege por sí solo reintentos de red. Sus acciones siempre afectan al participante activo derivado del orden: no reciben un actor autenticado ni demuestran quién las solicita. Rechaza identidades/órdenes/índices incoherentes y acciones incompatibles con la fase; la autorización de la cuenta y del lector corresponde al futuro servicio.
-- Asociar la evaluación humana con la presentación y el contenido congelado. La fase QUESTION de este motor expresa una necesidad de pregunta, no demuestra que alguien haya recibido una carta.
-
-La entrega original del motor no añadió esquema ni migración; la persistencia interna posterior se documenta por separado. Siguen fuera selección/consumo/repetición de cartas, permisos del lector, salas, cronómetro, resultados históricos nuevos y frontend. No cambian reglas de Trivial individual, Pasapalabra ni gestión de contenidos.
+QUESTION indica que el motor requiere una pregunta. Extracción, presentación sin plazo y evaluación del lector son entregas posteriores. La futura capa HTTP deberá obtener al actor desde get_current_user. El motor puro calcula las transiciones y los servicios internos se encargan de permisos, generación de tiradas y protección frente a reintentos.
 
 ## Verificación
 

@@ -23,3 +23,4 @@ from app.models.question_import import QuestionImport
 
 from app.models.trivial_board import TrivialBoardMatch, TrivialBoardParticipant, TrivialBoardTurn, TrivialBoardOperation
 from app.models.trivial_content import TrivialContentCopy, TrivialPresentation
+from app.models.inmunoquest_content import InmunoQuestDeck

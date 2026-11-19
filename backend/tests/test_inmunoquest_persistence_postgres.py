@@ -26,6 +26,7 @@ from app.domain.inmunoquest_rules import Phase, Bank
 from app.schemas.inmunoquest_persistence import InternalSetup, Command
 from app.schemas.trivial_persistence import ParticipantSpec
 from app.services import inmunoquest_persistence as service
+from inmunoquest_content_fixtures import seed_open_questions
 
 
 @pytest.fixture
@@ -60,6 +61,8 @@ def accounts(engine):
         users = [User(name=f'Synthetic IQ {i}', email=f'iq-{i}@example.test', hashed_password='synthetic-unused-hash') for i in range(7)]
         subject = Subject(name='Synthetic explicit subject', description='No inferred classification')
         db.add_all([*users, subject])
+        db.flush()
+        seed_open_questions(db, subject.id)
         db.commit()
         return [p.id for p in users], subject.id
 
@@ -284,8 +287,9 @@ def test_setup_destination_conflict_missing_subject_and_immutable_subject_contex
         db.get(Subject, subject).name = 'Synthetic renamed subject'
         db.commit()
     assert reload(pg, ids, state)['subject']['name'] == 'Synthetic explicit subject'
-    unclassified, _ = create(pg, ids, None)
-    assert unclassified['subject'] is None
+    with pytest.raises(HTTPException) as error:
+        create(pg, ids, None)
+    assert code(error) == 'SUBJECT_REQUIRED'
 
 
 @pytest.mark.parametrize('online', [False, True])
@@ -539,7 +543,13 @@ def test_migration_preserves_actual_legacy_rows_copies_receipts_and_interpretati
     from app.models import Base
     for name in ('trivial_board_matches', 'trivial_board_participants'):
         assert {c['name']: c['nullable'] for c in inspect(pg).get_columns(name)} == {c.name: c.nullable for c in Base.metadata.tables[name].columns}
-    state, _ = create(pg, users, None)
+    with Session(pg) as db:
+        manual_subject = Subject(name='Synthetic prepared manual context')
+        db.add(manual_subject); db.flush()
+        seed_open_questions(db, manual_subject.id)
+        db.commit()
+        manual_subject_id = manual_subject.id
+    state, _ = create(pg, users, manual_subject_id)
     with patch('app.database.engine', pg), pytest.raises(RuntimeError, match='Cannot discard'):
         command.downgrade(Config('alembic.ini'), 'c08b174c95da')
     reload(pg, users, state)
