@@ -29,8 +29,8 @@ def test_permissions_registration_and_privacy(client,db):
     assert changed.status_code==200 and changed.json()['email']=='legacy@example.test'
     app.dependency_overrides.pop(get_current_user,None)
     payload={'name':'Public','email':'public@example.com','password':'test-only-password'}
-    assert client.post('/auth/register',json={**payload,'role':'admin'}).status_code==422
-    assert client.post('/auth/register',json=payload).json()['role']=='student'
+    assert client.post('/auth/register',json={**payload,'role':'admin'}).status_code==410
+    assert client.post('/auth/register',json=payload).status_code==410
 
 def test_role_trace_conflict_and_old_token(client,db):
     a=make(db,'A',UserRole.ADMIN);b=make(db,'B',UserRole.ADMIN);target=make(db,'T',UserRole.STUDENT)

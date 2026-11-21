@@ -101,6 +101,9 @@ export default function DashboardPage() {
           {user&&<button className="button-secondary" aria-haspopup="dialog" onClick={()=>setJoinOpen(true)}>Unirme con código</button>}
         </div>
 
+        {user?.role === "teacher" && <Link href="/altas/alumnado" className="button-secondary mb-4">Importar alumnado</Link>}
+        {user?.role === "admin" && <Link href="/altas/profesorado" className="button-secondary mb-4">Importar profesorado</Link>}
+
         {loading ? (
           <div role="status" className="rounded-2xl border border-slate-200 bg-white p-8 text-slate-600">
             Cargando tu panel…

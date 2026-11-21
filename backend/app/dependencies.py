@@ -37,7 +37,7 @@ def get_current_user(
 
     user = user_service.get_user_by_email(db, email=email)
     version = payload.get("auth_version", 0)
-    if user is None or type(version) is not int or version != user.auth_version:
+    if user is None or user.hashed_password is None or type(version) is not int or version != user.auth_version:
         raise credentials_exception
 
     return user

@@ -34,31 +34,31 @@ def test_windows_separation_and_retry(monkeypatch):
     with pytest.raises(HTTPException) as error:
         limiter.check("login", "peer-a")
     assert error.value.status_code == 429 and error.value.headers["Retry-After"] == "10"
-    limiter.check("register", "peer-a")
+    limiter.check("activation", "peer-a")
     limiter.check("login", "peer-b")
     now[0] = 10
     limiter.check("login", "peer-a")
 
 
-@pytest.mark.parametrize("kind", ["login", "register"])
+@pytest.mark.parametrize("kind", ["login", "activation"])
 def test_limits_precede_hashing_and_ignore_headers(client, test_user, monkeypatch, kind):
     from app.utils import auth_limits
     from app.routers import auth
     monkeypatch.setenv("AUTH_LOGIN_LIMIT", "1")
-    monkeypatch.setenv("AUTH_REGISTER_LIMIT", "1")
+    monkeypatch.setenv("AUTH_ACTIVATION_LIMIT", "1")
     monkeypatch.setattr(auth_limits, "limits", AuthLimits())
     if kind == "login":
         path = "/auth/login"
-        payload = dict(data={"username": test_user.email, "password": "test-password-123"})
+        payload = dict(data={"username": test_user.dni, "password": "test-password-123"})
         assert client.post(path, **payload).status_code == 200
         costly = Mock(side_effect=AssertionError("must not hash"))
         monkeypatch.setattr(auth, "verify_password", costly)
     else:
-        path = "/auth/register"
-        payload = dict(json={"name": "Synthetic", "email": "synthetic@example.com", "password": "test-password-123"})
-        assert client.post(path, **payload).status_code == 201
+        path = "/auth/activate"
+        payload = dict(json={"code": "a" * 43, "password": "test-password-123"})
+        assert client.post(path, **payload).status_code == 400
         costly = Mock(side_effect=AssertionError("must not hash"))
-        monkeypatch.setattr(auth.user_service, "get_password_hash", costly)
+        monkeypatch.setattr(auth.user_onboarding, "activate", costly)
     response = client.post(path, **payload, headers={"X-Forwarded-For": "198.51.100.123", "X-Real-IP": "203.0.113.10", "Forwarded": "for=198.51.100.123"})
     assert response.status_code == 429 and int(response.headers["Retry-After"]) > 0
     costly.assert_not_called()

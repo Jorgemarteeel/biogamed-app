@@ -6,11 +6,7 @@ export interface LoginResponse {
   token_type: string;
 }
 
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-}
+
 
 export interface UserResponse {
   id: string;
@@ -19,10 +15,7 @@ export interface UserResponse {
   role: "admin" | "teacher" | "student";
 }
 
-export async function registerUser(data: RegisterData): Promise<UserResponse> {
-  const response = await api.post<UserResponse>("/auth/register", data);
-  return response.data;
-}
+
 
 export interface Topic {
   id: number;
@@ -136,7 +129,7 @@ const api = axios.create({
 
 function isPublicAuthRequest(url?: string): boolean {
   const path = new URL(url ?? "", api.defaults.baseURL).pathname.replace(/\/$/, "");
-  return path === "/auth/login" || path === "/auth/register";
+  return ["/auth/login", "/auth/register", "/auth/activate"].includes(path);
 }
 
 api.interceptors.request.use((config) => {
@@ -179,10 +172,10 @@ api.interceptors.response.use(
 );
 
 export async function loginUser(
-  email: string,
+  dni: string,
   password: string,
 ): Promise<LoginResponse> {
-  const credentials = new URLSearchParams({ username: email, password });
+  const credentials = new URLSearchParams({ username: dni, password });
   const response = await api.post<LoginResponse>("/auth/login", credentials, {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   });

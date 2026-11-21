@@ -1,10 +1,9 @@
-import Link from "next/link";
 import Login from "@/components/Login";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session?: string | string[]; password?: string | string[] }>;
+  searchParams: Promise<{ session?: string | string[]; password?: string | string[]; activated?: string | string[] }>;
 }) {
   const params = await searchParams;
   return (
@@ -17,14 +16,7 @@ export default async function LoginPage({
         </p>
       </div>
 
-      <Login passwordChanged={params.password === "changed"} sessionExpired={params.session === "expired"} />
-
-      <div className="mt-8 border-t border-slate-200 pt-7 text-center">
-        <p className="text-sm text-slate-600">
-          ¿Todavía no tienes cuenta?{" "}
-          <Link href="/registro" className="text-link">Crea una gratis</Link>
-        </p>
-      </div>
+      <Login passwordChanged={params.password === "changed"} sessionExpired={params.session === "expired"} activated={params.activated === "1"} />
     </div>
   );
 }

@@ -39,7 +39,8 @@ test('public landing describes academic preparation and both Pasapalabra modes w
   assert.match(html,/Dos juegos para practicar/);
   assert.ok(html.includes('Elige los contenidos de tu asignatura y practica con Trivial o Pasapalabra. Consulta después tus resultados'));
   for(const text of ['Elige qué practicar','asignatura, bloque y categoría','Prepara tu partida','Consulta tus resultados','evolución de partidas comparables','de forma individual','rosco numerado','con un invitado','en línea con otra cuenta'])assert.ok(html.includes(text),text);
-  for(const href of ['/practicar','/login','/registro','#modalidades'])assert.ok(html.includes(`href="${href}"`),href);
+  for(const href of ['/practicar','/login','#modalidades'])assert.ok(html.includes(`href="${href}"`),href);
+  assert.doesNotMatch(html, /href="\/registro"|Crear cuenta|crea tu cuenta/);
   assert.doesNotMatch(html,/Selecciona el tema|Al terminar Trivial|Empieza por L|Pasapalabra local y consulta|Disponible/);
 });
 

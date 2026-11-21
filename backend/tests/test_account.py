@@ -44,8 +44,8 @@ def test_password_validation_and_revocation(client,db,test_user,auth_headers):
     for h in tokens:
         for path in ['/auth/me','/game/history','/subjects','/admin/users','/pasapalabra/matches/1','/pasapalabra/rooms/00000000-0000-4000-8000-000000000001']:
             assert client.get(path,headers=h).status_code==401
-    assert client.post('/auth/login',data={'username':test_user.email,'password':'test-password-123'}).status_code==401
-    login=client.post('/auth/login',data={'username':test_user.email,'password':NEW})
+    assert client.post('/auth/login',data={'username':test_user.dni,'password':'test-password-123'}).status_code==401
+    login=client.post('/auth/login',data={'username':test_user.dni,'password':NEW})
     assert login.status_code==200
     current={'Authorization':'Bearer '+login.json()['access_token']}
     assert client.get('/auth/me',headers=current).status_code==200
@@ -54,20 +54,12 @@ def test_password_validation_and_revocation(client,db,test_user,auth_headers):
     assert client.get('/auth/me',headers=tokens[1]).status_code==401
 
 
-def test_registration_unicode_limits_and_no_privileges(client,db):
-    for value in ['ñ'*36+'A','🔬'*255]:
-        email=f'u{len(value)}@example.com'
-        response=client.post('/auth/register',json={'name':'  Nombre  ','email':email,'password':value})
-        assert response.status_code==201 and response.json()['role']=='student' and response.json()['name']=='Nombre'
-        assert client.post('/auth/login',data={'username':email,'password':value}).status_code==200
-        assert client.post('/auth/login',data={'username':email,'password':value[:-1]+'B'}).status_code==401
-    assert client.post('/auth/register',json={'name':'A','email':'bad@example.com','password':'x'*256}).status_code==422
-    assert client.post('/auth/register',json={'name':'A','email':'bad@example.com','password':'12345678','role':'admin'}).status_code==422
+
 
 
 def test_legacy_login_and_atomic_rollback(client,db,test_user,auth_headers,monkeypatch):
     original=pwd_context.hash('test-password-123');test_user.hashed_password=original;db.commit()
-    assert client.post('/auth/login',data={'username':test_user.email,'password':'test-password-123'}).status_code==200
+    assert client.post('/auth/login',data={'username':test_user.dni,'password':'test-password-123'}).status_code==200
     db.refresh(test_user);assert test_user.hashed_password==original
     def fail():raise RuntimeError('controlled database failure')
     with monkeypatch.context() as m:

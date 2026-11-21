@@ -19,7 +19,8 @@ class AuthLimits:
         self.clock = clock
         self.rules = {
             "login": (positive("AUTH_LOGIN_LIMIT", 120), positive("AUTH_LOGIN_WINDOW_SECONDS", 600)),
-            "register": (positive("AUTH_REGISTER_LIMIT", 60), positive("AUTH_REGISTER_WINDOW_SECONDS", 3600)),
+            "activation": (positive("AUTH_ACTIVATION_LIMIT", 15), positive("AUTH_ACTIVATION_WINDOW_SECONDS", 600)),
+            "import": (positive("AUTH_IMPORT_LIMIT", 60), positive("AUTH_IMPORT_WINDOW_SECONDS", 600)),
         }
         self.entries = OrderedDict()
         self.lock = Lock()
@@ -49,5 +50,9 @@ def login_limit(request: Request):
     limits.check("login", request.client.host if request.client else "unknown")
 
 
-def register_limit(request: Request):
-    limits.check("register", request.client.host if request.client else "unknown")
+def activation_limit(request: Request):
+    limits.check("activation", request.client.host if request.client else "unknown")
+
+
+def user_import_limit(request: Request):
+    limits.check("import", request.client.host if request.client else "unknown")

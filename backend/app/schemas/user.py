@@ -26,6 +26,18 @@ class UserCreate(UserBase):
         return value
 
 
+class ActivationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(min_length=43, max_length=43)
+    password: str = Field(min_length=8, max_length=255)
+
+    @field_validator("password")
+    @classmethod
+    def valid_password(cls, value):
+        value.encode("utf-8")
+        return value
+
+
 class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 

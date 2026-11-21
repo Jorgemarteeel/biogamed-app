@@ -1,15 +1,25 @@
 import os
 from urllib.parse import urlsplit, urlunsplit
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 # Importamos nuestro nuevo router
 from app.routers import inmunoquest, auth, game, questions, subjects, topics
-from app.routers import pasapalabra, practice, monitoring, users, question_import, trivial_board
+from app.routers import pasapalabra, practice, monitoring, users, question_import, trivial_board, user_import
 
 # Las tablas se gestionan mediante `alembic upgrade head`.
 
 app = FastAPI(title="BioGaMed API")
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_error(request: Request, error: RequestValidationError):
+    if request.url.path.startswith(("/auth/", "/user-imports/")):
+        return JSONResponse({"detail": "La solicitud contiene campos inválidos."}, status_code=422)
+    return await request_validation_exception_handler(request, error)
 
 allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 if extra_origin := os.getenv("BIOGAMED_CORS_ORIGIN"):
@@ -32,6 +42,7 @@ app.add_middleware(
 # Enganchamos el router a la app principal
 app.include_router(inmunoquest.router)
 app.include_router(auth.router)
+app.include_router(user_import.router)
 app.include_router(topics.router)
 app.include_router(subjects.router)
 app.include_router(questions.router)

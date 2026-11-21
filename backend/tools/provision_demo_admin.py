@@ -2,6 +2,8 @@
 import os
 from sqlalchemy.engine import make_url
 from sqlalchemy import select,text
+from app.services.user_onboarding import lock_users
+from app.utils.identity import normalize_dni
 from app.database import engine,SessionLocal
 from app.models import User,UserRole
 from app.utils.security import get_password_hash
@@ -13,10 +15,14 @@ def main():
     if len(password)<16:raise RuntimeError('Demo password too short')
     with SessionLocal() as db:
         assert db.scalar(text('select current_database()'))=='biogamed_demo'
+        lock_users(db)
         user=db.scalar(select(User).where(User.email=='admin-demo@example.com'))
         if user:
             if user.role!=UserRole.ADMIN:raise RuntimeError('Existing account must not be promoted by bootstrap')
             print('Existing demo administrator retained; no password change');return
-        db.add(User(name='Administrador Demo',email='admin-demo@example.com',hashed_password=get_password_hash(password),role=UserRole.ADMIN));db.commit()
+        if db.scalar(select(User.id).where(User.role==UserRole.ADMIN).limit(1)):raise RuntimeError('Administrator already exists')
+        dni=normalize_dni(os.environ.get('BIOGAMED_DEMO_ADMIN_DNI',''))
+        if db.scalar(select(User.id).where(User.dni==dni)):raise RuntimeError('DNI already assigned')
+        db.add(User(name='Administrador Demo',email='admin-demo@example.com',dni=dni,hashed_password=get_password_hash(password),role=UserRole.ADMIN));db.commit()
         print('Isolated demo administrator created')
 if __name__=='__main__':main()

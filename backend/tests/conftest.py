@@ -48,6 +48,7 @@ def test_user(db):
     user = User(
         name="Test Student",
         email="student@example.com",
+        dni="00000000T",
         hashed_password=get_password_hash("test-password-123"),
     )
     db.add(user)
@@ -60,7 +61,7 @@ def test_user(db):
 def auth_headers(client, test_user):
     response = client.post(
         "/auth/login",
-        data={"username": test_user.email, "password": "test-password-123"},
+        data={"username": test_user.dni, "password": "test-password-123"},
     )
     assert response.status_code == 200, response.text
     token = response.json()

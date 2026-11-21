@@ -42,6 +42,7 @@ def change_role(db:Session,actor_id:UUID,target_id:UUID,request:RoleUpdate):
     if target is None:raise HTTPException(404,'Cuenta no encontrada.')
     if target.role!=request.expected_role:raise HTTPException(409,'El rol ha cambiado. Recarga la lista y confirma de nuevo.')
     if target.role==request.role:return target
+    if target.hashed_password is None:raise HTTPException(409, "El rol solo se puede cambiar en cuentas activas.")
     if target.role==UserRole.ADMIN and db.scalar(select(func.count()).select_from(User).where(User.role==UserRole.ADMIN))<=1:
         raise HTTPException(409,'Debe quedar al menos un administrador.')
     db.add(RoleChange(actor_id=actor_id,target_id=target_id,previous_role=target.role.value,new_role=request.role.value))

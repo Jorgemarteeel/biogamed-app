@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { loginUser, SESSION_REJECTION_NOTICE_KEY } from "@/services/api";
 
-export default function Login({ sessionExpired = false, passwordChanged = false }: { sessionExpired?: boolean; passwordChanged?: boolean }) {
+export default function Login({ sessionExpired = false, passwordChanged = false, activated = false }: { sessionExpired?: boolean; passwordChanged?: boolean; activated?: boolean }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,7 +42,7 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
     setSuccess("");
 
     try {
-      const { access_token } = await loginUser(email, password);
+      const { access_token } = await loginUser(dni, password);
       localStorage.setItem("token", access_token);
       setPassword("");
       setSuccess("Sesión iniciada correctamente.");
@@ -55,7 +55,7 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
       if (isAxiosError(err)) {
         setError(
           err.response?.status === 401
-            ? "Credenciales incorrectas. Revisa tu correo y contraseña."
+            ? "Credenciales incorrectas. Revisa tu DNI y contraseña."
             : !err.response
               ? "No se pudo conectar con el servidor. Inténtalo de nuevo."
               : "No se pudo iniciar sesión. Inténtalo de nuevo.",
@@ -70,6 +70,7 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
 
   return (
     <form method="post" onSubmit={handleSubmit} aria-busy={isLoading} className="space-y-5">
+      {activated && <p role="status" className="notice-success">Cuenta activada. Ya puedes iniciar sesión con tu DNI.</p>}
       {passwordChanged && <p role="status" className="notice-success">Contraseña cambiada. Todas las sesiones anteriores están cerradas. Inicia sesión de nuevo.</p>}
       {sessionExpired && showSessionNotice && (
         <p role="status" className="notice-warning">
@@ -77,16 +78,19 @@ export default function Login({ sessionExpired = false, passwordChanged = false 
         </p>
       )}
       <div>
-        <label htmlFor="login-email" className="form-label">
-          Correo electrónico
+        <label htmlFor="login-dni" className="form-label">
+          DNI
         </label>
         <input
-          id="login-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          id="login-dni"
+          name="dni"
+          type="text"
+          autoCapitalize="characters"
+          spellCheck={false}
+          autoComplete="username"
+          maxLength={32}
+          value={dni}
+          onChange={(event) => setDni(event.target.value)}
           disabled={isLoading}
           required
           className="form-input"

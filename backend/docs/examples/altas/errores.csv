@@ -1,0 +1,5 @@
+dni;nombre;correo
+DNI-INVÁLIDO;Cuenta ficticia;ejemplo-sin-dni@example.com
+00080004X;;correo-invalido
+00080005B;Cuenta duplicada A;repetido@example.com
+00080005B;Cuenta duplicada B;repetido@example.com

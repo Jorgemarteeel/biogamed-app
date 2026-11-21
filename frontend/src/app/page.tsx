@@ -16,7 +16,6 @@ export default function Home() {
           <Brand />
           <div className="flex w-full items-center justify-between gap-3 text-sm font-bold sm:w-auto">
             <Link href="/login" className="rounded-xl px-3 py-3 text-white transition-colors hover:bg-white/10">Iniciar sesión</Link>
-            <Link href="/registro" className="button-primary">Crear cuenta</Link>
           </div>
         </nav>
       </header>
@@ -30,7 +29,7 @@ export default function Home() {
               <Link href="/practicar" className="button-primary">Elegir qué practicar →</Link>
               <Link href="#modalidades" className="button-secondary">Conocer los juegos</Link>
             </div>
-            <p className="mt-5 text-sm text-slate-600">Para jugar, <Link href="/login" className="text-link">inicia sesión</Link> o <Link href="/registro" className="text-link">crea tu cuenta</Link>.</p>
+            <p className="mt-5 text-sm text-slate-600">Para jugar, <Link href="/login" className="text-link">inicia sesión</Link>.</p>
           </div>
           <div className="relative isolate rounded-2xl bg-blue-950 p-8 text-white shadow-lg shadow-blue-950/10 before:pointer-events-none before:absolute before:-inset-8 before:-z-10 before:rounded-full before:bg-[radial-gradient(ellipse,rgba(14,116,144,0.18),transparent_70%)] sm:p-10">
             <p className="text-xs font-bold uppercase tracking-widest text-orange-300">Aprender haciendo</p>

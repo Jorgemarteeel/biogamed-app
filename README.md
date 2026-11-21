@@ -39,7 +39,7 @@ docker compose -p biogamed_fresh -f compose.install.yml exec backend pip check
 
 El backend espera a PostgreSQL saludable, ejecuta `alembic upgrade head` y solo arranca si la migración termina correctamente. Frontend ejecuta `next start` sobre la compilación de producción. La compilación utiliza `npm ci` y package-lock; Python utiliza requirements con las restricciones completas de `requirements.lock.txt`, fijadas a las versiones ya verificadas del proyecto, instaladas de nuevo (sin copiar entornos). Para una instalación Python manual usa `python -m pip install -r requirements.txt -c requirements.lock.txt` dentro de un entorno nuevo; no omitas las restricciones.
 
-Abre <http://localhost:14004> y registra una cuenta ficticia para comprobar el acceso. La API está en <http://localhost:19004/docs>. Las cuentas públicas son siempre estudiantes y no aceptan rol. La instalación empieza sin asignaturas, temáticas, preguntas ni partidas; el panel muestra el estado vacío y el acceso alternativo a bancos. No se podrán iniciar juegos hasta preparar contenido. No se ejecutan seeds ni se importan automáticamente archivos originales.
+Abre <http://localhost:14004> y, tras crear el primer administrador, inicia sesión con su DNI. La API está en <http://localhost:19004/docs>. El administrador importa docentes y el docente importa alumnado mediante CSV. Las cuentas importadas eligen su propia contraseña con la invitación por correo. Para configurar SMTP, probar el alta o preparar una actualización con cuentas existentes, consulta [Altas y acceso](backend/docs/user-onboarding.md). La instalación empieza sin asignaturas, temáticas, preguntas ni partidas.
 
 Para detener y volver a arrancar conservando datos:
 
@@ -58,7 +58,7 @@ Solo en la instalación nueva cuya conexión acabas de verificar:
 docker compose -p biogamed_fresh -f compose.install.yml exec backend python -m tools.bootstrap_admin
 ```
 
-Introduce nombre, correo y contraseña (entrada oculta) y confirma esta última. Crea una **cuenta nueva**, nunca promueve ni modifica una existente. Reutiliza las validaciones y Argon2id; la transacción con bloqueo PostgreSQL evita dos altas iniciales simultáneas. Se niega si ya existe cualquier administrador o si el correo ya está registrado. No registra contraseñas y no añade endpoints públicos. El operador con acceso a la consola controla el aprovisionamiento; no ejecutes el comando contra conexiones no verificadas. Después usa el login normal y la administración de roles para gestionar cuentas. El aprovisionador `provision_demo_admin.py` sigue reservado a la demo y no se usa aquí.
+Introduce nombre, correo, DNI verificado y contraseña. El DNI y la contraseña se introducen sin eco. Crea una **cuenta nueva**, nunca promueve ni modifica una existente. Reutiliza las validaciones y Argon2id; la transacción con bloqueo PostgreSQL evita dos altas iniciales simultáneas. Se niega si ya existe cualquier administrador o si el correo ya está registrado. No registra contraseñas y no añade endpoints públicos. El operador con acceso a la consola controla el aprovisionamiento; no ejecutes el comando contra conexiones no verificadas. Después usa el login normal y la administración de roles para gestionar cuentas. El aprovisionador `provision_demo_admin.py` sigue reservado a la demo y no se usa aquí.
 
 ## Verificación realizada y límites (12-11-2026)
 
@@ -89,16 +89,16 @@ El backend exige SECRET_KEY explícita, no vacía y distinta del antiguo valor d
 
 El Compose histórico queda identificado como desarrollo, con recarga y next dev. Su PostgreSQL pasa a publicar 127.0.0.1:5432, conservando la conexión interna backend→db:5432. La receta aislada sigue sin publicar la base. El cambio de publicación **no altera contenedores ya existentes**: requiere recrear únicamente el servicio db en una ventana acordada, con el mismo proyecto y volumen y previa verificación/copia. No se ha recreado ni reiniciado ningún servicio en esta entrega. No uses down -v ni cambies de volumen.
 
-Los límites se ejecutan como dependencias de las dos rutas, antes de buscar/verificar/crear el hash. Cuentan peticiones admitidas, incluidas las correctas. Política por IP de conexión y proceso:
+Los límites se ejecutan como dependencias de acceso, activación y altas. Cuentan peticiones admitidas, incluidas las correctas. Política por IP de conexión y proceso:
 
 | Variable | Predeterminado |
 | --- | --- |
 | AUTH_LOGIN_LIMIT | 120 peticiones |
 | AUTH_LOGIN_WINDOW_SECONDS | 600 segundos |
-| AUTH_REGISTER_LIMIT | 60 peticiones |
-| AUTH_REGISTER_WINDOW_SECONDS | 3600 segundos |
+| AUTH_ACTIVATION_LIMIT / AUTH_ACTIVATION_WINDOW_SECONDS | 15 peticiones / 600 segundos |
+| AUTH_IMPORT_LIMIT / AUTH_IMPORT_WINDOW_SECONDS | 60 peticiones / 600 segundos |
 
-Todos los valores deben ser enteros positivos. Son ventanas fijas iniciadas por la primera petición, independientes entre login/registro y entre IP; no hay bloqueo global por correo ni cuenta. Son valores iniciales para una clase con dirección compartida, no una garantía frente a ataques distribuidos. Ajustarlos requiere reiniciar el proceso. Al agotarse un límite se responde HTTP 429 con mensaje genérico y Retry-After en segundos, redondeado hacia arriba; no se renueva la ventana al rechazar. Las validaciones existentes pueden seguir devolviendo 422 sin que se ejecute un hash.
+Todos los valores deben ser enteros positivos. Son ventanas fijas iniciadas por la primera petición, independientes entre acceso, activación, altas y entre IP. No hay bloqueo global por correo ni cuenta. Son valores iniciales para una clase con dirección compartida, no una garantía frente a ataques distribuidos. Ajustarlos requiere reiniciar el proceso. Al agotarse un límite se responde HTTP 429 con mensaje genérico y Retry-After en segundos, redondeado hacia arriba; no se renueva la ventana al rechazar. Las validaciones existentes pueden seguir devolviendo 422 sin que se ejecute un hash.
 
 Se usa reloj monotónico y bloqueo entre hilos. El estado permanece **en memoria de cada proceso**, se pierde al reiniciar y no se comparte entre workers o réplicas. Hay un máximo de 10.000 entradas; se purgan las vencidas y se expulsa la más antigua si se llena: muchas direcciones pueden eludir límites mediante esa expulsión. No hay una protección distribuida ni sustituto de límites de tráfico en el futuro perímetro. No se añade Redis, almacenamiento de IP en base ni nuevas tablas.
 
