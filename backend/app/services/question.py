@@ -25,6 +25,8 @@ def update_accepted_answers(db: Session, question_id: int, answers: list[str]) -
 
 def _require_topic(db: Session, topic_id: int) -> None:
     topic = db.get(Topic, topic_id)
+    if topic is not None and topic.edition_id is not None:
+        raise HTTPException(422, "Gestiona esta temática desde Contenidos de su edición.")
     if topic is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

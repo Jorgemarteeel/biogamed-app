@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, require_content_staff
 from app.models import AcademicEdition, Enrollment, Subject, User, UserRole
 from app.services.enrollment_access import enable_for_play
 from app.services.user_onboarding import checked_manager, require_manager
@@ -18,8 +18,7 @@ router = APIRouter(prefix="/academic-editions", tags=["Ediciones académicas"])
 
 
 def require_teacher(actor: User = Depends(get_current_user)) -> User:
-    require_manager(actor, "alumnado")
-    return actor
+    return require_content_staff(actor)
 
 
 class EditionCreate(BaseModel):
@@ -58,7 +57,7 @@ def list_subjects(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=10
 def list_editions(skip: int = Query(0, ge=0), limit: int = Query(30, ge=1, le=100),
                   db: Session = Depends(get_db), actor: User = Depends(require_teacher)):
     rows = db.execute(
-        select(AcademicEdition.id, AcademicEdition.academic_year, Subject.name.label("subject_name"),
+        select(AcademicEdition.id, AcademicEdition.subject_id, AcademicEdition.academic_year, Subject.name.label("subject_name"),
                Subject.code.label("subject_code"))
         .join(Subject, AcademicEdition.subject_id == Subject.id)
         .order_by(Subject.name, AcademicEdition.academic_year.desc(), AcademicEdition.id)
@@ -69,7 +68,10 @@ def list_editions(skip: int = Query(0, ge=0), limit: int = Query(30, ge=1, le=10
 
 @router.post("", status_code=201)
 def create_edition(payload: EditionCreate, db: Session = Depends(get_db), actor: User = Depends(require_teacher)):
-    checked_manager(db, actor, "alumnado")
+    from app.services.user_onboarding import lock_users
+    lock_users(db)
+    db.refresh(actor)
+    require_content_staff(actor)
     subject = db.get(Subject, payload.subject_id, with_for_update=True)
     if subject is None:
         raise HTTPException(404, "No existe la asignatura indicada.")

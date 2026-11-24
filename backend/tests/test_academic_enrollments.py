@@ -28,9 +28,10 @@ def test_edition_catalog_has_unique_code_and_existing_subject(client, db, manage
     db.add(subject)
     db.commit()
     assert client.get("/academic-editions").status_code == 401
-    for role in ("student", "admin"):
+    for role in ("student",):
         assert client.get("/academic-editions/subjects", headers=roles[role]).status_code == 403
         assert create(client, roles[role], subject.id, "2026-2027", "SECOND").status_code == 403
+    assert client.get("/academic-editions", headers=roles["admin"]).status_code == 200
     assert create(client, teacher, subject.id, "2026-2027").status_code == 422
     assert create(client, teacher, subject.id, "2026-2028", "SECOND").status_code == 422
     assert create(client, teacher, subject.id, "2026-2027", "DEMO").status_code == 409

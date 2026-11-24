@@ -36,3 +36,13 @@ class Enrollment(Base):
     edition_id: Mapped[int] = mapped_column(primary_key=True)
     subject_id: Mapped[int]
     play_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=false())
+
+class EditionBoardTopic(Base):
+    __tablename__ = "edition_board_topics"
+    __table_args__ = (
+        ForeignKeyConstraint(["topic_id", "edition_id"], ["topics.id", "topics.edition_id"], ondelete="RESTRICT"),
+        UniqueConstraint("edition_id", "topic_id"),
+    )
+    edition_id: Mapped[int] = mapped_column(ForeignKey("academic_editions.id", ondelete="RESTRICT"), primary_key=True)
+    bank: Mapped[str] = mapped_column(String(16), primary_key=True)
+    topic_id: Mapped[int]

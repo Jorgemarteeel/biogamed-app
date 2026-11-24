@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, JSON, String, Text, true
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, ForeignKeyConstraint, Integer, JSON, String, Text, true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -7,12 +7,14 @@ from app.models.base import Base
 class Question(Base):
     __tablename__ = "questions"
     __table_args__ = (
+        ForeignKeyConstraint(["topic_id", "edition_id"], ["topics.id", "topics.edition_id"], name="fk_question_topic_edition", ondelete="RESTRICT"),
         CheckConstraint(
             "difficulty IS NULL OR difficulty BETWEEN 1 AND 4",
             name="ck_question_difficulty",
         ),
     )
 
+    edition_id: Mapped[int | None] = mapped_column(ForeignKey("academic_editions.id", ondelete="RESTRICT"), nullable=True)
     id: Mapped[int] = mapped_column(primary_key=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true(), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
@@ -41,6 +43,6 @@ class Question(Base):
         ForeignKey("categories.id", ondelete="RESTRICT"), nullable=True, index=True,
     )
 
-    topic: Mapped["Topic"] = relationship(back_populates="questions")
+    topic: Mapped["Topic"] = relationship(back_populates="questions", foreign_keys=[topic_id])
     category: Mapped["Category | None"] = relationship(back_populates="questions")
     answer_logs: Mapped[list["AnswerLog"]] = relationship(back_populates="question")

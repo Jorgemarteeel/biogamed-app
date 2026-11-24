@@ -74,6 +74,7 @@ def edit_question(question_id: int, payload: QuestionCreate, db: Session = Depen
     # Lock the destination before the question, matching imports/manual creation.
     existing = db.get(Question, question_id)
     if existing is None: raise HTTPException(404, "La pregunta no existe.")
+    if existing.edition_id is not None: raise HTTPException(409, "Edita esta pregunta desde Contenidos de su edición.")
     academic = academic_destination(db, payload.subject_id, payload.block_id, payload.category_id)
     for destination in sorted({existing.category_id or 0, academic["category_id"] or 0}):
         question_service.lock_question_destination(db, destination or None)
