@@ -4,9 +4,10 @@ from unittest.mock import Mock
 import pytest
 from sqlalchemy import select
 
-from app.models import GameSession, User, UserRole
+from app.models import AcademicEdition, GameSession, Subject, User, UserRole
 from app.models.user_import import UserImport
 from app.services import activation_mail, user_onboarding
+from app.utils import auth_limits
 from app.utils.identity import LETTERS
 from app.utils.security import get_password_hash
 from tools.assign_user_dni import assign
@@ -22,10 +23,22 @@ def csv_data(*rows):
     return ("dni;nombre;correo\r\n" + "\r\n".join(";".join(row) for row in rows) + "\r\n").encode()
 
 
-def post_csv(client, target, action, headers, raw, proof=None):
+def student_csv(*rows):
+    default_edition = ("DEMO", "2026-2027")
+    return ("dni;nombre;correo;codigo_asignatura;anio_academico\r\n" + "\r\n".join(
+        ";".join(row + default_edition if len(row) == 3 else row) for row in rows
+    ) + "\r\n").encode()
+
+
+def post_csv(client, target, action, headers, raw, proof=None, mode=None):
+    fields = {}
+    if proof is not None:
+        fields["proof"] = proof
+    if target == "alumnado" and mode is not None:
+        fields["mode"] = mode
     return client.post(f"/user-imports/{target}/{action}", headers=headers, files={
         "file": ("test.csv", raw, "text/csv"),
-    }, data={"proof": proof} if proof is not None else None)
+    }, data=fields)
 
 
 def login(client, username, password=PASSWORD):
@@ -34,6 +47,7 @@ def login(client, username, password=PASSWORD):
 
 @pytest.fixture
 def managers(db, client, monkeypatch):
+    monkeypatch.setattr(auth_limits, "limits", auth_limits.AuthLimits())
     sent = []
 
     def deliver(invitations, ttl):
@@ -41,6 +55,10 @@ def managers(db, client, monkeypatch):
         return {invitation.user_id for invitation in invitations}
 
     monkeypatch.setattr(activation_mail, "send_invitations", deliver)
+    subject = Subject(name="Asignatura de prueba", code="DEMO")
+    db.add(subject)
+    db.flush()
+    db.add(AcademicEdition(subject_id=subject.id, academic_year="2026-2027"))
     headers = {}
     for n, role in enumerate((UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT), 10):
         user = User(dni=dni(n), name=role.value, email=f"{role.value}@example.com",
@@ -54,8 +72,9 @@ def managers(db, client, monkeypatch):
 
 def test_roles_and_template(client, managers):
     headers, _ = managers
-    raw = csv_data((dni(41), "Example user", "new-user@example.com"))
     for target, allowed in (("alumnado", "teacher"), ("profesorado", "admin")):
+        row = (dni(41), "Example user", "new-user@example.com")
+        raw = student_csv(row) if target == "alumnado" else csv_data(row)
         path = f"/user-imports/{target}"
         assert client.get(path + "/template").status_code == 401
         for role, auth in headers.items():
@@ -67,7 +86,8 @@ def test_roles_and_template(client, managers):
             if role != allowed:
                 assert post_csv(client, target, "confirm", auth, raw, "irrelevant").status_code == 403
                 assert client.post(path + "/pending/11111111-1111-4111-8111-111111111111/resend", headers=auth).status_code == 403
-        assert client.get(path + "/template", headers=headers[allowed]).text.lstrip("\ufeff").strip() == "dni;nombre;correo"
+        template = client.get(path + "/template", headers=headers[allowed]).text.lstrip("\ufeff").strip()
+        assert template == raw.decode().splitlines()[0]
         with_role = raw.replace(b"dni;nombre;correo", b"dni;nombre;correo;rol")
         assert post_csv(client, target, "validate", headers[allowed], with_role).status_code == 422
 
@@ -77,16 +97,18 @@ def test_confirm_once_and_activate(client, db, managers, target, actor, role):
     headers, mailbox = managers
     auth = headers[actor]
     n = dni(42)
-    raw = csv_data((n[:8] + "-" + n[-1].lower(), "  Ana  ", "ANA@example.com"))
+    row = (n[:8] + "-" + n[-1].lower(), "  Ana  ", "ANA@example.com")
+    raw = student_csv(row) if target == "alumnado" else csv_data(row)
     validated = post_csv(client, target, "validate", auth, raw).json()
     assert validated["valid"] == 1 and validated["errors"] == []
     assert n not in str(validated["preview"])
     assert db.scalar(select(User).where(User.dni == n)) is None
     assert post_csv(client, target, "confirm", auth, raw + b"\n", validated["proof"]).status_code == 422
     first = post_csv(client, target, "confirm", auth, raw, validated["proof"])
-    assert first.json() == {"count": 1, "sent": 1, "replayed": False}
+    extra = {"enrolled": 1, "already_enrolled": 0} if target == "alumnado" else {}
+    assert first.json() == {"count": 1, "sent": 1, "replayed": False, **extra}
     replay = post_csv(client, target, "confirm", auth, raw, validated["proof"])
-    assert replay.json() == {"count": 1, "sent": None, "replayed": True}
+    assert replay.json() == {"count": 1, "sent": None, "replayed": True, **extra}
     assert len(mailbox) == 1 and len(db.scalars(select(UserImport)).all()) == 1
     user = db.scalar(select(User).where(User.dni == n))
     user_id = user.id
@@ -117,7 +139,7 @@ def test_preview_errors_and_existing_accounts_are_unchanged(db, client, managers
     headers, mailbox = managers
     existing = db.scalar(select(User).where(User.email == "admin@example.com"))
     identity = (existing.dni, existing.email, existing.role, existing.hashed_password)
-    raw = csv_data(
+    raw = student_csv(
         (dni(41), "", "invalid"),
         (dni(40), "First", "duplicate@example.com"),
         (dni(40), "Second", "DUPLICATE@example.com"),
@@ -126,8 +148,8 @@ def test_preview_errors_and_existing_accounts_are_unchanged(db, client, managers
     result = post_csv(client, "alumnado", "validate", headers["teacher"], raw).json()
     assert result["valid"] == 0 and result["proof"] is None
     assert {error["row"] for error in result["errors"]} == {2, 3, 4, 5}
-    assert sum("existente" in error["message"] for error in result["errors"]) == 2
-    assert sum("Duplicado" in error["message"] for error in result["errors"]) == 4
+    assert result["errors"][-1]["field"] == "rol"
+    assert sum("duplicada" in error["message"] for error in result["errors"]) == 2
     assert (existing.dni, existing.email, existing.role, existing.hashed_password) == identity
     assert mailbox == []
 
@@ -135,7 +157,7 @@ def test_preview_errors_and_existing_accounts_are_unchanged(db, client, managers
 def test_failed_delivery_expiry_and_resend(client, db, managers, monkeypatch):
     headers, mailbox = managers
     failed = Mock(return_value=set())
-    raw = csv_data((dni(71), "Example", "failed-delivery@example.com"))
+    raw = student_csv((dni(71), "Example", "failed-delivery@example.com"))
     validate = post_csv(client, "alumnado", "validate", headers["teacher"], raw).json()
     with monkeypatch.context() as patch:
         patch.setattr(activation_mail, "send_invitations", failed)

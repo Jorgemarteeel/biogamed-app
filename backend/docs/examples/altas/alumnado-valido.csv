@@ -1,3 +1,4 @@
-dni;nombre;correo
-00080001F;Alumna Ejemplo Álvarez;alumna-alvarez@example.com
-00080002P;Alumno Ejemplo Peña;alumno-pena@example.com
+dni;nombre;correo;codigo_asignatura;anio_academico
+00080001F;Alumna Ejemplo Álvarez;alumna-alvarez@example.com;FISIO-DEMO;2026-2027
+00080001F;Alumna Ejemplo Álvarez;alumna-alvarez@example.com;INMUNO-DEMO;2026-2027
+00080002P;Alumno Ejemplo Peña;alumno-pena@example.com;FISIO-DEMO;2026-2027

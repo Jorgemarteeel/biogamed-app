@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 # Importamos nuestro nuevo router
 from app.routers import inmunoquest, auth, game, questions, subjects, topics
-from app.routers import pasapalabra, practice, monitoring, users, question_import, trivial_board, user_import
+from app.routers import pasapalabra, practice, monitoring, users, question_import, trivial_board, user_import, academic_editions
 
 # Las tablas se gestionan mediante `alembic upgrade head`.
 
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(inmunoquest.router)
 app.include_router(auth.router)
 app.include_router(user_import.router)
+app.include_router(academic_editions.router)
 app.include_router(topics.router)
 app.include_router(subjects.router)
 app.include_router(questions.router)

@@ -13,3 +13,5 @@ class UserImport(Base):
     target: Mapped[str] = mapped_column(String(16), primary_key=True)
     fingerprint: Mapped[str] = mapped_column(String(64), primary_key=True)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
+    enrolled: Mapped[int | None]
+    already_enrolled: Mapped[int | None]

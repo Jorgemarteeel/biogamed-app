@@ -101,7 +101,6 @@ export default function DashboardPage() {
           {user&&<button className="button-secondary" aria-haspopup="dialog" onClick={()=>setJoinOpen(true)}>Unirme con código</button>}
         </div>
 
-        {user?.role === "teacher" && <Link href="/altas/alumnado" className="button-secondary mb-4">Importar alumnado</Link>}
         {user?.role === "admin" && <Link href="/altas/profesorado" className="button-secondary mb-4">Importar profesorado</Link>}
 
         {loading ? (
