@@ -1,4 +1,4 @@
-# Gestión común de preguntas e InmunoQuest
+# Gestión común de preguntas y Trivial de tablero
 
 > Estado posterior: el [motor del manual](inmunoquest-rules.md), su persistencia interna y la [preparación automática de mazos](inmunoquest-decks.md) están implementados internamente. No hay partida pública ni esta gestión habilita el inicio.
 
@@ -8,9 +8,9 @@ Entrega desarrollada sobre main/a2119a1, conservando los seis commits anteriores
 
 ## Organización y acceso
 
-Entrada docente principal: **Gestión de preguntas**, `/gestion/preguntas`. Un listado paginado (20 por página) reúne preguntas abiertas de InmunoQuest y Pasapalabra. También permite consultar el formato anterior de opciones. Asignaturas, bloques y categorías se mantienen y se administran desde un enlace secundario; ya no es obligatorio recorrerlos para gestionar preguntas. `/gestion/inmunoquest` y las rutas de categoría utilizan el mismo componente de gestión, no catálogos independientes.
+Entrada docente principal: **Gestión de preguntas**, `/gestion/preguntas`. Un listado paginado (20 por página) reúne preguntas abiertas de Trivial de tablero y Pasapalabra. También permite consultar el formato anterior de opciones. Asignaturas, bloques y categorías se mantienen y se administran desde un enlace secundario; ya no es obligatorio recorrerlos para gestionar preguntas. `/gestion/inmunoquest` y las rutas de categoría utilizan el mismo componente de gestión, no catálogos independientes.
 
-Filtros opcionales: formato, asignatura, bloque, categoría, dificultad, estado y clasificación (cualquiera/sin asignatura/sin categoría). Banco solo se admite con InmunoQuest. Consultar aplica filtros, conservados en URL junto a la página. El servidor valida combinaciones: una categoría o bloque identificables resuelven sus ascendientes; un padre contradictorio se rechaza. Nunca se infieren relaciones por nombres.
+Filtros opcionales: formato, asignatura, bloque, categoría, dificultad, estado y clasificación (cualquiera/sin asignatura/sin categoría). Banco solo se admite con Trivial de tablero. Consultar aplica filtros, conservados en URL junto a la página. El servidor valida combinaciones: una categoría o bloque identificables resuelven sus ascendientes; un padre contradictorio se rechaza. Nunca se infieren relaciones por nombres.
 
 Cada pregunta puede asociarse directamente a una asignatura, a un bloque sin categoría o a una categoría. Una categoría vinculada determina bloque/asignatura; una categoría sin bloque no permite inventar esa relación. Elegir solo asignatura no requiere crear bloques o categorías ficticios. El contenido sin asignatura sigue localizable. Las vinculaciones explícitas de categorías existentes actualizan las asociaciones demostrables de sus preguntas; se rechazan si contradicen una asignatura ya elegida.
 
@@ -18,7 +18,7 @@ Crear/editar e importar son paneles exclusivos; alternarlos conserva los borrado
 
 ## Campos y CSV
 
-InmunoQuest conserva enunciado, respuesta de referencia (hasta 10000 caracteres), banco, nivel obligatorio 1–4 y referencia opcional a apuntes (hasta 120). No usa Topic, distractores o corrección automática. T1–T16 sigue siendo una referencia. Pasapalabra conserva letra, solución, alternativas y dificultad opcional; su temática continúa siendo necesaria para los bancos jugables actuales y no equivale a un banco de InmunoQuest.
+Trivial de tablero conserva enunciado, respuesta de referencia (hasta 10000 caracteres), banco, nivel obligatorio 1–4 y referencia opcional a apuntes (hasta 120). No usa Topic, distractores o corrección automática. T1–T16 sigue siendo una referencia. Pasapalabra conserva letra, solución, alternativas y dificultad opcional; su temática continúa siendo necesaria para los bancos jugables actuales y no equivale a un banco de Trivial de tablero.
 
 Se reutilizan QuestionImportForm, el parser, validadores, comprobantes, bloqueo transaccional y recibos existentes. Solo CSV UTF-8 (BOM admitido), separador `;`, máximo 500 preguntas y 2 MiB. Plantillas sin ejemplos importables. Para abiertas:
 
@@ -51,7 +51,7 @@ Todos los contratos de gestión requieren docente/administrador vigente; ámbito
 
 Cuenta únicamente abiertas activas, completas y pertenecientes a la asignatura elegida, incluyendo sus bloques y categorías. Excluye otras asignaturas y preguntas sin asignatura. Devuelve los veinte mazos aunque estén vacíos y el número de mazos sin preguntas. Cantidades mayores de treinta son válidas. No existen objetivos manuales, nombres/versiones de actividades ni selección de cartas. `can_start=false` siempre: disponibilidad no garantiza suficiencia pedagógica ni implementa la partida.
 
-La futura creación de partidas congelará su contenido y preparará los mazos automáticamente. Se mantiene fuera de alcance: motor del manual, extracción/barajado, lector, evaluación, salas e historial de InmunoQuest.
+La futura creación de partidas congelará su contenido y preparará los mazos automáticamente. Se mantiene fuera de alcance: motor del manual, extracción/barajado, lector, evaluación, salas e historial de Trivial de tablero.
 
 ## Migraciones y conservación
 
@@ -82,8 +82,8 @@ La demo de reunión, instalación habitual e instalación limpia no se migran ni
 
 - Selección por teclado en Radix, filtro pendiente sin consulta automática, aplicación explícita, banco vacío y mensaje recuperable. La disponibilidad de asignatura mantuvo las tres cartas de Matraz aunque el listado se filtrara por otro banco.
 - Paginación del listado y conservación al recargar; filtros en URL. Seleccionar categoría completó sus ascendientes y limpiar solo la categoría mantuvo el bloque explícito. Menú compartido dentro del ancho móvil; Escape cierra y devuelve el foco.
-- Formulario abierto de InmunoQuest: foco inicial, Tab/Shift+Tab entre campos, Guardar deshabilitado si falta contenido, borrador conservado al alternar con CSV. Formulario de Pasapalabra en móvil y edición/cancelación de la pregunta ficticia ID 7 sin guardar, con devolución del foco a Editar. No se enviaron formularios de creación o edición durante el cierre.
-- Descarga real de plantilla InmunoQuest: solo cabeceras, sin ejemplos importables. Selección de archivos ficticios (incluida activación por teclado), error de cabecera ausente con recomendación de plantilla, error de registro 2/columna banco y vista previa válida de 12 filas en dos páginas, sin confirmar. El resumen usa role=status y el error de estructura role=alert; no equivale a probar un lector de pantalla.
+- Formulario abierto de Trivial de tablero: foco inicial, Tab/Shift+Tab entre campos, Guardar deshabilitado si falta contenido, borrador conservado al alternar con CSV. Formulario de Pasapalabra en móvil y edición/cancelación de la pregunta ficticia ID 7 sin guardar, con devolución del foco a Editar. No se enviaron formularios de creación o edición durante el cierre.
+- Descarga real de plantilla Trivial de tablero: solo cabeceras, sin ejemplos importables. Selección de archivos ficticios (incluida activación por teclado), error de cabecera ausente con recomendación de plantilla, error de registro 2/columna banco y vista previa válida de 12 filas en dos páginas, sin confirmar. El resumen usa role=status y el error de estructura role=alert; no equivale a probar un lector de pantalla.
 - CSV de Pasapalabra: temática sintética elegida explícitamente y vista previa válida de dos filas, sin confirmar. Tras recargar se conservaron formato y destino en URL; no persistieron archivo ni comprobante y no se reenvió la importación.
 - Sin desbordamiento horizontal de página en los estados medidos: escritorio innerWidth=1366/scrollWidth=1353; móvil innerWidth=390/scrollWidth=376. Se permite desplazamiento vertical de formularios y listado. Son tamaños y estados concretos, no una garantía para todos los textos, dispositivos o zoom.
 
@@ -95,12 +95,12 @@ La demo de reunión, instalación habitual e instalación limpia no se migran ni
 
 Durante este cierre solo se actualizaron las imágenes de frontend/backend del entorno aislado. No se aplicaron migraciones adicionales ni se confirmaron importaciones. El cotejo final de recuentos y huellas coincidió con el estado al comenzar el cierre: todas las filas previas permanecieron iguales (49 preguntas, 2 cuentas, 1 recibo y 0 partidas/respuestas), en c08b174c95da. Los CSV, capturas, credenciales y evidencias privadas permanecen fuera del repositorio. Los recursos PostgreSQL nuevos de prueba son sintéticos, propios y sin puertos; se retiran al finalizar, sin borrar registros del entorno de revisión.
 
-Para jugar a InmunoQuest desde la aplicación faltan el acceso público a las partidas y la interfaz de juego local y online. La preparación de mazos, presentación de cartas y evaluación del lector ya funcionan internamente. Esta entrega solo permite gestionar contenido y consultar disponibilidad. El Trivial individual permanece compatible y no se amplía.
+Para jugar a Trivial de tablero desde la aplicación faltan el acceso público a las partidas y la interfaz de juego local y online. La preparación de mazos, presentación de cartas y evaluación del lector ya funcionan internamente. Esta entrega solo permite gestionar contenido y consultar disponibilidad. El Trivial individual permanece compatible y no se amplía.
 
 ## Revisión manual breve
 
 1. Abrir http://localhost:13014/login con la cuenta docente ficticia existente (credenciales solo en su archivo privado).
-2. Menú → Gestión de preguntas. Consultar todos los formatos y después InmunoQuest/asignatura; probar Sin asignatura y Sin categoría.
+2. Menú → Gestión de preguntas. Consultar todos los formatos y después Trivial de tablero/asignatura; probar Sin asignatura y Sin categoría.
 3. Abrir Crear pregunta y alternar con Importar CSV; comprobar asignatura directa y clasificación opcional. No se inicia ninguna partida.
 4. Consultar la tabla de los veinte mazos: incluye toda la asignatura, sin objetivos ni actividades.
 5. Usar el enlace secundario para administrar la jerarquía. La cuenta estudiante debe ser rechazada en gestión.

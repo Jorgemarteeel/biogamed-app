@@ -1,4 +1,4 @@
-export interface AcademicContext { subject_id: number; subject_name: string; block_id: number; block_name: string; category_id: number; category_name: string }
+export interface AcademicContext { subject_id: number; subject_name: string; block_id?: number | null; block_name?: string | null; category_id?: number | null; category_name?: string | null; edition_id?: number | null; academic_year?: string | null; topic_id?: number | null; topic_name?: string | null; difficulty?: number | null }
 import axios from "axios";
 
 export interface LoginResponse {

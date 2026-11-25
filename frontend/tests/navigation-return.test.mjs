@@ -50,3 +50,10 @@ test('reload restores origin; blocked storage still permits memory-only back',()
 test('old preparation query keeps topicId and account switch clears origins',()=>{const h=integration();try{h.navigate('/dashboard');h.navigate('/game?topicId=4&mode=PASAPALABRA&play=LOCAL');h.navigate('/pasapalabra/30');assert.equal(h.link('/historial').props.href,'/game?topicId=4&mode=PASAPALABRA&play=LOCAL');h.navigate('/login');assert.equal(h.saved.size,0);h.navigate('/cuenta');assert.equal(h.link('/dashboard').props.href,'/dashboard');}finally{h.close();}});
 
 test('InmunoQuest return restores management or category origin and filters after reload',()=>{for(const origin of ['/gestion/asignaturas?page=2','/gestion/asignaturas/1/bloques/2/categorias/3?mode=TRIVIAL&page=4']){let trail=screenTrail([],origin);trail=screenTrail(trail,'/gestion/inmunoquest?subject=1&block=2&category=3');trail=readTrail(JSON.stringify(trail));assert.equal(screenReturn(trail,trail.at(-1),'/gestion/asignaturas'),origin);}});
+
+test('enrollment preparation retains difficulty and edition content origin',()=>{
+ const prepare='/pasapalabra?subject=4&topic=8&level=3';
+ const trail=screenTrail(screenTrail([],prepare),'/pasapalabra/40');
+ assert.equal(screenReturn(trail,'/pasapalabra/40','/dashboard'),prepare);
+ assert.equal(safeScreen('/gestion/contenidos'),'/gestion/contenidos');
+});

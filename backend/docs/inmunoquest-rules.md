@@ -1,4 +1,4 @@
-# Motor interno InmunoQuest: manual, modalidad básica
+# Motor interno Trivial de tablero: manual, modalidad básica
 
 Base comprobada: main, 3423055041abd829d70ed9a5e639e7c3bf08948f, árbol limpio al comenzar. La gestión común ya tiene commit y no se mezcla ni se vuelve a confirmar. Cierre autorizado como entrega independiente del motor, sus pruebas y documentación; sin push.
 

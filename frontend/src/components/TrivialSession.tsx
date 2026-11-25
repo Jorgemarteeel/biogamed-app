@@ -48,7 +48,7 @@ export default function TrivialSession({ id }: { id: number }) {
     return () => { active = false; };
   }, [id, router, attempt]);
 
-  return <Frame title="Trivial">{game
+  return <Frame title="Trivial individual">{game
     ? <TrivialGame session={game.session} initialDraft={game.draft} topicName={game.session.topic_id === null ? "Práctica académica" : `Temática ${game.session.topic_id}`} />
     : legacy ? <LegacySessionNotice topicId={null} mode="TRIVIAL" />
     : error ? <><p className="notice-error" role="alert">{error}</p>{canRetry && <button className="button-secondary mt-4" onClick={() => { setError(""); setAttempt((value) => value + 1); }}>Reintentar</button>}</>

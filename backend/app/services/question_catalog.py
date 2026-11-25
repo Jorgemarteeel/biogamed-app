@@ -43,7 +43,7 @@ def catalog(db, *, mode=None, subject_id=None, block_id=None, category_id=None,
     if difficulty_unknown and difficulty is not None:
         raise HTTPException(422, "Selecciona dificultad o sin dificultad, no ambas.")
     if bank and mode != "INMUNOQUEST":
-        raise HTTPException(422, "El filtro de banco requiere InmunoQuest.")
+        raise HTTPException(422, "El filtro de banco requiere Trivial.")
     if classification == "unassigned" and any(resolved.values()):
         raise HTTPException(422, "Sin asignatura es incompatible con filtros académicos.")
     stmt = select(Question)

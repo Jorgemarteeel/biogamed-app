@@ -4,7 +4,7 @@
 
 Abre [Contenidos en revisión](http://localhost:13020/gestion/contenidos) desde el menú de cuenta, Gestión docente → Contenidos. Selecciona asignatura y curso. Puedes crear ambos desde esa pantalla. Las temáticas se crean previamente en la edición. El contexto de asignatura y año permanece en una banda visible al desplazarse por la edición.
 
-Las preguntas de una temática pueden ser de Pasapalabra o de InmunoQuest. El único nivel de dificultad es 1–4. InmunoQuest utiliza enunciado, respuesta de referencia y referencia opcional a apuntes. Su tipo de casilla se asigna en la configuración del tablero a la temática, sin inventar asociaciones por nombres.
+Las preguntas de una temática pueden ser de Pasapalabra o de Trivial de tablero. El único nivel de dificultad es 1–4. Trivial de tablero utiliza enunciado, respuesta de referencia y referencia opcional a apuntes. Su tipo de casilla se asigna en la configuración del tablero a la temática, sin inventar asociaciones por nombres.
 
 Los iconos se suben como PNG, hasta 512 KiB y 1024 × 1024 píxeles. Se conservan en la temática de esa edición y se pueden sustituir. No se aceptan SVG. La vista permite consultar la imagen guardada.
 
@@ -13,7 +13,7 @@ Los iconos se suben como PNG, hasta 512 KiB y 1024 × 1024 píxeles. Se conserva
 - Sin temática seleccionada, pulsa Importar CSV en esta edición. La plantilla incluye tematica.
 - Con temática seleccionada, pulsa Importar CSV en esta temática. La plantilla omite tematica y el servidor fija el destino.
 - Ambos usan el mismo servicio, límites y validaciones. Asignatura y curso proceden de la pantalla. Máximo 500 filas y 2 MiB, UTF-8 (BOM admitido), separador de punto y coma.
-- Campos comunes de fila: juego, dificultad y enunciado. InmunoQuest usa respuesta_referencia y referencia_apuntes opcional. Pasapalabra usa letra, solucion y alternativas opcionales separadas por saltos de línea dentro de una celda entrecomillada. Los campos del otro juego quedan vacíos.
+- Campos comunes de fila: juego, dificultad y enunciado. Trivial de tablero usa respuesta_referencia y referencia_apuntes opcional. Pasapalabra usa letra, solucion y alternativas opcionales separadas por saltos de línea dentro de una celda entrecomillada. Los campos del otro juego quedan vacíos.
 - Validar no guarda. La vista previa muestra contexto, grupos por temática y juego, errores por fila y una tabla paginada.
 - Confirmar revalida destinos, contenido y duplicados bajo el bloqueo compartido con la creación manual. Se confirma todo el lote junto con su recibo, o no se inserta nada. Los duplicados exactos del formato y temática, incluidas preguntas retiradas, bloquean el lote. No se fusionan preguntas por similitud.
 - El comprobante caduca a los 15 minutos y vincula actor, archivo, edición, temática fijada y las temáticas resueltas. La clave de operación reutilizada con otro contenido se rechaza. Un reintento idéntico recupera el recibo.
@@ -37,7 +37,7 @@ La migración aditiva 26ea7dac0318 parte de 15df6c9be207. Añade edición e icon
 
 El contenido anterior queda con edición vacía. Se localiza mediante Preguntas sin curso asignado, con identificadores y relaciones conservadas. Su revisión y asignación requieren una decisión explícita, fuera del traslado automático. Historiales, copias de preguntas, respuestas y sesiones no se reescriben.
 
-La preparación jugable de esta estructura corresponde a la entrega 2. Las consultas de los formatos anteriores excluyen preguntas de edición hasta incorporar la selección por matrícula. No se habilitan partidas nuevas de InmunoQuest.
+Pasapalabra ya utiliza la edición de la matrícula habilitada; véase [recorrido y verificación](pasapalabra-enrollment.md). Las consultas de los formatos anteriores siguen excluyendo preguntas de edición. No se habilitan partidas nuevas del Trivial de tablero.
 
 ## Evidencia y límites
 
@@ -80,3 +80,7 @@ En 13020, una transacción SQL explícitamente de solo lectura encontró 17 preg
 Se detectó además un defecto de paginación en la interfaz: cambiar de página vaciaba el listado sin consultar la siguiente. Se corrigió para consultar directamente el desplazamiento pedido y mantener la página anterior si falla. Se añade cobertura frontend de avance/retroceso y backend de 25 preguntas anteriores de distintos formatos y estados, excluyendo una con edición.
 
 Verificaciones nuevas del cierre: tres pruebas backend aprobaron en un contenedor desechable sin red con SQLite en memoria; seis pruebas frontend aprobaron, incluidos los desplazamientos 0/20/0 del listado. Tipos y lint pasaron. Se reutilizan las pruebas PostgreSQL y la revisión visual documentadas; no se presenta SQLite como prueba de migración ni se repiten escrituras en 13020.
+
+## Nombre del juego y compatibilidad
+
+El juego de tablero se presenta como Trivial. Trivial individual identifica el cuestionario anterior de opciones. Se conservan question_type=INMUNOQUEST, los identificadores de reglas inmunoquest-*, clases, tablas y rutas /inmunoquest y /gestion/inmunoquest para interpretar registros y clientes existentes. No se convierten datos históricos. En el CSV mixto por edición, juego=Trivial crea exclusivamente una pregunta abierta (internamente INMUNOQUEST); INMUNOQUEST sigue admitido para CSV anteriores. El modo TRIVIAL de las API antiguas sigue significando cuestionario individual. La plantilla mixta usa las mismas cabeceras; los ejemplos nuevos muestran Trivial.

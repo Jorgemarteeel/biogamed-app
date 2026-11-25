@@ -15,7 +15,7 @@ def template(subject_id: int, block_id: int, category_id: int, mode: ContentType
              db: Session = Depends(get_db), user: User = Depends(require_content_staff)):
     service.get_category(db, subject_id, block_id, category_id)
     return Response("\ufeff" + ";".join(service.COLUMNS[mode]) + "\r\n", media_type="text/csv; charset=utf-8",
-                    headers={"Content-Disposition": f'attachment; filename="plantilla-{mode.lower()}.csv"', "Cache-Control": "no-store"})
+                    headers={"Content-Disposition": 'attachment; filename="plantilla-' + ('trivial-tablero' if mode == 'INMUNOQUEST' else 'trivial-individual' if mode == 'TRIVIAL' else mode.lower()) + '.csv"', "Cache-Control": "no-store"})
 
 @router.post("/validate")
 async def validate(subject_id: int, block_id: int, category_id: int, mode: ContentType = Form(...), topic_id: int | None = Form(None, gt=0),
@@ -41,7 +41,7 @@ unclassified_router = APIRouter(prefix="/question-imports", tags=["Question impo
 
 @unclassified_router.get("/template")
 def open_template(mode: ContentType = "INMUNOQUEST", db: Session=Depends(get_db), user: User=Depends(require_content_staff)):
-    return Response("\ufeff" + ";".join(service.COLUMNS[mode]) + "\r\n", media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="plantilla-{mode.lower()}.csv"', "Cache-Control":"no-store"})
+    return Response("\ufeff" + ";".join(service.COLUMNS[mode]) + "\r\n", media_type="text/csv; charset=utf-8", headers={"Content-Disposition": 'attachment; filename="plantilla-' + ('trivial-tablero' if mode == 'INMUNOQUEST' else 'trivial-individual' if mode == 'TRIVIAL' else mode.lower()) + '.csv"', "Cache-Control":"no-store"})
 
 @unclassified_router.post("/validate")
 async def open_validate(file: UploadFile=File(...), mode: ContentType=Form("INMUNOQUEST"),

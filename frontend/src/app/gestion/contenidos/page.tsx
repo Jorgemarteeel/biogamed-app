@@ -31,7 +31,7 @@ function readRecovery(userId: string): RecoveryRef | null {
 }
 const emptyQuestion = {question_type:"INMUNOQUEST",text:"",difficulty:1,reference_answer:"",note_reference:"",letter:"",exact_word:"",alternatives:""};
 const boardSlotName: Record<string, string> = {LYMPHOCYTE:"Tipo de casilla 1",MACROPHAGE:"Tipo de casilla 2",SPLEEN:"Tipo de casilla 3",FLASK:"Tipo de casilla 4",DNA:"Tipo de casilla 5"};
-const gameName = (game:string)=>game === "INMUNOQUEST" ? "InmunoQuest" : "Pasapalabra";
+const gameName = (game:string)=>game === "INMUNOQUEST" ? "Trivial" : "Pasapalabra";
 function failure(err:unknown) {
   const detail = isAxiosError(err) ? err.response?.data?.detail : undefined;
   return typeof detail === "string" ? detail : err instanceof Error && !isAxiosError(err) ? err.message : Array.isArray(detail) ? detail.map(x=>x.msg).join(" · ") : "No se pudo completar la operación. Revisa los datos e inténtalo de nuevo.";
@@ -265,7 +265,7 @@ export default function Contents() {
             <button className="button-secondary" onClick={()=>{setImportOpen(v=>!v);setQuestionOpen(false);}}>Importar CSV {selected?"en esta temática":"en esta edición"}</button></div>
           {questionOpen&&<form className="space-y-3" onSubmit={saveQuestion}>
             <h2 className="text-xl font-bold">{editingQuestion?"Editar pregunta":"Nueva pregunta"} · {selected?.name}</h2>
-            <label className="form-label">Juego<select className="form-input" value={draft.question_type} disabled={editingQuestion!==null} onChange={e=>setDraft({...emptyQuestion,question_type:e.target.value})}><option value="INMUNOQUEST">InmunoQuest</option><option value="PASAPALABRA">Pasapalabra</option></select></label>
+            <label className="form-label">Juego<select className="form-input" value={draft.question_type} disabled={editingQuestion!==null} onChange={e=>setDraft({...emptyQuestion,question_type:e.target.value})}><option value="INMUNOQUEST">Trivial</option><option value="PASAPALABRA">Pasapalabra</option></select></label>
             <label className="form-label">Nivel de dificultad<select className="form-input" value={draft.difficulty} onChange={e=>setDraft({...draft,difficulty:Number(e.target.value)})}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></label>
             <label className="form-label">Enunciado<textarea className="form-input" required value={draft.text} onChange={e=>setDraft({...draft,text:e.target.value})}/></label>
             {draft.question_type==="INMUNOQUEST"?<>
@@ -280,7 +280,7 @@ export default function Contents() {
           </form>}
           {importOpen&&<div className="space-y-3">
             <h2 className="text-xl font-bold">Importar preguntas · {selected?.name||"Toda la edición"}</h2>
-            <p>{selected?"La temática se fija aquí.":"Crea antes las temáticas y escribe su nombre exacto en cada fila."} Cada fila indica juego, dificultad 1–4 y enunciado. InmunoQuest usa respuesta_referencia y referencia_apuntes opcional. Pasapalabra usa letra, solucion y alternativas opcionales, una por línea. Deja vacíos los campos del otro juego.</p>
+            <p>{selected?"La temática se fija aquí.":"Crea antes las temáticas y escribe su nombre exacto en cada fila."} En juego escribe Trivial o Pasapalabra. Cada fila indica dificultad 1–4 y enunciado. Trivial usa respuesta_referencia y referencia_apuntes opcional. Pasapalabra usa letra, solucion y alternativas opcionales, una por línea. Deja vacíos los campos del otro juego.</p>
             <p className="text-sm">CSV UTF-8, separador ;. Máximo 500 preguntas y 2 MiB. Validar no guarda preguntas.</p>
             <button className="button-secondary" disabled={busy} onClick={()=>void template()}>Descargar plantilla</button>
             <div className="flex flex-wrap items-center gap-3"><button className="button-secondary" disabled={busy} onClick={()=>upload.current?.click()}>Seleccionar archivo CSV</button>
@@ -310,7 +310,7 @@ export default function Contents() {
           {questions&&questions.total>20&&<div className="flex gap-3"><button className="button-secondary" disabled={!page} onClick={()=>setPage(p=>p-1)}>Anterior</button><button className="button-secondary" disabled={(page+1)*20>=questions.total} onClick={()=>setPage(p=>p+1)}>Siguiente</button></div>}
         </section>}
         <section className={card}>
-          <h2 className="text-xl font-bold">Contenido del tablero de InmunoQuest</h2>
+          <h2 className="text-xl font-bold">Contenido del tablero de Trivial</h2>
           <p>Asigna una temática distinta a cada tipo de casilla. Puedes guardar mientras lo completas. La tabla cuenta preguntas abiertas activas por nivel. No habilita partidas ni acredita suficiencia pedagógica.</p>
           <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr>{["Casilla","Temática","Icono","Nivel 1","Nivel 2","Nivel 3","Nivel 4"].map(h=><th className="p-2" key={h} scope="col">{h}</th>)}</tr></thead>
             <tbody>{overview.board.slots.map(slot=><tr key={slot.bank}><th scope="row" className="p-2">{boardSlotName[slot.bank]||slot.label}</th>
@@ -323,7 +323,7 @@ export default function Contents() {
       <section className={card}><h2 className="text-xl font-bold">Preguntas sin curso asignado</h2>
         <p>Son preguntas anteriores que aún no están vinculadas a un año académico. Revisa su procedencia para determinar el curso que les corresponde. Sus relaciones e historial se conservan.</p>
         <button className="button-secondary" disabled={busy} onClick={()=>void loadUnassigned()}>Ver preguntas sin curso asignado</button>
-        {legacy&&<><p>{legacy.total} preguntas sin curso asignado</p><ul>{legacy.items.map(q=><li key={q.id} className="py-2">#{q.id} · {q.game} · {q.text}</li>)}</ul>
+        {legacy&&<><p>{legacy.total} preguntas sin curso asignado</p><ul>{legacy.items.map(q=><li key={q.id} className="py-2">#{q.id} · {q.game==="INMUNOQUEST"?"Trivial":q.game==="TRIVIAL"?"Trivial individual":"Pasapalabra"} · {q.text}</li>)}</ul>
           <div className="flex gap-3"><button className="button-secondary" disabled={busy||!legacyPage} onClick={()=>void loadUnassigned(legacyPage-1)}>Página anterior</button><button className="button-secondary" disabled={busy||(legacyPage+1)*20>=legacy.total} onClick={()=>void loadUnassigned(legacyPage+1)}>Página siguiente</button></div></>}
       </section>
       </>}

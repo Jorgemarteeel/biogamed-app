@@ -87,9 +87,9 @@ class QuestionCreate(QuestionBase):
     def validate_game_fields(self):
         if self.question_type == "INMUNOQUEST":
             if self.topic_id is not None:
-                raise ValueError("InmunoQuest no utiliza una temática Topic.")
+                raise ValueError("Trivial no utiliza una temática Topic.")
             if self.bank is None or self.difficulty is None or not self.reference_answer or not self.reference_answer.strip():
-                raise ValueError("InmunoQuest requiere banco, dificultad 1–4 y respuesta de referencia.")
+                raise ValueError("Trivial requiere banco, dificultad 1–4 y respuesta de referencia.")
             if any(v is not None for v in (self.options, self.correct_option_index, self.letter, self.exact_word, self.accepted_answers)):
                 raise ValueError("La pregunta abierta no admite opciones, letra ni alternativas.")
             self.text = self.text.strip()

@@ -50,7 +50,7 @@ export default function GameHistoryView({ sessionId }: { sessionId: number | nul
     return () => { active = false; };
   }, [router, sessionId, attempt]);
 
-  const mode = game?.game_mode === "PASAPALABRA" ? "Pasapalabra" : "Trivial";
+  const mode = game?.game_mode === "PASAPALABRA" ? "Pasapalabra" : "Trivial individual";
   const context = game ? describeContentContext(game.content_context) : null;
   const date = game ? new Date(game.created_at) : null;
   const dateLabel = date && !Number.isNaN(date.getTime())

@@ -3,7 +3,7 @@ import {gameAvailabilityLabel} from "@/lib/academic";
 import GameIllustration from "@/components/GameIllustration";
 
 export const GAME_CHOICES = [
-  { id: "TRIVIAL" as const, name: "Trivial", description: "Responde preguntas y descubre cuánto sabes." },
+  { id: "TRIVIAL" as const, name: "Trivial individual", description: "Responde preguntas y descubre cuánto sabes." },
   { id: "PASAPALABRA" as const, name: "Pasapalabra", description: "Dos jugadores y dos roscos numerados de vocabulario científico." },
 ];
 

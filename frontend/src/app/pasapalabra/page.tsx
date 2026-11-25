@@ -1,2 +1,2 @@
-import {PasapalabraEntry} from "@/components/PasapalabraOnline";
-export default function Page(){return <PasapalabraEntry/>;}
+import EnrollmentPasapalabra from "@/components/EnrollmentPasapalabra";
+export default function Page(){return <EnrollmentPasapalabra/>;}

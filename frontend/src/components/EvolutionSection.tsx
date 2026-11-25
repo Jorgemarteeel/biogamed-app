@@ -8,7 +8,7 @@ import type { PersonalBestMark } from "@/services/api";
 function groupLabel(mark: PersonalBestMark) {
   const topic = academicLabel(mark.academic) ?? mark.topic_name ?? (mark.topic_id === null ? "Contenido académico" : `Temática ${mark.topic_id}`);
   const category = mark.category_name ?? `Categoría ${mark.category_id}`;
-  return `${mark.game_mode === "TRIVIAL" ? "Trivial" : mark.format_key === "pasapalabra-online-v1" ? "Pasapalabra en línea" : mark.format_key === "pasapalabra-local-v1" ? "Pasapalabra local" : "Pasapalabra"} · ${topic}${topic === category ? "" : ` · Categoría ${category}`} · Nivel ${mark.difficulty} · ${mark.total_questions} ${mark.total_questions === 1 ? "pregunta" : "preguntas"}`;
+  return `${mark.game_mode === "TRIVIAL" ? "Trivial individual" : mark.format_key === "pasapalabra-online-v1" ? "Pasapalabra en línea" : mark.format_key === "pasapalabra-local-v1" ? "Pasapalabra local" : "Pasapalabra"} · ${topic}${topic === category ? "" : ` · Categoría ${category}`} · Nivel ${mark.difficulty} · ${mark.total_questions} ${mark.total_questions === 1 ? "pregunta" : "preguntas"}`;
 }
 
 function dateLabel(value: string) {

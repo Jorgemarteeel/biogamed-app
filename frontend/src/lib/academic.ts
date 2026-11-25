@@ -1,5 +1,5 @@
 import type {AcademicContext} from "@/services/api";
-export const academicLabel = (context?: AcademicContext | null) => context ? `${context.subject_name} → ${context.block_name} → ${context.category_name}` : null;
+export const academicLabel = (context?: AcademicContext | null) => context ? [context.subject_name,context.academic_year?.replace("-","–"),context.topic_name??context.block_name,context.topic_name?null:context.category_name].filter(Boolean).join(" → ") : null;
 export function practiceQuery(query: URLSearchParams) {
   const ids: Record<string, number | undefined> = {};
   let valid = true;
@@ -40,9 +40,9 @@ export function academicReturn(value: string) {
 export function recentAcademicHref(games: import("@/services/api").GameHistorySummary[]) {
   const game=games.find(g=>g.content_context?.academic);
   const a=game?.content_context?.academic;
-  if(!game||!a||![a.subject_id,a.block_id,a.category_id].every(id=>Number.isSafeInteger(id)&&id>0)||!a.category_name)return null;
+  if(!game||!a||![a.subject_id,a.block_id,a.category_id].every(id=>typeof id==="number"&&Number.isSafeInteger(id)&&id>0)||!a.category_name)return null;
   const selection=game.content_context!.selection;
-  return practiceHref("",{subject:a.subject_id,block:a.block_id,category:a.category_id,mode:game.game_mode,step:"prepare",...(game.game_mode==="PASAPALABRA"?(game.format_key==="pasapalabra-online-v1"?{play:"ONLINE"}:game.format_key==="pasapalabra-local-v1"?{play:"LOCAL"}:{step:"mode"}):{}),difficulty:selection?.difficulty_unknown?"unknown":selection?.difficulty??"all"});
+  return practiceHref("",{subject:a.subject_id,block:a.block_id??undefined,category:a.category_id??undefined,mode:game.game_mode,step:"prepare",...(game.game_mode==="PASAPALABRA"?(game.format_key==="pasapalabra-online-v1"?{play:"ONLINE"}:game.format_key==="pasapalabra-local-v1"?{play:"LOCAL"}:{step:"mode"}):{}),difficulty:selection?.difficulty_unknown?"unknown":selection?.difficulty??"all"});
 }
 
 /** Deterministic parent step: works without browser history, including after reload. */

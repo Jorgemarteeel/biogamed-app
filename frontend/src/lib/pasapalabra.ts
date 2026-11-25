@@ -23,6 +23,7 @@ export interface Player {
     }[];
 }
 export interface Match {
+    topic_icon?: string | null;
     academic?: import("@/services/api").AcademicContext | null;
     play_mode?: "LOCAL" | "ONLINE";
     self_position?: number;

@@ -5,6 +5,8 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
 from app.schemas.pasapalabra import Selection, LocalStart, Answer, Command, Abandon, MatchState, CommandResponse
+from app.services import pasapalabra_academic as academic
+from app.utils.auth_limits import login_limit
 from app.services import pasapalabra as service
 from app.services import pasapalabra_rooms as rooms
 from app.schemas.pasapalabra import RoomCreate, RoomJoin, RoomAction, RoomState, RoomLeft
@@ -35,12 +37,22 @@ def room_action(room_id: int, kind: str, request: RoomAction, db: Session = Depe
     return rooms.action(db, owner, room_id, kind, request)
 
 
+@router.get("/subjects")
+def playable_subjects(db: Session = Depends(get_db), owner: User = Depends(get_current_user)):
+    return academic.subjects(db, owner)
+
+
+@router.get("/subjects/{subject_id}/topics")
+def playable_topics(subject_id: int, db: Session = Depends(get_db), owner: User = Depends(get_current_user)):
+    return academic.themes(db, owner, subject_id)
+
+
 @router.post("/preparations")
 def prepare(selection: Selection, db: Session = Depends(get_db), owner: User = Depends(get_current_user)):
-    return service.prepare(db, selection)
+    return service.prepare(db, selection, owner)
 
 
-@router.post("/local/start", response_model=MatchState, status_code=201)
+@router.post("/local/start", response_model=MatchState, status_code=201, dependencies=[Depends(login_limit)])
 def start(request: LocalStart, db: Session = Depends(get_db), owner: User = Depends(get_current_user)):
     return service.start_local(db, owner, request)
 

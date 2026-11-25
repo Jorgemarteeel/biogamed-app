@@ -58,7 +58,7 @@ class ContentInput(BaseModel):
             if not self.text.strip() or not (self.reference_answer or "").strip():
                 raise ValueError("Indica enunciado y respuesta de referencia.")
             if any(value is not None for value in (self.letter, self.exact_word, self.accepted_answers)):
-                raise ValueError("InmunoQuest no admite letra, solución de Pasapalabra ni alternativas.")
+                raise ValueError("Trivial no admite letra, solución de Pasapalabra ni alternativas.")
         else:
             raise ValueError("Juego debe ser INMUNOQUEST o PASAPALABRA.")
         return self
@@ -210,6 +210,8 @@ def parse(db, edition_id, topic_id, raw):
                 if row["dificultad"] not in ("1", "2", "3", "4"):
                     raise ValueError("dificultad: usa un nivel de 1 a 4.")
                 game = row["juego"].strip().upper()
+                if game == "TRIVIAL":
+                    game = "INMUNOQUEST"  # CSV display name; never the historical options format.
                 payload = dict(question_type=game, difficulty=int(row["dificultad"]), text=row["enunciado"],
                                reference_answer=row["respuesta_referencia"] or None, note_reference=row["referencia_apuntes"] or None,
                                letter=row["letra"] or None, exact_word=row["solucion"] or None,

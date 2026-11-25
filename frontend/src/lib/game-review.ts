@@ -12,6 +12,7 @@ export interface ReviewItem {
 
 export function describeContentContext(context: GameContentContext | null): { category: string; difficulty: string } | null {
   if (!context) return null;
+  if(context.academic?.edition_id)return {category:"",difficulty:`Nivel ${context.selection.difficulty??context.academic.difficulty}`};
   const categories = [...new Set(context.questions.map((item) =>
     item.category_id === null ? "Sin categoría" : item.category_name || `Categoría ${item.category_id}`))];
   const category = context.selection.category_id !== null

@@ -3,8 +3,8 @@ import Brand from "@/components/Brand";
 import GameIllustration from "@/components/GameIllustration";
 
 const games = [
-  { mode: "TRIVIAL" as const, name: "Trivial", description: "Practica de forma individual: lee cada pregunta y elige una respuesta entre varias opciones." },
-  { mode: "PASAPALABRA" as const, name: "Pasapalabra", description: "Dos jugadores resuelven pistas por turnos, cada uno con su rosco numerado. Juega en un dispositivo con un invitado o en línea con otra cuenta." },
+  { mode: "TRIVIAL" as const, name: "Trivial", description: "Juego de tablero con turnos, preguntas abiertas y evaluación de otro participante. Su acceso jugable está en preparación." },
+  { mode: "PASAPALABRA" as const, name: "Pasapalabra", description: "Dos jugadores resuelven pistas por turnos, cada uno con su rosco numerado. Juega con dos cuentas, en el mismo dispositivo o en línea." },
 ];
 
 export default function Home() {
@@ -53,9 +53,7 @@ export default function Home() {
                     <p className={`text-xs font-bold uppercase tracking-wider ${game.name === "Trivial" ? "text-sky-800" : "text-teal-800"}`}>Ejemplo ilustrativo · No es una partida</p>
                     {game.mode === "TRIVIAL" ? <>
                       <p className="mt-2 font-semibold leading-6 text-blue-950">¿Qué células producen anticuerpos?</p>
-                      <ul aria-label="Opciones del ejemplo de Trivial" className="mt-3 flex flex-wrap gap-2 text-sm text-slate-700">
-                        {["Plasmocitos", "Eritrocitos", "Plaquetas"].map(option => <li key={option} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1">{option}</li>)}
-                      </ul>
+                      <p className="mt-3 text-sm text-slate-700">Tablero · Temáticas de tu curso · Respuesta oral</p>
                     </> : <div className="mt-3 flex items-start gap-3">
                       <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-950 text-lg font-bold text-white">7</span>
                       <div><p className="text-xs font-bold text-teal-800">Casilla 7</p><p className="mt-1 font-semibold leading-6 text-blue-950">Pista: Unidad básica de los seres vivos.</p></div>

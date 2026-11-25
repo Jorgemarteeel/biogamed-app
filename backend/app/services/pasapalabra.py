@@ -3,13 +3,14 @@ from datetime import timedelta
 from random import SystemRandom
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session, object_session
 
 from app.models import AnswerLog, GameSession, Question, Topic, User
 from app.models.pasapalabra import PasapalabraMatch, MatchParticipant, MatchQuestion, MatchCommand
 from app.schemas.game_snapshot import StoredQuestion, SharedQuestionSnapshot
 from app.services.game_questions import selectable_questions
+from app.services import pasapalabra_academic as academic_selection
 from app.services.content_selection import resolve, selection_dump
 from app.utils.answers import is_accepted_answer
 from app.utils.server_time import server_now, utc
@@ -27,11 +28,15 @@ def counts(participant):
     return {"correct": correct, "wrong": wrong, "pending": COUNT - correct - wrong}
 
 
-def prepare(db, selection):
-    statement = selectable_questions(**selection_dump(selection, exclude={"operation_id", "guest_name"}),
-                                     mode="PASAPALABRA", db=db)
-    academic = resolve(db, selection.topic_id, selection.category_id, selection.subject_id, selection.block_id)
-    available = len(list(db.scalars(statement.with_only_columns(Question.id))))
+def prepare(db, selection, owner=None):
+    if academic_selection.is_academic(selection):
+        if owner is None:
+            raise HTTPException(403, "Se necesita una cuenta autenticada.")
+        statement, academic, _ = academic_selection.resolve(db, owner, selection)
+    else:
+        statement = selectable_questions(**selection_dump(selection, exclude={"operation_id", "guest_name"}), mode="PASAPALABRA", db=db)
+        academic = resolve(db, selection.topic_id, selection.category_id, selection.subject_id, selection.block_id)
+    available = db.scalar(select(func.count()).select_from(statement.subquery()))
     return {"academic": academic, "available": available, "required": COUNT * 2, "questions_per_player": COUNT,
             "time_per_player_ms": TIME_MS, "can_start": available >= COUNT * 2,
             "selection": selection_dump(selection, exclude={"operation_id", "guest_name"})}
@@ -47,9 +52,16 @@ def start_local(db, owner, request):
 
 
 def start_shared(db, owner, request, *, online_guest=None, auto_commit=True, start_before=None, academic_context=None):
+    scoped = academic_selection.is_academic(request)
+    if scoped:
+        academic_selection.lock_users(db)
     # Serialize starts by this owner, including retries with the same key.
     db.scalar(select(User).where(User.id == owner.id).with_for_update(key_share=True))
+    local_guest = academic_selection.companion(db, owner, request) if scoped and online_guest is None else None
     payload = selection_dump(request, mode="json", exclude={"operation_id"})
+    if local_guest:
+        payload.pop("guest_name", None)
+        payload["local_guest_id"] = str(local_guest.id)
     if online_guest:
         payload.update(play_mode="ONLINE", online_guest_id=str(online_guest.id))
     existing = db.scalar(select(PasapalabraMatch).where(
@@ -62,13 +74,20 @@ def start_shared(db, owner, request, *, online_guest=None, auto_commit=True, sta
             db.rollback()
         return read_state(db, owner, existing.id) if auto_commit else existing.id
     selection = selection_dump(request, exclude={"operation_id", "guest_name"})
-    statement = selectable_questions(**selection, mode="PASAPALABRA", db=db)
-    academic = resolve(db, request.topic_id, request.category_id, request.subject_id, request.block_id)
+    if scoped:
+        statement, academic, topic = academic_selection.resolve(db, owner, request)
+        academic_selection.same_edition(db, online_guest or local_guest, request, academic["edition_id"])
+    else:
+        if not online_guest and not request.guest_name:
+            raise HTTPException(422, "Indica el nombre del invitado.")
+        statement = selectable_questions(**selection, mode="PASAPALABRA", db=db)
+        academic = resolve(db, request.topic_id, request.category_id, request.subject_id, request.block_id)
+        topic = db.get(Topic, request.topic_id) if request.topic_id is not None else None
     if academic_context is not None:
-        if academic is None or any(academic_context.get(k) != academic[k] for k in ("subject_id", "block_id", "category_id")):
-            raise HTTPException(409, "El contexto académico acordado no coincide")
+        keys = ("subject_id", "edition_id", "topic_id", "difficulty") if scoped else ("subject_id", "block_id", "category_id")
+        if academic is None or any(academic_context.get(k) != academic.get(k) for k in keys):
+            raise HTTPException(409, "El contenido acordado ya no coincide con el curso habilitado. Vuelve a preparar la sala.")
         academic = academic_context
-    topic = db.get(Topic, request.topic_id) if request.topic_id is not None else None
     # Lock eligible rows until snapshots are made: retirement/editing cannot race the copy.
     candidates = list(db.scalars(statement.order_by(Question.id).with_for_update()))
     if len(candidates) < COUNT * 2:
@@ -84,15 +103,17 @@ def start_shared(db, owner, request, *, online_guest=None, auto_commit=True, sta
                              play_mode="ONLINE" if online_guest else "LOCAL")
     db.add(match)
     db.flush()
-    for position, name, user_id in [(1, owner.name, owner.id), (2, online_guest.name if online_guest else request.guest_name, online_guest.id if online_guest else None)]:
+    companion = online_guest or local_guest
+    for position, name, user_id in [(1, owner.name, owner.id), (2, companion.name if companion else request.guest_name, companion.id if companion else None)]:
         assigned = chosen[(position - 1) * COUNT:position * COUNT]
         context = {"topic_name": topic.name if topic else None,
+                   **({"topic_icon": topic.icon_data, "context_version":2} if scoped else {}),
                    **({"academic": academic} if academic else {}),
                    "selection": {"category_id": request.category_id,
-                                 "category_name": academic["category_name"] if academic else assigned[0].category.name if request.category_id else None,
+                                 "category_name": academic.get("category_name") if academic else assigned[0].category.name if request.category_id else None,
                                  "difficulty": request.difficulty,
                                  "difficulty_unknown": request.difficulty_unknown},
-                   "questions": [_classification(q) for q in assigned]}
+                   "questions": [{**_classification(q), **({"academic":academic} if scoped else {})} for q in assigned]}
         snapshots = [StoredQuestion.model_validate(q).model_dump() for q in assigned]
         session = None
         if user_id:
@@ -121,7 +142,7 @@ def locked_match(db, owner, match_id):
     db.expire_all()
     match = db.scalar(select(PasapalabraMatch).where(
         PasapalabraMatch.id == match_id,
-        ((PasapalabraMatch.owner_id == owner.id) | ((PasapalabraMatch.play_mode == "ONLINE") & PasapalabraMatch.participants.any(MatchParticipant.user_id == owner.id)))).with_for_update())
+        ((PasapalabraMatch.owner_id == owner.id) | PasapalabraMatch.participants.any(MatchParticipant.user_id == owner.id))).with_for_update())
     if match is None:
         raise HTTPException(404, "La partida no existe.")
     return match
@@ -209,7 +230,7 @@ def public_state(match, now, viewer_id=None):
     own = next((p for p in match.participants if p.user_id == viewer_id), match.participants[0] if match.play_mode == "LOCAL" else None)
     if own is None:
         raise HTTPException(404, "La partida no existe.")
-    return {"academic": ((db.get(GameSession, own.session_id).content_context or {}).get("academic") if own.session_id else None), "id": match.id, "version": match.version, "play_mode": match.play_mode, "self_position": own.position,
+    return {"topic_icon": ((db.get(GameSession, own.session_id).content_context or {}).get("topic_icon") if own.session_id else None), "academic": ((db.get(GameSession, own.session_id).content_context or {}).get("academic") if own.session_id else None), "id": match.id, "version": match.version, "play_mode": match.play_mode, "self_position": own.position,
             "rules_version": match.rules_version, "status": match.status, "server_now": now,
             "turn_deadline_at": utc(match.turn_started_at) + timedelta(milliseconds=participant.remaining_ms) if participant else None,
             "active_participant": match.active_position,
@@ -245,6 +266,8 @@ def read_state(db, owner, match_id, result_only=False):
 
 def execute(db, owner, match_id, kind, request):
     match = locked_match(db, owner, match_id)
+    if match.play_mode == "LOCAL" and match.owner_id != owner.id:
+        raise HTTPException(403, "En este dispositivo las acciones se realizan desde la sesión del anfitrión.")
     payload = {"kind": kind, **selection_dump(request, mode="json", exclude={"operation_id"})}
     if match.play_mode == "ONLINE":
         payload["actor_id"] = str(owner.id)
@@ -316,6 +339,6 @@ def execute(db, owner, match_id, kind, request):
 
 def reconcile_for_user(db, owner):
     ids = list(db.scalars(select(PasapalabraMatch.id).where(
-        ((PasapalabraMatch.owner_id == owner.id) | ((PasapalabraMatch.play_mode == "ONLINE") & PasapalabraMatch.participants.any(MatchParticipant.user_id == owner.id))), PasapalabraMatch.status == "RUNNING").order_by(PasapalabraMatch.id)))
+        ((PasapalabraMatch.owner_id == owner.id) | PasapalabraMatch.participants.any(MatchParticipant.user_id == owner.id)), PasapalabraMatch.status == "RUNNING").order_by(PasapalabraMatch.id)))
     for match_id in ids:
         read_state(db, owner, match_id)

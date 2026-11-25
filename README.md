@@ -109,3 +109,7 @@ El comando de producción local existente sigue siendo `docker compose -p biogam
 Verificación de esta corrección: contenedor desechable sin volumen de datos y pruebas SQLite aisladas; claves ausente/vacía/blanca/de desarrollo rechazadas, clave sintética válida, ventanas y Retry-After, separación, cabeceras falsificadas, ausencia de hash cuando hay límite y regresiones de cuenta/roles. Validación de ambos Compose con secretos sintéticos únicamente en el proceso de comprobación. No se prueban límites contra usuarios reales, ni se modifican claves efectivas. No hay frontend, migraciones ni cambios de dependencias.
 
 Resultado: 22 pruebas relacionadas aprobadas; ambos Compose válidos con variables sintéticas, red interna de base conservada y publicaciones comprobadas por configuración. Persiste únicamente el aviso previo de TestClient/httpx. Sin cambios frontend: no se repiten tipos/lint ni compilación. Las comprobaciones de publicación describen la configuración futura, no un cambio aplicado a los contenedores actuales.
+
+## Recorrido actual de juegos
+
+El panel entra por Pasapalabra y resuelve el curso por matrícula habilitada. Trivial identifica el tablero, aún sin acceso jugable; Trivial individual distingue el cuestionario anterior y sus resultados. [Integración por edición, compatibilidad y revisión aislada](backend/docs/pasapalabra-enrollment.md).

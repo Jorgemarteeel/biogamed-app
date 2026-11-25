@@ -58,7 +58,7 @@ def activity(start:date|None=None,end:date|None=None,game:str=Query("ALL",patter
 
 EXPORT_LIMIT = 10000
 FORMAT_LABELS = {
-    "TRIVIAL-legacy": "Trivial · individual",
+    "TRIVIAL-legacy": "Trivial individual",
     "PASAPALABRA-legacy": "Pasapalabra · sesión individual",
     "pasapalabra-local-v1": "Pasapalabra · local (cuenta e invitado)",
     "pasapalabra-online-v1": "Pasapalabra · en línea (dos cuentas)",

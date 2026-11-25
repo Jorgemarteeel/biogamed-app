@@ -37,7 +37,7 @@ export function roomErrorMessage(error: unknown) {
     INSUFFICIENT_QUESTIONS: `Hay ${data?.detail?.available ?? 0} de las 40 preguntas necesarias. No se han cambiado los filtros.`,
     ROOM_NOT_WAITING: "La sala ya no admite cambios.",
   };
-  return labels[data?.detail?.code] ?? (status === 404 ? "Esta sala no está disponible para tu cuenta." : "No se pudo realizar la operación. Revisa la sala.");
+  return labels[data?.detail?.code] ?? (typeof data?.detail==="string"?data.detail:status === 404 ? "Esta sala no está disponible para tu cuenta." : "No se pudo realizar la operación. Revisa la sala.");
 }
 const failure = roomErrorMessage;
 
@@ -178,7 +178,7 @@ export function PasapalabraRoom({ id }: {
           <div className={layout.lobbyInfo}>
             {room.code&&<div className={layout.inviteBox}><div className="min-w-0"><p className="text-sm font-semibold text-sky-900">Código de invitación</p><p className="font-mono font-black text-blue-950" aria-label="Código de invitación">{room.code}</p></div>
               <button className="button-secondary" onClick={async()=>{try{await navigator.clipboard.writeText(room.code!);setCopied(true);}catch{setError('No se pudo copiar. Selecciona el código y cópialo manualmente.');}}}>Copiar código</button>{copied&&<p role="status" className="w-full text-sm font-bold text-sky-800">Código copiado</p>}</div>}
-            <div className={layout.lobbyConfig}><h3>Reto elegido</h3><AcademicContext value={room.configuration.academic}/><p tabIndex={0}>{room.configuration.topic}</p><p tabIndex={0}>{room.configuration.category} · {room.configuration.difficulty_unknown?'Sin clasificar':room.configuration.difficulty?`Nivel ${room.configuration.difficulty}`:'Dificultad sin filtrar'}</p><p>20 preguntas por jugador · 10 minutos individuales</p></div>
+            <div className={layout.lobbyConfig}><h3>Reto elegido</h3><AcademicContext value={room.configuration.academic}/><p tabIndex={0}>{room.configuration.topic}</p><p tabIndex={0}>{!room.configuration.academic?.edition_id&&<>{room.configuration.category} · </>}{room.configuration.difficulty_unknown?'Sin clasificar':room.configuration.difficulty?`Nivel ${room.configuration.difficulty}`:'Dificultad sin filtrar'}</p><p>20 preguntas por jugador · 10 minutos individuales</p></div>
             <p className={layout.lobbyExpiry}>Caduca el {new Intl.DateTimeFormat('es-ES',{dateStyle:'short',timeStyle:'short',timeZone:'Atlantic/Canary'}).format(new Date(room.expires_at))} (hora canaria).</p>
           </div>
           <section aria-label="Jugadores de la sala"><h3 className="font-black text-blue-950" aria-live="polite">Jugadores · {room.participants.length}/2</h3>

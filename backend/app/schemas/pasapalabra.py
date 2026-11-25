@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 from app.schemas.content_selection import AcademicContext
 
 
@@ -19,6 +19,10 @@ class Selection(BaseModel):
     def exclusive_difficulty(self):
         if self.difficulty is not None and self.difficulty_unknown:
             raise ValueError("difficulty y difficulty_unknown son excluyentes")
+        if self.subject_id is not None and self.topic_id is not None and self.block_id is None and self.category_id is None:
+            if self.difficulty is None or self.difficulty_unknown:
+                raise ValueError("Elige un nivel de dificultad de 1 a 4.")
+            return self
         academic = self.subject_id is not None or self.block_id is not None
         if academic and (self.subject_id is None or self.block_id is None or self.category_id is None or self.topic_id is not None):
             raise ValueError("La selección académica requiere asignatura, bloque y categoría sin temática")
@@ -29,11 +33,15 @@ class Selection(BaseModel):
 
 class LocalStart(Selection):
     operation_id: UUID
-    guest_name: str = Field(min_length=1, max_length=255)
+    guest_name: str | None = Field(default=None, min_length=1, max_length=255)
+    guest_dni: str | None = Field(default=None, max_length=20)
+    guest_password: SecretStr | None = Field(default=None, max_length=255)
 
     @field_validator("guest_name")
     @classmethod
     def trim_name(cls, value):
+        if value is None:
+            return value
         if not value.strip():
             raise ValueError("El invitado necesita un nombre")
         return value.strip()
@@ -103,6 +111,7 @@ class ActiveQuestion(BaseModel):
 
 class MatchState(BaseModel):
     academic: AcademicContext | None = None
+    topic_icon: str | None = None
     id: int
     version: int
     play_mode: Literal["LOCAL", "ONLINE"]

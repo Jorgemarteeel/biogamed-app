@@ -5,7 +5,7 @@ import styles from './MonitoringGameSelect.module.css';
 
 const games = [
  {value:'ALL',label:'Todos'},
- {value:'TRIVIAL',label:'Trivial'},
+ {value:'TRIVIAL',label:'Trivial individual'},
  {value:'PASAPALABRA',label:'Pasapalabra'},
 ];
 export default function MonitoringGameSelect({value,onValueChange,label='Juego',options=games,name='game',id:providedId,hideLabel=false,disabled=false}:{value:string;onValueChange:(value:string)=>void;label?:string;options?:{value:string;label:string}[];name?:string;id?:string;hideLabel?:boolean;disabled?:boolean}){

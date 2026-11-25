@@ -58,3 +58,8 @@ test('remounting a match restores unsent text only if the current turn is still 
     assert.equal(advanced.calls.length, 0);
   } finally { advanced.close(); }
 });
+
+test('rosco uses the saved theme icon and keeps its compact representation accessible',async()=>{
+ const h=harness({initial:{...state(),topic_icon:'data:image/png;base64,saved',academic:{subject_name:'Guardada',topic_name:'Vocabulario',academic_year:'2026-2027',edition_id:8}}});
+ try{await h.boot();assert.match(h.html(),/href="data:image\/png;base64,saved"/);assert.match(h.html(),/Icono de Vocabulario/);assert.equal(h.calls.length,0);}finally{h.close();}
+});

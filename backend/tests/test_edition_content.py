@@ -120,3 +120,15 @@ def test_unassigned_filter_is_global_includes_retired_and_paginates(client, db, 
     assert len(first["items"]) == 20 and len(second["items"]) == 5
     assert all("reference_answer" not in r and "correct_answer" not in r for r in first["items"] + second["items"])
     assert client.get(url, headers=roles["admin"]).json()["total"] == 25
+
+def test_trivial_display_csv_alias_preserves_internal_open_format(client,db,managers):
+    roles,_=managers
+    ed=db.scalar(select(AcademicEdition));base=f"/edition-content/{ed.id}"
+    topic=client.post(base+"/topics",headers=roles["teacher"],json={"name":"Board"}).json()
+    raw=content_csv([[name,1,f"Open {name}","Reference","","","",""] for name in ("Trivial","INMUNOQUEST")],fixed=True)
+    p=request(client,roles["teacher"],base+"/validate",raw,topic_id=topic["id"]).json()
+    assert p["valid"]==2 and p["proof"]
+    r=request(client,roles["teacher"],base+"/confirm",raw,topic_id=topic["id"],proof=p["proof"],operation_id=str(uuid4()))
+    assert r.status_code==200
+    rows=list(db.scalars(select(Question)))
+    assert len(rows)==2 and all(q.question_type=="INMUNOQUEST" and q.options is None for q in rows)

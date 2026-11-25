@@ -1,4 +1,4 @@
-# Persistencia interna del manual de InmunoQuest
+# Persistencia interna del manual de Trivial de tablero
 
 Base: main, `541cfcba08fdd17a366891b644b6fab85cdb0841`. Entrega interna con cierre autorizado en un commit local; sin push. No habilita partidas públicas.
 

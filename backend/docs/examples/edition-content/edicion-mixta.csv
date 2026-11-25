@@ -1,5 +1,5 @@
-tematica;juego;dificultad;enunciado;respuesta_referencia;referencia_apuntes;letra;solucion;alternativas
-Tejidos linfoides;INMUNOQUEST;2;Ejemplo para revisar: define un tejido.;Conjunto organizado de células.;T1;;;
+﻿tematica;juego;dificultad;enunciado;respuesta_referencia;referencia_apuntes;letra;solucion;alternativas
+Tejidos linfoides;Trivial;2;Ejemplo para revisar: define un tejido.;Conjunto organizado de células.;T1;;;
 Inmunidad innata;PASAPALABRA;1;Con la A: ejemplo de vaso que sale del corazón.;;;A;Arteria;
 Tejidos linfoides;PASAPALABRA;3;Con la B: ejemplo de órgano linfoide.;;;B;Bazo;
-Inmunidad innata;INMUNOQUEST;4;Ejemplo para revisar: describe una barrera.;La piel es una barrera física.;;;;
+Inmunidad innata;Trivial;4;Ejemplo para revisar: describe una barrera.;La piel es una barrera física.;;;;

@@ -147,7 +147,7 @@ def destination(db, subject_id, block_id, category_id, topic_id, mode):
     academic = academic_destination(db, subject_id or None, block_id or None, category_id or None)
     if mode not in COLUMNS: raise HTTPException(422, "Formato no válido.")
     if mode == "INMUNOQUEST":
-        if topic_id is not None: raise HTTPException(422, "InmunoQuest no utiliza temática; banco y nivel se indican por pregunta.")
+        if topic_id is not None: raise HTTPException(422, "Trivial no utiliza temática; banco y nivel se indican por pregunta.")
     else:
         if topic_id is None: raise HTTPException(422, "La temática es obligatoria para este formato.")
         _require_topic(db, topic_id)

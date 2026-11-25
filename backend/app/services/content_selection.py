@@ -5,6 +5,10 @@ from app.services.subject import get_category
 
 def selection_dump(request, **kwargs):
     value = request.model_dump(**kwargs)
+    for secret in ("guest_dni", "guest_password"):
+        value.pop(secret, None)
+    if value.get("guest_name", True) is None:
+        value.pop("guest_name", None)
     for key in ("subject_id", "block_id"):
         if value.get(key) is None:
             value.pop(key, None)

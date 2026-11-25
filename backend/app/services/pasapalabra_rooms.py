@@ -9,12 +9,13 @@ from sqlalchemy import select
 from app.models import User, Topic, Category
 from app.models.pasapalabra import PasapalabraRoom as Room, RoomOperation, RoomJoinLimit
 from app.schemas.pasapalabra import Selection, LocalStart
-from app.services import pasapalabra as engine
+from app.services import pasapalabra as engine, pasapalabra_academic as academic_selection
 from app.services.content_selection import resolve, selection_dump
 
 
 def lock_actor(db, actor):
     # Consistent lock order: actor, then room, then match/question rows.
+    academic_selection.lock_users(db)
     db.expire_all()
     db.scalar(select(User).where(User.id == actor.id).with_for_update(key_share=True))
 
@@ -73,8 +74,10 @@ def create(db, actor, request):
     previous = receipt(db, actor, request.operation_id, payload)
     if previous:
         return read(db, actor, previous.room_id)
-    engine.prepare(db, Selection(**selection))
-    academic = resolve(db, request.topic_id, request.category_id, request.subject_id, request.block_id)
+    prepared = engine.prepare(db, Selection(**selection), actor)
+    if academic_selection.is_academic(request) and not prepared["can_start"]:
+        raise HTTPException(409, {"code":"INSUFFICIENT_QUESTIONS", "available":prepared["available"], "required":40})
+    academic = prepared["academic"]
     topic = db.get(Topic, request.topic_id) if request.topic_id is not None else None
     category = db.get(Category, request.category_id) if request.category_id else None
     now = engine.server_now(db)
@@ -82,7 +85,7 @@ def create(db, actor, request):
     code = ''.join(secrets.choice('ABCDEFGHJKLMNPQRSTUVWXYZ23456789') for _ in range(12))
     room = Room(owner_id=actor.id, code=code, selection=selection, created_at=now,
                 expires_at=now + timedelta(minutes=30),
-                configuration={"academic": academic, "topic": topic.name if topic else None, "category": category.name if category else "Todas, incluidas sin categoría",
+                configuration={"academic": academic, "topic": topic.name if topic else None, "category": "" if academic_selection.is_academic(request) else category.name if category else "Todas, incluidas sin categoría",
                                "difficulty": request.difficulty, "difficulty_unknown": request.difficulty_unknown,
                                "questions_per_player": 20, "time_per_player_ms": 600000})
     db.add(room)
@@ -131,6 +134,9 @@ def join(db, actor, request):
     if error:
         db.commit()
         raise HTTPException(409 if error != "ROOM_UNAVAILABLE" else 404, {"code": error})
+    if academic_selection.is_academic(Selection(**room.selection)):
+        academic_selection.same_edition(db, actor, Selection(**room.selection), room.configuration["academic"]["edition_id"])
+        academic_selection.same_edition(db, db.get(User, room.owner_id), Selection(**room.selection), room.configuration["academic"]["edition_id"])
     if room.guest_id is None:
         room.guest_id = actor.id
         room.owner_ready = room.guest_ready = False

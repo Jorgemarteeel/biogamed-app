@@ -151,7 +151,7 @@ export default function GameStart({ topicId, mode }: {
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
         <ReturnLink href="/dashboard" className="text-link inline-flex min-h-11 items-center">← Volver al panel</ReturnLink>
         <p className="mt-6 text-xs font-bold uppercase tracking-widest text-orange-700">Tu espacio de práctica</p>
-        <h1 className="mt-3 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl">{mode === "PASAPALABRA" ? "Pasapalabra" : mode === "TRIVIAL" ? "Trivial" : "Preparar partida"}</h1>
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl">{mode === "PASAPALABRA" ? "Pasapalabra" : mode === "TRIVIAL" ? "Trivial individual" : "Preparar partida"}</h1>
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8" aria-label="Partida" aria-busy={!authenticated && !authError || loading}>
           {authError ? <>

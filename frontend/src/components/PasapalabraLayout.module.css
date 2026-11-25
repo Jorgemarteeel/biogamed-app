@@ -28,6 +28,7 @@
 .clock { font-size: 1.75rem; line-height: 1.2; font-weight: 900; font-variant-numeric: tabular-nums; }
 .counts { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: .875rem; line-height: 1.4; }
 .roscoCanvas { display: none; }
+.compactTopicIcon { display:block; width:3rem; height:3rem; margin:4px auto; }
 .compactSlots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; margin-top: 6px; }
 .compactSlots span { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 25px; border-radius: 6px; font-size: .8rem; font-weight: 800; color: white; }
 .compactSlots [data-current="true"] { outline: 3px solid #0284c7; outline-offset: 1px; }
@@ -104,7 +105,7 @@
   .roscoCanvas { flex: 1 1 0; min-height: 0; display: flex; }
   .roscoCanvas svg { width: 100%; height: 100%; min-height: 0; }
   .roscoSecondary .roscoCanvas { height: 260px; flex: none; }
-  .compactSlots, .mobilePlayers { display: none; }
+  .compactSlots, .mobilePlayers, .compactTopicIcon { display: none; }
   .questionCard { grid-column: 2; grid-row: 1; }
   .questionScroll { flex: 1 1 0; max-height: none; }
 }
@@ -152,3 +153,5 @@
 @media (max-width: 599px) { .finalRoscos { grid-template-columns: minmax(0,1fr); } }
 
 .resultHero > h2 { font-size: clamp(1.4rem,2.5vw,1.8rem); }
+
+.finalRoscos .compactTopicIcon { display:none; }

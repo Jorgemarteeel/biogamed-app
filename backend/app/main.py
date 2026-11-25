@@ -17,7 +17,7 @@ app = FastAPI(title="BioGaMed API")
 
 @app.exception_handler(RequestValidationError)
 async def request_validation_error(request: Request, error: RequestValidationError):
-    if request.url.path.startswith(("/auth/", "/user-imports/")):
+    if request.url.path.startswith(("/auth/", "/user-imports/", "/pasapalabra/local/start")):
         return JSONResponse({"detail": "La solicitud contiene campos inválidos."}, status_code=422)
     return await request_validation_exception_handler(request, error)
 

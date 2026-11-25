@@ -8,7 +8,7 @@ from app.models import Question
 from app.services.question_catalog import academic_destination
 
 BANKS = [("LYMPHOCYTE", "Linfocito"), ("MACROPHAGE", "Macrófago"), ("SPLEEN", "Bazo"), ("FLASK", "Matraz"), ("DNA", "ADN")]
-router = APIRouter(prefix="/inmunoquest", tags=["InmunoQuest availability"], dependencies=[Depends(require_content_staff)])
+router = APIRouter(prefix="/inmunoquest", tags=["Trivial availability"], dependencies=[Depends(require_content_staff)])
 
 @router.get("/coverage")
 def coverage(response: Response, subject_id: int = Query(..., gt=0), db: Session = Depends(get_db)):

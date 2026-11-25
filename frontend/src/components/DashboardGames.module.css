@@ -1,0 +1,110 @@
+.games {
+  display:grid;
+  gap:24px;
+}
+.card {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #cbd5e1;
+  border-radius:24px;
+  background:white;
+  box-shadow:0 5px 18px #17255408;
+}
+.art {
+  position:relative;
+  aspect-ratio:3 / 2;
+  background:#eff5fb;
+  border-bottom:1px solid #dbe5ef;
+}
+.image {object-fit:contain;}
+.body {
+  display:flex;
+  flex:1;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:16px;
+  padding:24px;
+}
+.body h2 {
+  color:#172554;
+  font-size:1.75rem;
+  font-weight:900;
+  line-height:1.15;
+  letter-spacing:-.025em;
+}
+.description {
+  max-width:36ch;
+  color:#475569;
+  font-size:1rem;
+  line-height:1.6;
+}
+.example {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:12px;
+  border:1px solid #dbe5ef;
+  border-radius:14px;
+  background:#f5f8fc;
+}
+.letter {
+  display:grid;
+  flex:none;
+  place-items:center;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#172554;
+  color:white;
+  font-size:1.25rem;
+  font-weight:800;
+}
+.exampleLabel {
+  display:block;
+  color:#475569;
+  font-size:.75rem;
+  font-weight:600;
+  line-height:1.4;
+}
+.clue {
+  display:block;
+  margin-top:3px;
+  color:#172554;
+  font-size:.875rem;
+  font-weight:600;
+  line-height:1.5;
+}
+.action {width:100%;margin-top:auto;}
+.previewNote {
+  max-width:35ch;
+  color:#64748b;
+  font-size:.875rem;
+  line-height:1.7;
+}
+.availability {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  min-height:48px;
+  margin-top:auto;
+  border:1px solid #cbd5e1;
+  border-radius:12px;
+  background:#f1f5f9;
+  color:#475569;
+  font-size:.875rem;
+  font-weight:700;
+}
+@media(min-width:640px) {
+  .games {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .body {padding:28px;}
+  .body h2 {font-size:2rem;}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .card {transition:border-color .2s,box-shadow .2s;}
+  .card:focus-within {border-color:#0369a1;box-shadow:0 6px 20px #17255414;}
+}

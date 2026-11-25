@@ -100,6 +100,37 @@ test("shared abandoned history retains personal correction and separates pending
   assert.doesNotMatch(html, /No hay una corrección guardada/);
   const card = renderToStaticMarkup(React.createElement(SummaryCard, { game: shared, topicName: "Tema" }));
   assert.match(card, /17 pendientes/);
-  assert.match(card, /× 2 errores/);
-  assert.doesNotMatch(card, /19 errores|Sin puntuación disponible/);
+  assert.match(card, /2 fallos/);
+  assert.doesNotMatch(card, /19 fallos|Sin puntuación disponible/);
+});
+
+function card(data) {
+  return renderToStaticMarkup(React.createElement(SummaryCard, { game: data, topicName: "Tema cambiado del catálogo" }));
+}
+
+test("recent and history card puts game and personal results before saved academic context", () => {
+  const html = card({ ...game, game_mode: "PASAPALABRA", shared_match_id: 2, match_status: "FINISHED",
+    completion_reason: "ABANDONMENT", score: 0, wrong_count: 12, pending_count: 8,
+    content_context: { ...game.content_context, academic: { subject_name: "Fisiología", academic_year: "2026-2027", edition_id: 4, topic_name: "Vocabulario" } } });
+  assert.match(html, /<h2[^>]*>Pasapalabra<\/h2>/);
+  assert.ok(html.indexOf("0 aciertos") < html.indexOf("Fisiología"));
+  assert.match(html, /12 fallos/); assert.match(html, /8 pendientes/);
+  assert.match(html, /Finalizada por abandono/);
+  assert.match(html, /Fisiología · 2026–2027/); assert.match(html, /Vocabulario · Nivel 2/);
+  assert.doesNotMatch(html, /→|Tema cambiado|Categoría original/);
+  assert.match(html, /href="\/partidas\/7"/); assert.match(html, /href="\/pasapalabra\/2"/);
+  assert.match(html, /aria-hidden="true"/);
+});
+
+test("completed, ongoing, abandoned and legacy cards preserve missing counts and distinct names", () => {
+  assert.match(card(game), /Trivial individual/);
+  assert.match(card(game), /Completada/); assert.match(card(game), /1 acierto/); assert.match(card(game), /0 fallos/);
+  assert.match(card({ ...game, game_mode: "INMUNOQUEST" }), /<h2[^>]*>Trivial<\/h2>/);
+  const legacy = card({ ...game, content_context: null, score: 0 });
+  assert.match(legacy, /Completada/); assert.match(legacy, /Resultado no registrado/);
+  assert.doesNotMatch(legacy, /0 aciertos|0 fallos|0 pendientes/);
+  const ongoing = card({ ...game, shared_match_id: 2, game_mode: "PASAPALABRA", is_completed: false, match_status: "RUNNING", score: 1, wrong_count: null, pending_count: null });
+  assert.match(ongoing, /En curso/); assert.match(ongoing, /1 acierto/); assert.match(ongoing, /Reanudar partida local/);
+  assert.doesNotMatch(ongoing, /0 pendientes|0 fallos/);
+  assert.match(card({ ...game, is_completed: false }), /Sin finalizar/);
 });
